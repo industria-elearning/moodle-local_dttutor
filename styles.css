@@ -1,0 +1,250 @@
+/* ============================================
+   TUTOR-IA DRAWER (basado en aiplacement_courseassist)
+   ============================================ */
+
+/* Toggle Button */
+.tutor-ia-toggle-button {
+    position: fixed;
+    /* bottom is set inline via template (6rem por defecto) */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    z-index: 1015;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Position: Right (default) */
+.tutor-ia-position-right {
+    right: 2rem;
+}
+
+/* Position: Left */
+.tutor-ia-position-left {
+    left: 2rem;
+}
+
+.tutor-ia-toggle-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.tutor-ia-avatar-toggle {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+/* Drawer Container */
+.tutor-ia-drawer {
+    position: fixed;
+    top: 60px;
+    bottom: 0;
+    width: 380px;
+    background-color: #f8f9fa;
+    z-index: 1016;
+    visibility: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Drawer Position: Right (default) */
+.tutor-ia-drawer-right {
+    right: calc(-380px - 10px);
+    transition: right 0.2s ease, visibility 0.2s ease;
+}
+
+.tutor-ia-drawer-right.show {
+    right: 0;
+    visibility: visible;
+}
+
+/* Drawer Position: Left */
+.tutor-ia-drawer-left {
+    left: calc(-380px - 10px);
+    transition: left 0.2s ease, visibility 0.2s ease;
+}
+
+.tutor-ia-drawer-left.show {
+    left: 0;
+    visibility: visible;
+}
+
+/* ============================================
+   Footer Popover Positioning
+   Mover footer-popover cuando el drawer del Tutor-IA está abierto
+   ============================================ */
+
+/* Cuando el drawer del Tutor-IA está abierto a la DERECHA */
+body.tutor-ia-drawer-open-right .btn-footer-popover,
+body.tutor-ia-drawer-open-right .btn-footer-communication,
+body.tutor-ia-drawer-open-right .popover-process-monitor {
+    /* Drawer width: 380px + spacing: 2rem */
+    right: calc(380px + 2rem) !important;
+    transition: right 0.2s ease;
+}
+
+body.tutor-ia-drawer-open-right .maintenancewarning {
+    right: calc(380px + 5rem) !important;
+    transition: right 0.2s ease;
+}
+
+/* Cuando el drawer del Tutor-IA está abierto a la IZQUIERDA */
+body.tutor-ia-drawer-open-left .btn-footer-popover,
+body.tutor-ia-drawer-open-left .btn-footer-communication,
+body.tutor-ia-drawer-open-left .popover-process-monitor {
+    /* Mantener posición derecha normal, no se mueven */
+    right: 2rem !important;
+}
+
+/* Drawer Header */
+.tutor-ia-drawer-header {
+    padding: 1rem;
+    background: #fff;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 60px;
+}
+
+.tutor-ia-header-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.tutor-ia-avatar-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.tutor-ia-title h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.tutor-ia-role {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.tutor-ia-close-button {
+    margin-left: auto;
+}
+
+/* Drawer Body */
+.tutor-ia-drawer-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+}
+
+/* Messages Container */
+.tutor-ia-messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: #6a737b #f8f9fa;
+}
+
+.tutor-ia-message {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    max-width: 85%;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.tutor-ia-message.ai {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    align-self: flex-start;
+}
+
+.tutor-ia-message.user {
+    background: #0d6efd;
+    color: #fff;
+    margin-left: auto;
+    align-self: flex-end;
+}
+
+/* Typing Indicator */
+.tutor-ia-typing {
+    display: flex;
+    gap: 4px;
+    padding: 0.75rem !important;
+}
+
+.tutor-ia-typing .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #6c757d;
+    animation: typing 1.4s infinite;
+}
+
+.tutor-ia-typing .dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.tutor-ia-typing .dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        opacity: 0.3;
+        transform: translateY(0);
+    }
+    30% {
+        opacity: 1;
+        transform: translateY(-8px);
+    }
+}
+
+/* Footer */
+.tutor-ia-footer {
+    padding: 1rem;
+    background: #fff;
+    border-top: 1px solid #dee2e6;
+}
+
+.tutor-ia-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.tutor-ia-input {
+    flex: 1;
+    resize: none;
+    min-height: 38px;
+    max-height: 120px;
+}
+
+.tutor-ia-send {
+    flex-shrink: 0;
+    padding: 0.5rem 0.75rem;
+}
+
+.tutor-ia-send svg {
+    display: block;
+}
