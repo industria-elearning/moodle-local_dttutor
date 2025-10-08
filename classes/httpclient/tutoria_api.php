@@ -24,6 +24,7 @@
 
 namespace local_dttutor\httpclient;
 
+use aiprovider_datacurso\httpclient\ai_services_api;
 use cache;
 use moodle_exception;
 
@@ -37,10 +38,7 @@ use moodle_exception;
 class tutoria_api {
 
     /** @var string $baseurl Base URL of the Tutor-IA API. */
-    private $baseurl;
-
-    /** @var string $token Authentication token for Tutor-IA API. */
-    private $token;
+    private $ai_service;
 
     /** @var cache $cache Cache instance for storing sessions. */
     private $cache;
@@ -49,8 +47,7 @@ class tutoria_api {
      * Constructor to initialize the Tutor-IA API client.
      */
     public function __construct() {
-        $this->baseurl = rtrim(get_config('local_dttutor', 'apiurl'), '/');
-        $this->token = get_config('local_dttutor', 'apitoken');
+        $this->ai_service = new ai_services_api();
         $this->cache = cache::make('local_dttutor', 'sessions');
     }
 
@@ -72,7 +69,7 @@ class tutoria_api {
         }
 
         // Create new session.
-        $response = $this->post('/chat/start', [
+        $response = $this->ai_service->request('POST','/chat/start', [
             'site_id' => $siteid,
             'course_id' => (string)$courseid,
         ]);
@@ -97,7 +94,7 @@ class tutoria_api {
      * @throws moodle_exception If sending fails.
      */
     public function send_message(string $sessionid, string $content, array $meta = []): array {
-        return $this->post('/chat/message', [
+        return $this->ai_service->request('POST','/chat/message', [
             'session_id' => $sessionid,
             'content' => $content,
             'meta' => $meta,
@@ -111,7 +108,7 @@ class tutoria_api {
      * @return string Full stream URL with session parameter.
      */
     public function get_stream_url(string $sessionid): string {
-        return $this->baseurl . '/chat/stream?session_id=' . urlencode($sessionid);
+        return $this->ai_service->get_streaming_url_for_session($sessionid);
     }
 
     /**
@@ -122,94 +119,7 @@ class tutoria_api {
      * @throws moodle_exception If deletion fails.
      */
     public function delete_session(string $sessionid): array {
-        return $this->delete("/chat/{$sessionid}");
-    }
-
-    /**
-     * Execute a POST request to the Tutor-IA API.
-     *
-     * @param string $endpoint API endpoint (relative path).
-     * @param array $data Request payload.
-     * @return array Decoded response.
-     * @throws moodle_exception On request failure.
-     */
-    private function post(string $endpoint, array $data): array {
-        $url = $this->baseurl . '/' . ltrim($endpoint, '/');
-
-        $headers = [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $this->token,
-        ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-
-        $response = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
-
-        if ($response === false) {
-            throw new moodle_exception('error_api_request_failed', 'local_dttutor', '', $error);
-        }
-
-        if ($httpcode >= 400) {
-            throw new moodle_exception('error_http_code', 'local_dttutor', '', $httpcode);
-        }
-
-        $decoded = json_decode($response, true);
-        if ($decoded === null) {
-            throw new moodle_exception('error_invalid_api_response', 'local_dttutor');
-        }
-
-        return $decoded;
-    }
-
-    /**
-     * Execute a DELETE request to the Tutor-IA API.
-     *
-     * @param string $endpoint API endpoint (relative path).
-     * @return array Decoded response.
-     * @throws moodle_exception On request failure.
-     */
-    private function delete(string $endpoint): array {
-        $url = $this->baseurl . '/' . ltrim($endpoint, '/');
-
-        $headers = [
-            'Authorization: Bearer ' . $this->token,
-        ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-
-        $response = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
-
-        if ($response === false) {
-            throw new moodle_exception('error_api_request_failed', 'local_dttutor', '', $error);
-        }
-
-        if ($httpcode >= 400) {
-            throw new moodle_exception('error_http_code', 'local_dttutor', '', $httpcode);
-        }
-
-        $decoded = json_decode($response, true);
-        if ($decoded === null) {
-            throw new moodle_exception('error_invalid_api_response', 'local_dttutor');
-        }
-
-        return $decoded;
+        return $this->ai_service->request('DELETE', '/chat/session/'.$sessionid);
     }
 
     /**

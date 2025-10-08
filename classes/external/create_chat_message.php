@@ -109,12 +109,6 @@ class create_chat_message extends external_api {
 
         // Build streaming URL with authentication.
         $streamurl = $tutoriaapi->get_stream_url($session['session_id']);
-        $token = get_config('local_dttutor', 'apitoken');
-
-        // Add token as query parameter for SSE authentication.
-        if (!empty($token)) {
-            $streamurl .= '&token=' . urlencode($token);
-        }
 
         return [
             'session_id' => $session['session_id'],
