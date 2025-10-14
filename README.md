@@ -225,7 +225,7 @@ local/dttutor/
 
 ```php
 // Clave de caché
-$cachekey = "session_{$siteid}_{$courseid}";
+$cachekey = "session_{$courseid}";
 
 // TTL: session_ttl_seconds - 1 hora (margen de seguridad)
 $ttl = $response['session_ttl_seconds'] - 3600;
@@ -292,7 +292,7 @@ Elimina una sesión de chat.
 
 ### HTTP Client API
 
-#### `tutoria_api::start_session(string $siteid, int $courseid)`
+#### `tutoria_api::start_session(int $courseid)`
 
 Inicia o recupera una sesión de chat.
 

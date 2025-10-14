@@ -47,10 +47,11 @@ define([
     };
 
     class TutorIAChat {
-        constructor(root, uniqueId, courseId, userId) {
+        constructor(root, uniqueId, courseId, cmId, userId) {
             this.root = $(root);
             this.uniqueId = uniqueId;
             this.courseId = courseId;
+            this.cmId = cmId;
             this.userId = userId;
             this.streaming = false;
             this.currentEventSource = null;
@@ -234,6 +235,7 @@ define([
                     methodname: "local_dttutor_create_chat_message",
                     args: {
                         courseid: parseInt(this.courseId, 10),
+                        cmid: parseInt(this.cmId, 10),
                         message: this.sanitizeString(messageText.substring(0, 4000)),
                         meta: JSON.stringify({
                             user_role: 'Estudiante',
@@ -434,8 +436,8 @@ define([
     }
 
     return {
-        init: function(root, uniqueId, courseId, userId) {
-            return new TutorIAChat(root, uniqueId, courseId, userId);
+        init: function(root, uniqueId, courseId, cmId, userId) {
+            return new TutorIAChat(root, uniqueId, courseId, cmId, userId);
         }
     };
 });

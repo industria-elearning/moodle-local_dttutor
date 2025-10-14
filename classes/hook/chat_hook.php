@@ -93,6 +93,13 @@ class chat_hook {
             return; // No mostrar en frontpage.
         }
 
+        // Detectar cmid (Course Module ID) si estamos en un contexto de módulo.
+        $cmid = 0;
+        $context = $PAGE->context;
+        if ($context->contextlevel == CONTEXT_MODULE) {
+            $cmid = $context->instanceid;
+        }
+
         // Detectar rol del usuario.
         $userrole = self::get_user_role_in_course();
         $userroledisplay = ($userrole === 'teacher') ? 'Profesor' : 'Estudiante';
@@ -125,6 +132,7 @@ class chat_hook {
         $drawerdata = [
             'uniqid' => $uniqid,
             'courseid' => $courseid,
+            'cmid' => $cmid,
             'userid' => $USER->id,
             'userrole' => $userroledisplay,
             'avatarurl' => $avatarurl->out(false),

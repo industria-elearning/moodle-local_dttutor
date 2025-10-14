@@ -54,25 +54,27 @@ class tutoria_api {
     /**
      * Start a new chat session or retrieve an existing one from cache.
      *
-     * @param string $siteid Site identifier.
      * @param int $courseid Course ID.
+     * @param int $cmid Course Module ID (0 if only in course).
      * @return array Session data including session_id, ready status, and TTL.
      * @throws moodle_exception If the session creation fails.
      */
-    public function start_session(string $siteid, int $courseid): array {
-        // Check cache first.
-        $cachekey = "session_{$siteid}_{$courseid}";
+    public function start_session(int $courseid, int $cmid = 0): array {
+        // Check cache first. Include cmid in cache key if present.
+        $cachekey = ($cmid > 0) ? "session_{$courseid}_{$cmid}" : "session_{$courseid}";
         $cached = $this->cache->get($cachekey);
 
         if ($cached && $this->is_session_valid($cached)) {
             return $cached;
         }
 
-        // Create new session.
-        $response = $this->ai_service->request('POST','/chat/start', [
-            'site_id' => $siteid,
-            'course_id' => (string)$courseid,
-        ]);
+        // Create new session. Include cmid if present.
+        $requestdata = ['course_id' => (string)$courseid];
+        if ($cmid > 0) {
+            $requestdata['cm_id'] = (string)$cmid;
+        }
+
+        $response = $this->ai_service->request('POST', '/chat/start', $requestdata);
 
         // Add creation timestamp for validation.
         $response['created_at'] = time();
@@ -94,10 +96,12 @@ class tutoria_api {
      * @throws moodle_exception If sending fails.
      */
     public function send_message(string $sessionid, string $content, array $meta = []): array {
+        global $USER;
         return $this->ai_service->request('POST','/chat/message', [
             'session_id' => $sessionid,
             'content' => $content,
             'meta' => $meta,
+            'user_id' => $USER->id,
         ]);
     }
 

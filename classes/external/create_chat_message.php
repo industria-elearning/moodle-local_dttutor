@@ -53,6 +53,7 @@ class create_chat_message extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'courseid' => new external_value(PARAM_INT, 'Course ID', VALUE_REQUIRED),
+            'cmid' => new external_value(PARAM_INT, 'Course Module ID (0 if only in course)', VALUE_DEFAULT, 0),
             'message' => new external_value(PARAM_RAW, 'User message', VALUE_REQUIRED),
             'meta' => new external_value(PARAM_RAW, 'Optional metadata (JSON)', VALUE_DEFAULT, '{}'),
         ]);
@@ -62,18 +63,20 @@ class create_chat_message extends external_api {
      * Create chat message and initialize Tutor-IA session.
      *
      * @param int $courseid Course ID.
+     * @param int $cmid Course Module ID (0 if only in course).
      * @param string $message User message text.
      * @param string $meta Optional metadata as JSON string.
      * @return array Session data with streaming URL.
      * @throws \invalid_parameter_exception
      * @throws \moodle_exception
      */
-    public static function execute($courseid, $message, $meta = '{}'): array {
+    public static function execute($courseid, $cmid = 0, $message, $meta = '{}'): array {
         global $CFG, $SITE;
 
         // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
+            'cmid' => $cmid,
             'message' => $message,
             'meta' => $meta,
         ]);
@@ -90,9 +93,8 @@ class create_chat_message extends external_api {
         // Initialize Tutor-IA API client.
         $tutoriaapi = new tutoria_api();
 
-        // Get or create session using site identifier.
-        $siteid = self::get_site_identifier();
-        $session = $tutoriaapi->start_session($siteid, $params['courseid']);
+        // Get or create session using site identifier and optional cmid.
+        $session = $tutoriaapi->start_session($params['courseid'], $params['cmid']);
 
         if (!isset($session['ready']) || !$session['ready']) {
             throw new \moodle_exception('sessionnotready', 'local_dttutor');
@@ -130,15 +132,4 @@ class create_chat_message extends external_api {
         ]);
     }
 
-    /**
-     * Generate a unique identifier for this Moodle site.
-     *
-     * @return string Site identifier hash.
-     */
-    private static function get_site_identifier(): string {
-        global $CFG, $SITE;
-
-        // Use hash of wwwroot + site ID for unique identification.
-        return md5($CFG->wwwroot . '_' . $SITE->id);
-    }
 }
