@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_dttutor';
-$plugin->version = 2025100703;  // YYYYMMDDXX
+$plugin->version = 2025100709;  // YYYYMMDDXX
 $plugin->requires = 2024042200;  // Moodle 4.5+
 $plugin->maturity = MATURITY_STABLE;
 $plugin->release = '1.0.0';

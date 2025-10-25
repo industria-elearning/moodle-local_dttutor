@@ -71,7 +71,82 @@ define([
             // Clase para identificar que el drawer del Tutor-IA está abierto (para mover footer-popover).
             this.bodyClass = this.position === 'left' ? 'tutor-ia-drawer-open-left' : 'tutor-ia-drawer-open-right';
 
+            // Capturar información contextual de la página
+            this.pageContext = this.detectPageContext();
+
             this.init();
+        }
+
+        /**
+         * Detecta el contexto de la página actual (tipo de página y parámetros relevantes).
+         *
+         * @returns {Object} Objeto con información contextual de la página
+         */
+        detectPageContext() {
+            const context = {};
+
+            // Método 1: Intentar obtener pagetype de M.cfg
+            if (typeof M !== 'undefined' && M.cfg && M.cfg.pagetype) {
+                context.pagetype = M.cfg.pagetype;
+            }
+
+            // Método 2: Si no está disponible, usar body id/class (más confiable)
+            if (!context.pagetype) {
+                const bodyId = document.body.id;
+                if (bodyId) {
+                    // El body id tiene formato: "page-mod-forum-discuss" o "page-course-view-topics"
+                    // Extraemos la parte después de "page-"
+                    context.pagetype = bodyId.replace('page-', '');
+                }
+            }
+
+            // Método 3: Fallback usando body classes
+            if (!context.pagetype) {
+                const bodyClasses = document.body.className;
+                // Buscar clases con formato "path-mod-forum", "pagelayout-incourse", etc
+                const pathMatch = bodyClasses.match(/path-([\w-]+)/);
+                if (pathMatch) {
+                    context.pagetype = pathMatch[1];
+                }
+            }
+
+            // Obtener parámetros de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // Extraer parámetros comunes según el tipo de página
+            if (context.pagetype && context.pagetype.includes('forum')) {
+                // Forum discussion ID
+                if (urlParams.has('d')) {
+                    context.discussionid = parseInt(urlParams.get('d'), 10);
+                }
+                // Forum ID
+                if (urlParams.has('f')) {
+                    context.forumid = parseInt(urlParams.get('f'), 10);
+                }
+            } else if (context.pagetype && context.pagetype.includes('quiz')) {
+                // Quiz attempt ID
+                if (urlParams.has('attempt')) {
+                    context.attemptid = parseInt(urlParams.get('attempt'), 10);
+                }
+            } else if (context.pagetype && context.pagetype.includes('assign')) {
+                // Assignment ID
+                if (urlParams.has('id')) {
+                    context.assignid = parseInt(urlParams.get('id'), 10);
+                }
+            } else if (context.pagetype && context.pagetype.includes('wiki')) {
+                // Wiki page ID
+                if (urlParams.has('pageid')) {
+                    context.pageid = parseInt(urlParams.get('pageid'), 10);
+                }
+            }
+
+            // Debug logging
+            window.console.log('Tutor-IA Page Context:', context);
+            window.console.log('Body ID:', document.body.id);
+            window.console.log('Body Classes:', document.body.className);
+            window.console.log('URL Params:', window.location.search);
+
+            return context;
         }
 
         init() {
@@ -231,16 +306,44 @@ define([
                 this.scrollToBottom();
                 this.showTypingIndicator();
 
+                // Construir objeto meta con información contextual
+                const metaData = {
+                    user_role: 'Estudiante',
+                    timestamp: Math.floor(Date.now() / 1000)
+                };
+
+                // Agregar información de página si está disponible
+                if (this.pageContext.pagetype) {
+                    metaData.page = this.pageContext.pagetype;
+                }
+
+                // Agregar parámetros contextuales específicos
+                if (this.pageContext.discussionid) {
+                    metaData.discussionid = this.pageContext.discussionid;
+                }
+                if (this.pageContext.forumid) {
+                    metaData.forumid = this.pageContext.forumid;
+                }
+                if (this.pageContext.attemptid) {
+                    metaData.attemptid = this.pageContext.attemptid;
+                }
+                if (this.pageContext.assignid) {
+                    metaData.assignid = this.pageContext.assignid;
+                }
+                if (this.pageContext.pageid) {
+                    metaData.pageid = this.pageContext.pageid;
+                }
+
+                // Debug logging
+                window.console.log('Tutor-IA sending metadata:', metaData);
+
                 const requests = Ajax.call([{
                     methodname: "local_dttutor_create_chat_message",
                     args: {
                         courseid: parseInt(this.courseId, 10),
                         cmid: parseInt(this.cmId, 10),
                         message: this.sanitizeString(messageText.substring(0, 4000)),
-                        meta: JSON.stringify({
-                            user_role: 'Estudiante',
-                            timestamp: Math.floor(Date.now() / 1000)
-                        })
+                        meta: JSON.stringify(metaData)
                     },
                 }]);
 

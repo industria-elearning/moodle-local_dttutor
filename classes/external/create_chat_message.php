@@ -106,8 +106,11 @@ class create_chat_message extends external_api {
             $metaarray = [];
         }
 
+        // Debug: Log metadata to verify it's being received correctly.
+        debugging('Tutor-IA metadata received: ' . json_encode($metaarray), DEBUG_DEVELOPER);
+
         // Send message to Tutor-IA.
-        $tutoriaapi->send_message($session['session_id'], $params['message'], $metaarray);
+        $tutoriaapi->send_message($session['session_id'], $params['message'], $metaarray, $params['cmid']);
 
         // Build streaming URL with authentication.
         $streamurl = $tutoriaapi->get_stream_url($session['session_id']);

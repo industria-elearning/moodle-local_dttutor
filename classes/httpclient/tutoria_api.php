@@ -95,13 +95,14 @@ class tutoria_api {
      * @return array Response indicating if message was enqueued.
      * @throws moodle_exception If sending fails.
      */
-    public function send_message(string $sessionid, string $content, array $meta = []): array {
+    public function send_message(string $sessionid, string $content, array $meta = [], string $cmid = null): array {
         global $USER;
         return $this->ai_service->request('POST','/chat/message', [
             'session_id' => $sessionid,
             'content' => $content,
             'meta' => $meta,
             'user_id' => $USER->id,
+            'cmid' => $cmid
         ]);
     }
 

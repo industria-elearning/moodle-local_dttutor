@@ -72,6 +72,33 @@ class chat_hook {
     }
 
     /**
+     * Checks if the current module context is a quiz activity.
+     * Returns true if we are viewing a quiz module.
+     *
+     * @return bool
+     */
+    private static function is_quiz_module(): bool {
+        global $PAGE;
+
+        $context = $PAGE->context;
+
+        // Only check if we're in a module context.
+        if ($context->contextlevel != CONTEXT_MODULE) {
+            return false;
+        }
+
+        // Get the course module information.
+        $cm = get_coursemodule_from_id('', $context->instanceid, 0, false, IGNORE_MISSING);
+
+        if (!$cm) {
+            return false;
+        }
+
+        // Check if the module is a quiz.
+        return ($cm->modname === 'quiz');
+    }
+
+    /**
      * Adds the Tutor-IA drawer to course pages for all users.
      *
      * @param before_footer_html_generation $hook The hook event.
@@ -91,6 +118,11 @@ class chat_hook {
         $courseid = $COURSE->id ?? 0;
         if ($courseid <= 1) {
             return; // No mostrar en frontpage.
+        }
+
+        // Do not show chat in quiz activities.
+        if (self::is_quiz_module()) {
+            return;
         }
 
         // Detectar cmid (Course Module ID) si estamos en un contexto de módulo.
