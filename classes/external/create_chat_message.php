@@ -30,9 +30,9 @@ use core_external\external_single_structure;
 use core_external\external_value;
 use local_dttutor\httpclient\tutoria_api;
 
-defined('MOODLE_INTERNAL') || die();
-
 require_once($CFG->libdir . '/externallib.php');
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Class create_chat_message
@@ -40,6 +40,7 @@ require_once($CFG->libdir . '/externallib.php');
  * Creates a chat message and returns streaming URL for Tutor-IA responses.
  *
  * @package    local_dttutor
+ * @category   external
  * @copyright  2025 Industria Elearning <info@industriaelearning.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -49,6 +50,7 @@ class create_chat_message extends external_api {
      * Returns description of method parameters.
      *
      * @return external_function_parameters
+     * @since Moodle 4.5
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
@@ -69,9 +71,10 @@ class create_chat_message extends external_api {
      * @return array Session data with streaming URL.
      * @throws \invalid_parameter_exception
      * @throws \moodle_exception
+     * @since Moodle 4.5
      */
     public static function execute($courseid, $cmid = 0, $message, $meta = '{}'): array {
-        global $CFG, $SITE;
+        global $CFG;
 
         // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -106,9 +109,6 @@ class create_chat_message extends external_api {
             $metaarray = [];
         }
 
-        // Debug: Log metadata to verify it's being received correctly.
-        debugging('Tutor-IA metadata received: ' . json_encode($metaarray), DEBUG_DEVELOPER);
-
         // Send message to Tutor-IA.
         $tutoriaapi->send_message($session['session_id'], $params['message'], $metaarray, $params['cmid']);
 
@@ -126,6 +126,7 @@ class create_chat_message extends external_api {
      * Returns description of method result value.
      *
      * @return external_single_structure
+     * @since Moodle 4.5
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([

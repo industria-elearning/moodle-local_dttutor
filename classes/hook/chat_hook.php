@@ -19,7 +19,7 @@ namespace local_dttutor\hook;
 use core\hook\output\before_footer_html_generation;
 
 /**
- * Hook para cargar el chat flotante del Tutor-IA
+ * Hook to load the Tutor-IA floating chat
  *
  * @package    local_dttutor
  * @copyright  2025 Datacurso <josue@datacurso.com>
@@ -31,6 +31,7 @@ class chat_hook {
      * Hook to load the floating chat before the footer.
      *
      * @param before_footer_html_generation $hook The hook event.
+     * @since Moodle 4.5
      */
     public static function before_footer_html_generation(before_footer_html_generation $hook): void {
         self::add_float_chat($hook);
@@ -41,6 +42,7 @@ class chat_hook {
      * Returns true if the current page or context is related to a course or module.
      *
      * @return bool
+     * @since Moodle 4.5
      */
     private static function is_course_context(): bool {
         global $PAGE, $COURSE;
@@ -76,6 +78,7 @@ class chat_hook {
      * Returns true if we are viewing a quiz module.
      *
      * @return bool
+     * @since Moodle 4.5
      */
     private static function is_quiz_module(): bool {
         global $PAGE;
@@ -102,6 +105,7 @@ class chat_hook {
      * Adds the Tutor-IA drawer to course pages for all users.
      *
      * @param before_footer_html_generation $hook The hook event.
+     * @since Moodle 4.5
      */
     private static function add_float_chat(before_footer_html_generation $hook): void {
         global $PAGE, $COURSE, $USER, $OUTPUT;
@@ -117,7 +121,7 @@ class chat_hook {
 
         $courseid = $COURSE->id ?? 0;
         if ($courseid <= 1) {
-            return; // No mostrar en frontpage.
+            return; // Don't show on frontpage.
         }
 
         // Do not show chat in quiz activities.
@@ -125,35 +129,37 @@ class chat_hook {
             return;
         }
 
-        // Detectar cmid (Course Module ID) si estamos en un contexto de módulo.
+        // Detect cmid (Course Module ID) if we are in a module context.
         $cmid = 0;
         $context = $PAGE->context;
         if ($context->contextlevel == CONTEXT_MODULE) {
             $cmid = $context->instanceid;
         }
 
-        // Detectar rol del usuario.
+        // Detect user role.
         $userrole = self::get_user_role_in_course();
-        $userroledisplay = ($userrole === 'teacher') ? 'Profesor' : 'Estudiante';
+        $userroledisplay = ($userrole === 'teacher')
+            ? get_string('teacher', 'local_dttutor')
+            : get_string('student', 'local_dttutor');
 
-        // Obtener avatar configurado con sistema de fallback.
+        // Get configured avatar with fallback system.
         $avatarurl = self::get_avatar_url();
 
-        // Obtener posición del avatar (derecha/izquierda).
+        // Get avatar position (right/left).
         $position = get_config('local_dttutor', 'avatar_position');
         if (empty($position)) {
-            $position = 'right'; // Por defecto: derecha.
+            $position = 'right'; // Default: right.
         }
 
-        // Calcular bottom position dinámicamente según el footer-popover de Moodle.
-        // El footer-popover está en bottom: 2rem, y el communication en 4rem.
-        // Colocamos el avatar en 6rem para estar por encima de ambos.
+        // Calculate bottom position dynamically based on Moodle's footer-popover.
+        // The footer-popover is at bottom: 2rem, and communication at 4rem.
+        // We place the avatar at 6rem to be above both.
         $bottomposition = '6rem';
 
-        // Generar unique ID.
+        // Generate unique ID.
         $uniqid = uniqid('tia_');
 
-        // Preparar datos para templates.
+        // Prepare data for templates.
         $toggledata = [
             'uniqid' => $uniqid,
             'avatarurl' => $avatarurl->out(false),
@@ -171,39 +177,40 @@ class chat_hook {
             'position' => $position,
         ];
 
-        // Renderizar templates.
+        // Render templates.
         $toggle = $OUTPUT->render_from_template('local_dttutor/tutor_ia_toggle', $toggledata);
         $drawer = $OUTPUT->render_from_template('local_dttutor/tutor_ia_drawer', $drawerdata);
 
-        // Agregar HTML directamente al footer usando el hook.
+        // Add HTML directly to footer using the hook.
         $hook->add_html($toggle . $drawer);
     }
 
     /**
-     * Obtiene la URL del avatar configurado con sistema de fallback.
+     * Gets the configured avatar URL with fallback system.
      *
-     * @return \moodle_url URL del avatar a usar
+     * @return \moodle_url Avatar URL to use
+     * @since Moodle 4.5
      */
     private static function get_avatar_url(): \moodle_url {
         global $CFG;
 
-        // Obtener configuración.
+        // Get configuration.
         $avatarnum = get_config('local_dttutor', 'avatar');
 
-        // Primer fallback: Si no hay configuración, usar '01'.
+        // First fallback: If no configuration, use '01'.
         if (empty($avatarnum)) {
             $avatarnum = '01';
         }
 
-        // Segundo fallback: Si el archivo no existe, usar '01'.
+        // Second fallback: If file doesn't exist, use '01'.
         $avatarpath = $CFG->dirroot . '/local/dttutor/pix/avatars/avatar_profesor_' . $avatarnum . '.png';
         if (!file_exists($avatarpath)) {
             $avatarnum = '01';
 
-            // Último fallback: Si ni siquiera el '01' existe, usar un icono genérico de Moodle.
+            // Last fallback: If even '01' doesn't exist, use generic Moodle icon.
             $defaultpath = $CFG->dirroot . '/local/dttutor/pix/avatars/avatar_profesor_01.png';
             if (!file_exists($defaultpath)) {
-                // Usar icono de usuario genérico de Moodle.
+                // Use generic Moodle user icon.
                 return new \moodle_url('/pix/u/f1.png');
             }
         }
@@ -213,6 +220,9 @@ class chat_hook {
 
     /**
      * Determines the user's role in the current course context.
+     *
+     * @return string User role: 'teacher' or 'student'
+     * @since Moodle 4.5
      */
     private static function get_user_role_in_course(): string {
         global $COURSE, $USER;
@@ -228,7 +238,7 @@ class chat_hook {
             return 'teacher';
         }
 
-        // Verificar roles específicos.
+        // Verify specific roles.
         $roles = get_user_roles($context, $USER->id);
         foreach ($roles as $role) {
             if (in_array($role->shortname, ['teacher', 'editingteacher', 'manager', 'coursecreator'])) {

@@ -30,6 +30,8 @@ $string['close'] = 'Cerrar Tutor IA';
 $string['sendmessage'] = 'Enviar mensaje';
 $string['typemessage'] = 'Escribe tu mensaje...';
 $string['welcomemessage'] = '¡Hola! Soy tu asistente de IA. ¿En qué puedo ayudarte hoy?';
+$string['teacher'] = 'Profesor';
+$string['student'] = 'Estudiante';
 
 // Settings.
 $string['avatar'] = 'Avatar del Tutor-IA';
