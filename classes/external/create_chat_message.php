@@ -72,7 +72,7 @@ class create_chat_message extends external_api {
      * @since Moodle 4.5
      */
     public static function execute($courseid, $message, $meta = '{}'): array {
-        global $CFG;
+        global $CFG, $USER;
 
         // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -98,6 +98,9 @@ class create_chat_message extends external_api {
         if ($metaarray === null) {
             $metaarray = [];
         }
+
+        // Add userid to metadata from backend.
+        $metaarray['userid'] = $USER->id;
 
         // Get or create session using only course ID (cmid is sent in metadata).
         $session = $tutoriaapi->start_session($params['courseid']);
