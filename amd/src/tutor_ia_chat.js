@@ -333,6 +333,9 @@ define([
                 if (this.pageContext.pageid) {
                     metaData.pageid = this.pageContext.pageid;
                 }
+                if(this.cmId) {
+                    metaData.cmid = parseInt(this.cmId, 10);
+                }
 
                 // Debug logging.
                 window.console.log('Tutor-IA sending metadata:', metaData);
@@ -341,7 +344,6 @@ define([
                     methodname: "local_dttutor_create_chat_message",
                     args: {
                         courseid: parseInt(this.courseId, 10),
-                        cmid: parseInt(this.cmId, 10),
                         message: this.sanitizeString(messageText.substring(0, 4000)),
                         meta: JSON.stringify(metaData)
                     },
