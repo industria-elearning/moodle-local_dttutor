@@ -71,7 +71,7 @@ class create_chat_message extends external_api {
      * @since Moodle 4.5
      */
     public static function execute($courseid, $message, $meta = '{}'): array {
-        global $CFG, $USER;
+        global $USER;
 
         // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
