@@ -60,3 +60,36 @@ $string['cachedef_sessions'] = 'Caché para sesiones de chat del Tutor-IA';
 
 // Capabilities.
 $string['dttutor:use'] = 'Usar el Tutor-IA';
+
+// AI Mode.
+$string['aimode_button'] = 'Modo IA';
+$string['aimode_settings'] = 'Configuración del Modo IA';
+$string['aimode_settings_desc'] = 'Configurar el modal de pantalla completa del Modo IA que aparece en la barra de navegación';
+$string['aimode_enabled'] = 'Habilitar Modo IA';
+$string['aimode_enabled_desc'] = 'Mostrar el botón de Modo IA en la barra de navegación del sitio. Los usuarios pueden hacer clic para abrir una interfaz de chat IA de pantalla completa.';
+$string['aimode_welcome'] = 'Mensaje de Bienvenida';
+$string['aimode_welcome_desc'] = 'Mensaje de saludo mostrado cuando se abre el modal del Modo IA. Marcadores disponibles: {username} (nombre completo), {firstname}, {lastname}, {email}, {sitename}, {coursename}';
+$string['aimode_quick_options'] = 'Opciones de Inicio Rápido';
+$string['aimode_quick_options_desc'] = 'Array JSON de botones de inicio rápido. Formato: [{"icon":"emoji", "label":"Texto del Botón", "prompt":"Mensaje prellenado"}]. Los usuarios pueden hacer clic en estos para iniciar rápidamente una conversación.';
+$string['aimode_placeholder'] = 'Pregúntale a la IA cualquier cosa...';
+$string['aimode_close'] = 'Cerrar Modo IA';
+
+// Placeholders.
+$string['placeholder_username'] = 'Nombre completo del usuario';
+$string['placeholder_firstname'] = 'Nombre del usuario';
+$string['placeholder_lastname'] = 'Apellido del usuario';
+$string['placeholder_email'] = 'Correo electrónico del usuario';
+$string['placeholder_sitename'] = 'Nombre del sitio';
+$string['placeholder_coursename'] = 'Nombre del curso actual';
+
+// Quick Options Manager.
+$string['quickoption_icon'] = 'Ícono';
+$string['quickoption_label'] = 'Etiqueta';
+$string['quickoption_prompt'] = 'Mensaje';
+$string['quickoption_icon_help'] = 'Emoji o símbolo';
+$string['quickoption_add_new'] = 'Agregar Nueva Opción Rápida';
+$string['quickoption_help_title'] = 'Cómo usar:';
+$string['quickoption_help_text'] = 'Use la tabla de arriba para gestionar sus opciones de inicio rápido. Puede agregar, eliminar y reordenar opciones. Cada opción requiere un ícono (emoji), una etiqueta (texto del botón) y un mensaje (mensaje prellenado). Los usuarios verán estos como botones clicables cuando abran el Modo IA.';
+$string['quickoption_validation_error'] = 'Por favor complete todos los campos (ícono, etiqueta y mensaje)';
+$string['quickoption_delete_confirm'] = '¿Está seguro de que desea eliminar esta opción?';
+$string['error_invalid_json'] = 'Formato JSON inválido';
