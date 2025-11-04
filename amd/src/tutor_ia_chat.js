@@ -333,7 +333,7 @@ define([
                 if (this.pageContext.pageid) {
                     metaData.pageid = this.pageContext.pageid;
                 }
-                if(this.cmId) {
+                if (this.cmId) {
                     metaData.cmid = parseInt(this.cmId, 10);
                 }
 
