@@ -32,19 +32,22 @@ use moodle_exception;
  * HTTP client for Tutor-IA Chat API
  *
  * @package    local_dttutor
+ * @category   local
  * @copyright  2025 Industria Elearning <info@industriaelearning.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class tutoria_api {
 
-    /** @var string $baseurl Base URL of the Tutor-IA API. */
-    private $ai_service;
+    /** @var ai_services_api AI services API client instance. */
+    private ai_services_api $ai_service;
 
-    /** @var cache $cache Cache instance for storing sessions. */
-    private $cache;
+    /** @var cache Cache instance for storing sessions. */
+    private cache $cache;
 
     /**
      * Constructor to initialize the Tutor-IA API client.
+     *
+     * @since Moodle 4.5
      */
     public function __construct() {
         $this->ai_service = new ai_services_api();
@@ -55,24 +58,21 @@ class tutoria_api {
      * Start a new chat session or retrieve an existing one from cache.
      *
      * @param int $courseid Course ID.
-     * @param int $cmid Course Module ID (0 if only in course).
      * @return array Session data including session_id, ready status, and TTL.
      * @throws moodle_exception If the session creation fails.
+     * @since Moodle 4.5
      */
-    public function start_session(int $courseid, int $cmid = 0): array {
-        // Check cache first. Include cmid in cache key if present.
-        $cachekey = ($cmid > 0) ? "session_{$courseid}_{$cmid}" : "session_{$courseid}";
+    public function start_session(int $courseid): array {
+        // Check cache first using course ID only.
+        $cachekey = "session_{$courseid}";
         $cached = $this->cache->get($cachekey);
 
         if ($cached && $this->is_session_valid($cached)) {
             return $cached;
         }
 
-        // Create new session. Include cmid if present.
+        // Create new session with course ID only (cmid sent in metadata with messages).
         $requestdata = ['course_id' => (string)$courseid];
-        if ($cmid > 0) {
-            $requestdata['cm_id'] = (string)$cmid;
-        }
 
         $response = $this->ai_service->request('POST', '/chat/start', $requestdata);
 
@@ -91,13 +91,14 @@ class tutoria_api {
      *
      * @param string $sessionid Session ID.
      * @param string $content Message content.
-     * @param array $meta Optional metadata.
+     * @param array $meta Optional metadata (includes cmid if in module context).
      * @return array Response indicating if message was enqueued.
      * @throws moodle_exception If sending fails.
+     * @since Moodle 4.5
      */
     public function send_message(string $sessionid, string $content, array $meta = []): array {
         global $USER;
-        return $this->ai_service->request('POST','/chat/message', [
+        return $this->ai_service->request('POST', '/chat/message', [
             'session_id' => $sessionid,
             'content' => $content,
             'meta' => $meta,
@@ -110,6 +111,7 @@ class tutoria_api {
      *
      * @param string $sessionid Session ID.
      * @return string Full stream URL with session parameter.
+     * @since Moodle 4.5
      */
     public function get_stream_url(string $sessionid): string {
         return $this->ai_service->get_streaming_url_for_session($sessionid);
@@ -121,6 +123,7 @@ class tutoria_api {
      * @param string $sessionid Session ID to delete.
      * @return array Response with deletion status.
      * @throws moodle_exception If deletion fails.
+     * @since Moodle 4.5
      */
     public function delete_session(string $sessionid): array {
         return $this->ai_service->request('DELETE', '/chat/session/'.$sessionid);

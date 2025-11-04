@@ -30,6 +30,8 @@ $string['close'] = 'Close Tutor AI';
 $string['sendmessage'] = 'Send message';
 $string['typemessage'] = 'Type your message...';
 $string['welcomemessage'] = 'Hello! I\'m your AI assistant. How can I help you today?';
+$string['teacher'] = 'Teacher';
+$string['student'] = 'Student';
 
 // Settings.
 $string['avatar'] = 'Tutor-AI avatar';

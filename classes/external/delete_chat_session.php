@@ -33,13 +33,13 @@ use local_dttutor\httpclient\tutoria_api;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/externallib.php');
-
 /**
  * Class delete_chat_session
  *
  * Deletes a Tutor-IA chat session to free up resources.
  *
  * @package    local_dttutor
+ * @category   external
  * @copyright  2025 Industria Elearning <info@industriaelearning.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -49,6 +49,7 @@ class delete_chat_session extends external_api {
      * Returns description of method parameters.
      *
      * @return external_function_parameters
+     * @since Moodle 4.5
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
@@ -63,6 +64,7 @@ class delete_chat_session extends external_api {
      * @return array Deletion status.
      * @throws \invalid_parameter_exception
      * @throws \moodle_exception
+     * @since Moodle 4.5
      */
     public static function execute($sessionid): array {
         // Validate parameters.
@@ -94,6 +96,7 @@ class delete_chat_session extends external_api {
      * Returns description of method result value.
      *
      * @return external_single_structure
+     * @since Moodle 4.5
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([

@@ -14,7 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Tutor-IA Chat - Drawer y funcionalidad del chat (basado en aiplacement_courseassist)
+ * Tutor-IA Chat - Drawer and chat functionality (based on aiplacement_courseassist)
  *
  * @module     local_dttutor/tutor_ia_chat
  * @copyright  2025 Datacurso
@@ -65,13 +65,88 @@ define([
             this.closeButton = document.querySelector(SELECTORS.CLOSE_BTN);
             this.jumpTo = document.querySelector(SELECTORS.JUMP_TO);
 
-            // Detectar posición del drawer (right/left) desde data-position.
+            // Detect drawer position (right/left) from data-position.
             this.position = this.drawerElement ? this.drawerElement.getAttribute('data-position') || 'right' : 'right';
             this.pageClass = this.position === 'left' ? 'show-drawer-left' : 'show-drawer-right';
-            // Clase para identificar que el drawer del Tutor-IA está abierto (para mover footer-popover).
+            // Class to identify that Tutor-IA drawer is open (to move footer-popover).
             this.bodyClass = this.position === 'left' ? 'tutor-ia-drawer-open-left' : 'tutor-ia-drawer-open-right';
 
+            // Capture contextual information from the page.
+            this.pageContext = this.detectPageContext();
+
             this.init();
+        }
+
+        /**
+         * Detects the current page context (page type and relevant parameters).
+         *
+         * @returns {Object} Object with page contextual information
+         */
+        detectPageContext() {
+            const context = {};
+
+            // Method 1: Try to get pagetype from M.cfg.
+            if (typeof M !== 'undefined' && M.cfg && M.cfg.pagetype) {
+                context.pagetype = M.cfg.pagetype;
+            }
+
+            // Method 2: If not available, use body id/class (more reliable).
+            if (!context.pagetype) {
+                const bodyId = document.body.id;
+                if (bodyId) {
+                    // Body id format: "page-mod-forum-discuss" or "page-course-view-topics".
+                    // Extract the part after "page-".
+                    context.pagetype = bodyId.replace('page-', '');
+                }
+            }
+
+            // Method 3: Fallback using body classes.
+            if (!context.pagetype) {
+                const bodyClasses = document.body.className;
+                // Look for classes with format "path-mod-forum", "pagelayout-incourse", etc.
+                const pathMatch = bodyClasses.match(/path-([\w-]+)/);
+                if (pathMatch) {
+                    context.pagetype = pathMatch[1];
+                }
+            }
+
+            // Get URL parameters.
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // Extract common parameters based on page type.
+            if (context.pagetype && context.pagetype.includes('forum')) {
+                // Forum discussion ID.
+                if (urlParams.has('d')) {
+                    context.discussionid = parseInt(urlParams.get('d'), 10);
+                }
+                // Forum ID.
+                if (urlParams.has('f')) {
+                    context.forumid = parseInt(urlParams.get('f'), 10);
+                }
+            } else if (context.pagetype && context.pagetype.includes('quiz')) {
+                // Quiz attempt ID.
+                if (urlParams.has('attempt')) {
+                    context.attemptid = parseInt(urlParams.get('attempt'), 10);
+                }
+            } else if (context.pagetype && context.pagetype.includes('assign')) {
+                // Assignment ID.
+                if (urlParams.has('id')) {
+                    context.assignid = parseInt(urlParams.get('id'), 10);
+                }
+            } else if (context.pagetype && context.pagetype.includes('wiki')) {
+                // Wiki page ID.
+                if (urlParams.has('pageid')) {
+                    context.pageid = parseInt(urlParams.get('pageid'), 10);
+                }
+            }
+
+            // Debug logging.
+            window.console.log('Tutor-IA Page Context:', context);
+            window.console.log('Body ID:', document.body.id);
+            window.console.log('Body Classes:', document.body.className);
+            window.console.log('URL Params:', window.location.search);
+
+            return context;
         }
 
         init() {
@@ -80,7 +155,7 @@ define([
         }
 
         registerEventListeners() {
-            // Toggle button
+            // Toggle button.
             if (this.toggleButton) {
                 this.toggleButton.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -88,7 +163,7 @@ define([
                 });
             }
 
-            // Close button
+            // Close button.
             if (this.closeButton) {
                 this.closeButton.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -96,12 +171,12 @@ define([
                 });
             }
 
-            // Send button
+            // Send button.
             this.root.find(SELECTORS.SEND_BTN).on('click', () => {
                 this.sendMessage();
             });
 
-            // Input - Enter to send
+            // Input - Enter to send.
             const input = this.root.find(SELECTORS.INPUT);
             input.on('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -110,27 +185,27 @@ define([
                 }
             });
 
-            // Auto-resize textarea
+            // Auto-resize textarea.
             input.on('input', function() {
                 this.style.height = 'auto';
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
 
-            // Close on Escape key
+            // Close on Escape key.
             document.addEventListener('keydown', (e) => {
                 if (this.isDrawerOpen() && e.key === 'Escape') {
                     this.closeDrawer();
                 }
             });
 
-            // Close drawer if message drawer opens
+            // Close drawer if message drawer opens.
             PubSub.subscribe('core_message/drawer_shown', () => {
                 if (this.isDrawerOpen()) {
                     this.closeDrawer();
                 }
             });
 
-            // Jump to functionality
+            // Jump to functionality.
             if (this.jumpTo) {
                 this.jumpTo.addEventListener('focus', () => {
                     if (this.closeButton) {
@@ -149,23 +224,23 @@ define([
                 return;
             }
 
-            // Close message drawer if open
+            // Close message drawer if open.
             PubSub.publish('core_message/hide', {});
 
             this.drawerElement.classList.add('show');
             this.drawerElement.setAttribute('tabindex', '0');
 
-            // Add padding to page (redistribute space) - usa this.pageClass (show-drawer-left o show-drawer-right)
+            // Add padding to page (redistribute space) - uses this.pageClass (show-drawer-left or show-drawer-right).
             if (this.pageElement && !this.pageElement.classList.contains(this.pageClass)) {
                 this.pageElement.classList.add(this.pageClass);
             }
 
-            // Add class to body to identify Tutor-IA drawer is open (for footer-popover positioning)
+            // Add class to body to identify Tutor-IA drawer is open (for footer-popover positioning).
             if (this.bodyElement && !this.bodyElement.classList.contains(this.bodyClass)) {
                 this.bodyElement.classList.add(this.bodyClass);
             }
 
-            // Focus management
+            // Focus management.
             if (this.jumpTo) {
                 this.jumpTo.setAttribute('tabindex', 0);
                 this.jumpTo.focus();
@@ -180,17 +255,17 @@ define([
             this.drawerElement.classList.remove('show');
             this.drawerElement.setAttribute('tabindex', '-1');
 
-            // Remove padding from page - usa this.pageClass
+            // Remove padding from page - uses this.pageClass.
             if (this.pageElement && this.pageElement.classList.contains(this.pageClass)) {
                 this.pageElement.classList.remove(this.pageClass);
             }
 
-            // Remove class from body
+            // Remove class from body.
             if (this.bodyElement && this.bodyElement.classList.contains(this.bodyClass)) {
                 this.bodyElement.classList.remove(this.bodyClass);
             }
 
-            // Focus management
+            // Focus management.
             if (this.jumpTo) {
                 this.jumpTo.setAttribute('tabindex', -1);
             }
@@ -217,7 +292,7 @@ define([
             }
 
             if (messageText.length > 4000) {
-                this.addMessage('[Error] El mensaje es demasiado largo. Máximo 4000 caracteres.', 'ai');
+                this.addMessage('[Error] Message is too long. Maximum 4000 characters.', 'ai');
                 return;
             }
 
@@ -231,23 +306,53 @@ define([
                 this.scrollToBottom();
                 this.showTypingIndicator();
 
+                // Build metadata object with contextual information.
+                const metaData = {
+                    user_role: 'Student',
+                    timestamp: Math.floor(Date.now() / 1000)
+                };
+
+                // Add page information if available.
+                if (this.pageContext.pagetype) {
+                    metaData.page = this.pageContext.pagetype;
+                }
+
+                // Add specific contextual parameters.
+                if (this.pageContext.discussionid) {
+                    metaData.discussionid = this.pageContext.discussionid;
+                }
+                if (this.pageContext.forumid) {
+                    metaData.forumid = this.pageContext.forumid;
+                }
+                if (this.pageContext.attemptid) {
+                    metaData.attemptid = this.pageContext.attemptid;
+                }
+                if (this.pageContext.assignid) {
+                    metaData.assignid = this.pageContext.assignid;
+                }
+                if (this.pageContext.pageid) {
+                    metaData.pageid = this.pageContext.pageid;
+                }
+                if (this.cmId) {
+                    metaData.cmid = parseInt(this.cmId, 10);
+                }
+
+                // Debug logging.
+                window.console.log('Tutor-IA sending metadata:', metaData);
+
                 const requests = Ajax.call([{
                     methodname: "local_dttutor_create_chat_message",
                     args: {
                         courseid: parseInt(this.courseId, 10),
-                        cmid: parseInt(this.cmId, 10),
                         message: this.sanitizeString(messageText.substring(0, 4000)),
-                        meta: JSON.stringify({
-                            user_role: 'Estudiante',
-                            timestamp: Math.floor(Date.now() / 1000)
-                        })
+                        meta: JSON.stringify(metaData)
                     },
                 }]);
 
                 requests[0]
                     .then((data) => {
                         if (!data || !data.stream_url) {
-                            throw new Error('URL de stream ausente en la respuesta');
+                            throw new Error('Stream URL missing in response');
                         }
                         this.currentSessionId = data.session_id;
                         this.startSSE(data.stream_url, sendBtn);
@@ -255,13 +360,13 @@ define([
                     })
                     .catch((err) => {
                         this.hideTypingIndicator();
-                        this.addMessage('[Error] ' + (err.message || 'Error desconocido'), 'ai');
+                        this.addMessage('[Error] ' + (err.message || 'Unknown error'), 'ai');
                         sendBtn.prop('disabled', false);
                         Notification.exception(err);
                     });
             } catch (error) {
                 this.hideTypingIndicator();
-                this.addMessage('[Error] Error interno: ' + error.message, 'ai');
+                this.addMessage('[Error] Internal error: ' + error.message, 'ai');
                 sendBtn.prop('disabled', false);
             }
         }
@@ -272,7 +377,7 @@ define([
                 this.currentEventSource = es;
                 this.streaming = true;
                 let firstToken = true;
-                let messageCompleted = false; // Flag para saber si el mensaje se completó correctamente
+                let messageCompleted = false; // Flag to track if message completed successfully.
 
                 es.addEventListener('token', (ev) => {
                     try {
@@ -290,30 +395,30 @@ define([
                     }
                 });
 
-                // Escuchar evento 'done' (el servidor envía 'done', no 'message_completed')
+                // Listen for 'done' event (server sends 'done', not 'message_completed').
                 es.addEventListener('done', () => {
-                    messageCompleted = true; // Marcar que el mensaje se completó correctamente
+                    messageCompleted = true; // Mark that message completed successfully.
                     this.finalizeStream(sendBtn);
                 });
 
-                // Mantener compatibilidad con 'message_completed' por si cambia el servidor
+                // Maintain compatibility with 'message_completed' in case server changes.
                 es.addEventListener('message_completed', () => {
                     messageCompleted = true;
                     this.finalizeStream(sendBtn);
                 });
 
                 es.addEventListener('error', (e) => {
-                    // Solo mostrar error si el mensaje NO se completó correctamente
+                    // Only show error if message did NOT complete successfully.
                     if (!messageCompleted) {
                         window.console.error('SSE error:', e);
-                        this.appendToAIMessage('\n[Conexión interrumpida]');
+                        this.appendToAIMessage('\n[Connection interrupted]');
                         this.finalizeStream(sendBtn);
                     }
-                    // Si messageCompleted=true, el error es esperado (cierre normal después de completar)
+                    // If messageCompleted=true, error is expected (normal closure after completion).
                 });
             } catch (error) {
                 window.console.error('Error starting SSE:', error);
-                this.addMessage('[Error] No se pudo establecer conexión SSE', 'ai');
+                this.addMessage('[Error] Could not establish SSE connection', 'ai');
                 this.finalizeStream(sendBtn);
             }
         }

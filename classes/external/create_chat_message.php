@@ -33,13 +33,13 @@ use local_dttutor\httpclient\tutoria_api;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/externallib.php');
-
 /**
  * Class create_chat_message
  *
  * Creates a chat message and returns streaming URL for Tutor-IA responses.
  *
  * @package    local_dttutor
+ * @category   external
  * @copyright  2025 Industria Elearning <info@industriaelearning.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -49,11 +49,11 @@ class create_chat_message extends external_api {
      * Returns description of method parameters.
      *
      * @return external_function_parameters
+     * @since Moodle 4.5
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'courseid' => new external_value(PARAM_INT, 'Course ID', VALUE_REQUIRED),
-            'cmid' => new external_value(PARAM_INT, 'Course Module ID (0 if only in course)', VALUE_DEFAULT, 0),
             'message' => new external_value(PARAM_RAW, 'User message', VALUE_REQUIRED),
             'meta' => new external_value(PARAM_RAW, 'Optional metadata (JSON)', VALUE_DEFAULT, '{}'),
         ]);
@@ -63,20 +63,19 @@ class create_chat_message extends external_api {
      * Create chat message and initialize Tutor-IA session.
      *
      * @param int $courseid Course ID.
-     * @param int $cmid Course Module ID (0 if only in course).
      * @param string $message User message text.
      * @param string $meta Optional metadata as JSON string.
      * @return array Session data with streaming URL.
      * @throws \invalid_parameter_exception
      * @throws \moodle_exception
+     * @since Moodle 4.5
      */
-    public static function execute($courseid, $cmid = 0, $message, $meta = '{}'): array {
-        global $CFG, $SITE;
+    public static function execute($courseid, $message, $meta = '{}'): array {
+        global $CFG, $USER;
 
         // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
-            'cmid' => $cmid,
             'message' => $message,
             'meta' => $meta,
         ]);
@@ -93,20 +92,23 @@ class create_chat_message extends external_api {
         // Initialize Tutor-IA API client.
         $tutoriaapi = new tutoria_api();
 
-        // Get or create session using site identifier and optional cmid.
-        $session = $tutoriaapi->start_session($params['courseid'], $params['cmid']);
-
-        if (!isset($session['ready']) || !$session['ready']) {
-            throw new \moodle_exception('sessionnotready', 'local_dttutor');
-        }
-
         // Parse metadata.
         $metaarray = json_decode($params['meta'], true);
         if ($metaarray === null) {
             $metaarray = [];
         }
 
-        // Send message to Tutor-IA.
+        // Add userid to metadata from backend.
+        $metaarray['userid'] = $USER->id;
+
+        // Get or create session using only course ID (cmid is sent in metadata).
+        $session = $tutoriaapi->start_session($params['courseid']);
+
+        if (!isset($session['ready']) || !$session['ready']) {
+            throw new \moodle_exception('sessionnotready', 'local_dttutor');
+        }
+
+        // Send message to Tutor-IA with metadata (includes cmid).
         $tutoriaapi->send_message($session['session_id'], $params['message'], $metaarray);
 
         // Build streaming URL with authentication.
@@ -123,6 +125,7 @@ class create_chat_message extends external_api {
      * Returns description of method result value.
      *
      * @return external_single_structure
+     * @since Moodle 4.5
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
