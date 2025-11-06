@@ -1,0 +1,93 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dttutor/admin_setting_quick_options
+
+    Quick Start Options visual editor
+
+    Context variables:
+    * id - Field ID
+    * name - Field name
+    * value - Current JSON value
+    * options - Array of current options
+    * forceltr - Force LTR direction
+
+    Example context (json):
+    {
+        "id": "id_s_local_dttutor_aimode_quick_options",
+        "name": "s_local_dttutor_aimode_quick_options",
+        "value": "[...]",
+        "options": [
+            {"icon": "✍️", "label": "Write", "prompt": "Help me write..."}
+        ]
+    }
+}}
+<div class="quick-options-manager" id="{{ id }}_manager" data-fieldname="{{ name }}">
+    <!-- Hidden field that stores the JSON -->
+    <input type="hidden" name="{{ name }}" id="{{ id }}" value="{{ value }}" {{#forceltr}}dir="ltr"{{/forceltr}}>
+
+    <!-- Current options list -->
+    <div class="quick-options-list">
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">{{#str}}quickoption_icon, local_dttutor{{/str}}</th>
+                    <th style="width: 150px;">{{#str}}quickoption_label, local_dttutor{{/str}}</th>
+                    <th>{{#str}}quickoption_prompt, local_dttutor{{/str}}</th>
+                    <th style="width: 100px;">{{#str}}quickoption_actions, local_dttutor{{/str}}</th>
+                </tr>
+            </thead>
+            <tbody data-region="options-tbody">
+                <!-- Options will be rendered here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add new option form -->
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">{{#str}}quickoption_add_new, local_dttutor{{/str}}</h5>
+            <div class="row">
+                <div class="col-md-2">
+                    <label for="{{ id }}_new_icon">{{#str}}quickoption_icon, local_dttutor{{/str}}</label>
+                    <input type="text" class="form-control" id="{{ id }}_new_icon" data-field="new-icon" placeholder="✨" maxlength="10">
+                    <small class="form-text text-muted">{{#str}}quickoption_icon_help, local_dttutor{{/str}}</small>
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ id }}_new_label">{{#str}}quickoption_label, local_dttutor{{/str}}</label>
+                    <input type="text" class="form-control" id="{{ id }}_new_label" data-field="new-label" placeholder="Label" maxlength="50">
+                </div>
+                <div class="col-md-5">
+                    <label for="{{ id }}_new_prompt">{{#str}}quickoption_prompt, local_dttutor{{/str}}</label>
+                    <input type="text" class="form-control" id="{{ id }}_new_prompt" data-field="new-prompt" placeholder="Pre-filled message..." maxlength="200">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary w-100" data-action="add-option">
+                        <i class="icon fa fa-plus fa-fw" aria-hidden="true"></i>
+                        {{#str}}quickoption_add, local_dttutor{{/str}}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help text -->
+    <div class="alert alert-info mt-3">
+        <strong>{{#str}}quickoption_help_title, local_dttutor{{/str}}</strong>
+        <p class="mb-0">{{#str}}quickoption_help_text, local_dttutor{{/str}}</p>
+    </div>
+</div>

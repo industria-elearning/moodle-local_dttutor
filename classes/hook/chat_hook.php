@@ -35,6 +35,7 @@ class chat_hook {
      */
     public static function before_footer_html_generation(before_footer_html_generation $hook): void {
         self::add_float_chat($hook);
+        self::add_ai_modal($hook);
     }
 
     /**
@@ -247,5 +248,88 @@ class chat_hook {
         }
 
         return 'student';
+    }
+
+    /**
+     * Adds the AI Mode modal to all pages for authenticated users.
+     *
+     * @param before_footer_html_generation $hook The hook event.
+     * @since Moodle 4.5
+     */
+    private static function add_ai_modal(before_footer_html_generation $hook): void {
+        global $PAGE, $USER, $OUTPUT, $COURSE;
+
+        // Check if AI Mode is enabled.
+        if (!get_config('local_dttutor', 'aimode_enabled')) {
+            return;
+        }
+
+        // Only for authenticated users.
+        if (!isloggedin() || isguestuser()) {
+            return;
+        }
+
+        // Detect cmid if in module context.
+        $cmid = 0;
+        $context = $PAGE->context;
+        if ($context->contextlevel == CONTEXT_MODULE) {
+            $cmid = $context->instanceid;
+        }
+
+        $courseid = $COURSE->id ?? 0;
+        if ($courseid <= 1) {
+            $courseid = 0; // Not in a course.
+        }
+
+        // Get configuration.
+        $welcomemsg = get_config('local_dttutor', 'aimode_welcome');
+        if (empty($welcomemsg)) {
+            $welcomemsg = 'Hello {username}';
+        }
+
+        // Replace placeholders in welcome message.
+        $welcomemsg = \local_dttutor\helpers\placeholder_helper::replace_placeholders($welcomemsg);
+
+        // Parse quick options JSON.
+        $quickoptionsjson = get_config('local_dttutor', 'aimode_quick_options');
+        $quickoptions = [];
+        if (!empty($quickoptionsjson)) {
+            $decoded = json_decode($quickoptionsjson, true);
+            if (is_array($decoded)) {
+                $quickoptions = $decoded;
+            }
+        }
+
+        // Fallback to default if empty or invalid.
+        if (empty($quickoptions)) {
+            $quickoptions = [
+                ['icon' => '✍️', 'label' => 'Write', 'prompt' => 'Help me write...'],
+                ['icon' => '🔍', 'label' => 'Research', 'prompt' => 'Research about...'],
+                ['icon' => '📚', 'label' => 'Learn', 'prompt' => 'Teach me about...'],
+            ];
+        }
+
+        // Generate unique ID.
+        $uniqid = uniqid('aimodal_');
+
+        // Prepare data for template.
+        $modaldata = [
+            'uniqid' => $uniqid,
+            'courseid' => $courseid,
+            'cmid' => $cmid,
+            'userid' => $USER->id,
+            'welcomemessage' => $welcomemsg,
+            'placeholder' => get_string('aimode_placeholder', 'local_dttutor'),
+            'quickoptions' => $quickoptions,
+        ];
+
+        // Render modal template.
+        $modal = $OUTPUT->render_from_template('local_dttutor/ai_modal', $modaldata);
+
+        // Initialize JavaScript module.
+        $PAGE->requires->js_call_amd('local_dttutor/ai_modal', 'init');
+
+        // Add modal HTML to footer.
+        $hook->add_html($modal);
     }
 }

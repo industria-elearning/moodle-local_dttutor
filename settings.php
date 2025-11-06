@@ -103,4 +103,48 @@ if ($hassiteconfig) {
             ]
         )
     );
+
+    // AI Mode Settings Section.
+    $settings->add(new admin_setting_heading(
+        'local_dttutor/aimodesettings',
+        get_string('aimode_settings', 'local_dttutor'),
+        get_string('aimode_settings_desc', 'local_dttutor')
+    ));
+
+    // Enable AI Mode.
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'local_dttutor/aimode_enabled',
+            get_string('aimode_enabled', 'local_dttutor'),
+            get_string('aimode_enabled_desc', 'local_dttutor'),
+            '0'
+        )
+    );
+
+    // Welcome Message.
+    $settings->add(
+        new admin_setting_configtext(
+            'local_dttutor/aimode_welcome',
+            get_string('aimode_welcome', 'local_dttutor'),
+            get_string('aimode_welcome_desc', 'local_dttutor'),
+            'Hello {username}',
+            PARAM_TEXT
+        )
+    );
+
+    // Quick Start Options (Visual Editor).
+    $defaultquickoptions = json_encode([
+        ['icon' => '✍️', 'label' => 'Write', 'prompt' => 'Help me write...'],
+        ['icon' => '🔍', 'label' => 'Research', 'prompt' => 'Research about...'],
+        ['icon' => '📚', 'label' => 'Learn', 'prompt' => 'Teach me about...'],
+    ], JSON_UNESCAPED_UNICODE);
+
+    $settings->add(
+        new \local_dttutor\admin_setting_quick_options(
+            'local_dttutor/aimode_quick_options',
+            get_string('aimode_quick_options', 'local_dttutor'),
+            get_string('aimode_quick_options_desc', 'local_dttutor'),
+            $defaultquickoptions
+        )
+    );
 }
