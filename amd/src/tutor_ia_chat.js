@@ -230,6 +230,11 @@ define([
             this.drawerElement.classList.add('show');
             this.drawerElement.setAttribute('tabindex', '0');
 
+            // Update toggle button aria-expanded.
+            if (this.toggleButton) {
+                this.toggleButton.setAttribute('aria-expanded', 'true');
+            }
+
             // Add padding to page (redistribute space) - uses this.pageClass (show-drawer-left or show-drawer-right).
             if (this.pageElement && !this.pageElement.classList.contains(this.pageClass)) {
                 this.pageElement.classList.add(this.pageClass);
@@ -254,6 +259,11 @@ define([
 
             this.drawerElement.classList.remove('show');
             this.drawerElement.setAttribute('tabindex', '-1');
+
+            // Update toggle button aria-expanded.
+            if (this.toggleButton) {
+                this.toggleButton.setAttribute('aria-expanded', 'false');
+            }
 
             // Remove padding from page - uses this.pageClass.
             if (this.pageElement && this.pageElement.classList.contains(this.pageClass)) {

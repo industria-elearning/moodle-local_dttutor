@@ -32,14 +32,13 @@ use moodle_exception;
  * HTTP client for Tutor-IA Chat API
  *
  * @package    local_dttutor
- * @category   local
+ * @category   classes
  * @copyright  2025 Industria Elearning <info@industriaelearning.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class tutoria_api {
-
     /** @var ai_services_api AI services API client instance. */
-    private ai_services_api $ai_service;
+    private ai_services_api $aiservice;
 
     /** @var cache Cache instance for storing sessions. */
     private cache $cache;
@@ -50,7 +49,7 @@ class tutoria_api {
      * @since Moodle 4.5
      */
     public function __construct() {
-        $this->ai_service = new ai_services_api();
+        $this->aiservice = new ai_services_api();
         $this->cache = cache::make('local_dttutor', 'sessions');
     }
 
@@ -74,7 +73,7 @@ class tutoria_api {
         // Create new session with course ID only (cmid sent in metadata with messages).
         $requestdata = ['course_id' => (string)$courseid];
 
-        $response = $this->ai_service->request('POST', '/chat/start', $requestdata);
+        $response = $this->aiservice->request('POST', '/chat/start', $requestdata);
 
         // Add creation timestamp for validation.
         $response['created_at'] = time();
@@ -98,7 +97,7 @@ class tutoria_api {
      */
     public function send_message(string $sessionid, string $content, array $meta = []): array {
         global $USER;
-        return $this->ai_service->request('POST', '/chat/message', [
+        return $this->aiservice->request('POST', '/chat/message', [
             'session_id' => $sessionid,
             'content' => $content,
             'meta' => $meta,
@@ -114,7 +113,7 @@ class tutoria_api {
      * @since Moodle 4.5
      */
     public function get_stream_url(string $sessionid): string {
-        return $this->ai_service->get_streaming_url_for_session($sessionid);
+        return $this->aiservice->get_streaming_url_for_session($sessionid);
     }
 
     /**
@@ -126,7 +125,7 @@ class tutoria_api {
      * @since Moodle 4.5
      */
     public function delete_session(string $sessionid): array {
-        return $this->ai_service->request('DELETE', '/chat/session/'.$sessionid);
+        return $this->aiservice->request('DELETE', '/chat/session/' . $sessionid);
     }
 
     /**

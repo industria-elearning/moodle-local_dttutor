@@ -44,7 +44,6 @@ require_once($CFG->libdir . '/externallib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class create_chat_message extends external_api {
-
     /**
      * Returns description of method parameters.
      *
@@ -134,5 +133,4 @@ class create_chat_message extends external_api {
             'expires_at' => new external_value(PARAM_INT, 'Session expiration timestamp'),
         ]);
     }
-
 }

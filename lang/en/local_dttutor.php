@@ -24,39 +24,42 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['pluginname'] = 'Tutor AI';
-$string['open'] = 'Open Tutor AI';
-$string['close'] = 'Close Tutor AI';
-$string['sendmessage'] = 'Send message';
-$string['typemessage'] = 'Type your message...';
-$string['welcomemessage'] = 'Hello! I\'m your AI assistant. How can I help you today?';
-$string['teacher'] = 'Teacher';
-$string['student'] = 'Student';
-
 // Settings.
+$string['apitoken'] = 'Authentication token';
+$string['apitoken_desc'] = 'Authentication token for the Tutor-AI API';
+$string['apiurl'] = 'Tutor-AI API URL';
+$string['apiurl_desc'] = 'Base URL of the Tutor-AI API (e.g., https://plugins-ai-dev.datacurso.com)';
 $string['avatar'] = 'Tutor-AI avatar';
 $string['avatar_desc'] = 'Select the avatar to display on the Tutor-AI floating chat button. If none is selected or the file does not exist, Avatar 1 will be used by default.';
 $string['avatar_position'] = 'Avatar position';
 $string['avatar_position_desc'] = 'Select the corner where the Tutor-AI floating chat button will be displayed. By default it appears in the bottom right corner.';
-$string['position_right'] = 'Bottom right corner';
-$string['position_left'] = 'Bottom left corner';
-$string['apiurl'] = 'Tutor-AI API URL';
-$string['apiurl_desc'] = 'Base URL of the Tutor-AI API (e.g., https://plugins-ai-dev.datacurso.com)';
-$string['apitoken'] = 'Authentication token';
-$string['apitoken_desc'] = 'Authentication token for the Tutor-AI API';
+
+// Cache.
+$string['cachedef_sessions'] = 'Cache for Tutor-AI chat sessions';
+
+// UI strings.
+$string['close'] = 'Close Tutor AI';
+
+// Capabilities.
+$string['dttutor:use'] = 'Use Tutor-AI';
+
 $string['enabled'] = 'Enable Chat';
 $string['enabled_desc'] = 'Enable or disable the Tutor-AI chat globally';
 
 // Error messages.
 $string['error_api_not_configured'] = 'API configuration is missing. Please check your settings.';
-$string['sessionnotready'] = 'The Tutor-AI session is not ready. Please try again.';
-$string['unauthorized'] = 'Unauthorized access';
 $string['error_api_request_failed'] = 'API request error: {$a}';
 $string['error_http_code'] = 'HTTP error {$a}';
 $string['error_invalid_api_response'] = 'Invalid API response';
 
-// Cache.
-$string['cachedef_sessions'] = 'Cache for Tutor-AI chat sessions';
-
-// Capabilities.
-$string['dttutor:use'] = 'Use Tutor-AI';
+$string['open'] = 'Open Tutor AI';
+$string['pluginname'] = 'Tutor AI';
+$string['position_left'] = 'Bottom left corner';
+$string['position_right'] = 'Bottom right corner';
+$string['sendmessage'] = 'Send message';
+$string['sessionnotready'] = 'The Tutor-AI session is not ready. Please try again.';
+$string['student'] = 'Student';
+$string['teacher'] = 'Teacher';
+$string['typemessage'] = 'Type your message...';
+$string['unauthorized'] = 'Unauthorized access';
+$string['welcomemessage'] = 'Hello! I\'m your AI assistant. How can I help you today?';
