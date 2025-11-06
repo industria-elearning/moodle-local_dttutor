@@ -26,7 +26,6 @@ use core\hook\output\before_footer_html_generation;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class chat_hook {
-
     /**
      * Hook to load the floating chat before the footer.
      *
@@ -48,10 +47,12 @@ class chat_hook {
         global $PAGE, $COURSE;
 
         // Check if we are on a course page.
-        if ($PAGE->pagelayout === 'course' ||
+        if (
+            $PAGE->pagelayout === 'course' ||
             $PAGE->pagelayout === 'incourse' ||
             strpos($PAGE->pagetype, 'course-') === 0 ||
-            strpos($PAGE->pagetype, 'mod-') === 0) {
+            strpos($PAGE->pagetype, 'mod-') === 0
+        ) {
             return true;
         }
 
@@ -65,8 +66,10 @@ class chat_hook {
         if (!$context) {
             return false;
         }
-        if ($context->contextlevel == CONTEXT_COURSE ||
-            $context->contextlevel == CONTEXT_MODULE) {
+        if (
+            $context->contextlevel == CONTEXT_COURSE ||
+            $context->contextlevel == CONTEXT_MODULE
+        ) {
             return true;
         }
 
@@ -233,8 +236,10 @@ class chat_hook {
 
         $context = \context_course::instance($COURSE->id);
 
-        if (has_capability('moodle/course:update', $context) ||
-            has_capability('moodle/course:manageactivities', $context)) {
+        if (
+            has_capability('moodle/course:update', $context) ||
+            has_capability('moodle/course:manageactivities', $context)
+        ) {
             return 'teacher';
         }
 

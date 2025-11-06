@@ -24,7 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-// Settings.
 $string['apitoken'] = 'Authentication token';
 $string['apitoken_desc'] = 'Authentication token for the Tutor-AI API';
 $string['apiurl'] = 'Tutor-AI API URL';
@@ -33,25 +32,15 @@ $string['avatar'] = 'Tutor-AI avatar';
 $string['avatar_desc'] = 'Select the avatar to display on the Tutor-AI floating chat button. If none is selected or the file does not exist, Avatar 1 will be used by default.';
 $string['avatar_position'] = 'Avatar position';
 $string['avatar_position_desc'] = 'Select the corner where the Tutor-AI floating chat button will be displayed. By default it appears in the bottom right corner.';
-
-// Cache.
 $string['cachedef_sessions'] = 'Cache for Tutor-AI chat sessions';
-
-// UI strings.
 $string['close'] = 'Close Tutor AI';
-
-// Capabilities.
 $string['dttutor:use'] = 'Use Tutor-AI';
-
 $string['enabled'] = 'Enable Chat';
 $string['enabled_desc'] = 'Enable or disable the Tutor-AI chat globally';
-
-// Error messages.
 $string['error_api_not_configured'] = 'API configuration is missing. Please check your settings.';
 $string['error_api_request_failed'] = 'API request error: {$a}';
 $string['error_http_code'] = 'HTTP error {$a}';
 $string['error_invalid_api_response'] = 'Invalid API response';
-
 $string['open'] = 'Open Tutor AI';
 $string['pluginname'] = 'Tutor AI';
 $string['position_left'] = 'Bottom left corner';

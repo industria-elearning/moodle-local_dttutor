@@ -32,7 +32,6 @@ use moodle_exception;
  * HTTP client for Tutor-IA Chat API
  *
  * @package    local_dttutor
- * @category   classes
  * @copyright  2025 Industria Elearning <info@industriaelearning.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

@@ -24,7 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-// Settings.
 $string['apitoken'] = 'Token de autenticación';
 $string['apitoken_desc'] = 'Token de autenticación para la API de Tutor-IA';
 $string['apiurl'] = 'URL de API Tutor-IA';
@@ -33,25 +32,15 @@ $string['avatar'] = 'Avatar del Tutor-IA';
 $string['avatar_desc'] = 'Selecciona el avatar que se mostrará en el botón flotante del chat Tutor-IA. Si no se selecciona ninguno o el archivo no existe, se usará el Avatar 1 por defecto.';
 $string['avatar_position'] = 'Posición del avatar';
 $string['avatar_position_desc'] = 'Selecciona la esquina donde se mostrará el botón flotante del chat Tutor-IA. Por defecto aparece en la esquina inferior derecha.';
-
-// Cache.
 $string['cachedef_sessions'] = 'Caché para sesiones de chat del Tutor-IA';
-
-// UI strings.
 $string['close'] = 'Cerrar Tutor IA';
-
-// Capabilities.
 $string['dttutor:use'] = 'Usar el Tutor-IA';
-
 $string['enabled'] = 'Habilitar Chat';
 $string['enabled_desc'] = 'Habilitar o deshabilitar el chat de Tutor-IA globalmente';
-
-// Error messages.
 $string['error_api_not_configured'] = 'Falta la configuración de la API. Por favor, verifica tus ajustes.';
 $string['error_api_request_failed'] = 'Error en la solicitud a la API: {$a}';
 $string['error_http_code'] = 'Error HTTP {$a}';
 $string['error_invalid_api_response'] = 'Respuesta inválida de la API';
-
 $string['open'] = 'Abrir Tutor IA';
 $string['pluginname'] = 'Tutor IA';
 $string['position_left'] = 'Esquina inferior izquierda';
