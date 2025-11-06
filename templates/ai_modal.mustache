@@ -1,0 +1,97 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dttutor/ai_modal
+
+    AI Mode fullscreen modal template.
+
+    Context variables:
+    * uniqid - Unique ID for this modal instance
+    * courseid - Current course ID
+    * cmid - Current course module ID (0 if not in module)
+    * userid - Current user ID
+    * welcomemessage - Welcome message with placeholders replaced
+    * placeholder - Input placeholder text
+    * quickoptions - Array of quick start options [{icon, label, prompt}]
+
+    Example context (json):
+    {
+        "uniqid": "aimodal_123",
+        "courseid": 2,
+        "cmid": 0,
+        "userid": 5,
+        "welcomemessage": "Hello, John Doe",
+        "placeholder": "Ask AI anything...",
+        "quickoptions": [
+            {"icon": "✍️", "label": "Write", "prompt": "Help me write..."},
+            {"icon": "🔍", "label": "Research", "prompt": "Research about..."}
+        ]
+    }
+}}
+<div class="ai-modal-backdrop" data-region="ai-modal" data-uniqid="{{ uniqid }}" data-courseid="{{ courseid }}" data-cmid="{{ cmid }}" data-userid="{{ userid }}" tabindex="-1" style="display: none;">
+    <div class="ai-modal-container">
+        <!-- Header with close button -->
+        <div class="ai-modal-header">
+            <button class="ai-modal-close-btn" data-action="close-ai-modal" aria-label="{{#str}}aimode_close, local_dttutor{{/str}}">
+                <i class="icon fa fa-times fa-fw" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="ai-modal-body">
+            <!-- Welcome Message -->
+            <div class="ai-modal-welcome">
+                {{{ welcomemessage }}}
+            </div>
+
+            <!-- Messages Area (hidden initially, shown when conversation starts) -->
+            <div class="ai-modal-messages-container" data-region="ai-modal-messages" style="display: none;">
+                <div class="ai-modal-messages-scroll">
+                    <!-- Messages will be inserted here dynamically -->
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="ai-modal-input-container">
+                <div class="ai-modal-input-wrapper">
+                    <textarea
+                        class="ai-modal-input"
+                        data-region="ai-modal-input"
+                        placeholder="{{ placeholder }}"
+                        rows="1"
+                        maxlength="4000"
+                    ></textarea>
+                    <div class="ai-modal-input-actions">
+                        <button class="ai-modal-send-btn" data-action="send-ai-message" aria-label="{{#str}}sendmessage, local_dttutor{{/str}}">
+                            <i class="icon fa fa-paper-plane fa-fw" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Start Options -->
+                <div class="ai-modal-quick-options" data-region="quick-options">
+                    {{# quickoptions }}
+                    <button class="quick-option-btn" data-action="quick-option" data-prompt="{{ prompt }}" type="button">
+                        <span class="quick-option-icon">{{{ icon }}}</span>
+                        <span class="quick-option-label">{{ label }}</span>
+                    </button>
+                    {{/ quickoptions }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
