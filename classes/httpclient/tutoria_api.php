@@ -116,6 +116,23 @@ class tutoria_api {
     }
 
     /**
+     * Get chat history for a session.
+     *
+     * @param string $sessionid Session ID.
+     * @param int $limit Maximum number of messages to return (default: 20).
+     * @param int $offset Number of messages to skip for pagination (default: 0).
+     * @return array Response with messages array and pagination info.
+     * @throws moodle_exception If the request fails.
+     * @since Moodle 4.5
+     */
+    public function get_history(string $sessionid, int $limit = 20, int $offset = 0): array {
+        $endpoint = '/chat/history?session_id=' . urlencode($sessionid) .
+                    '&limit=' . $limit .
+                    '&offset=' . $offset;
+        return $this->aiservice->request('GET', $endpoint);
+    }
+
+    /**
      * Delete a chat session.
      *
      * @param string $sessionid Session ID to delete.

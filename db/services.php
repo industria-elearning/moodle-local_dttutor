@@ -33,6 +33,14 @@ $functions = [
         'ajax'        => true,
         'capabilities' => 'local/dttutor:use',
     ],
+    'local_dttutor_get_chat_history' => [
+        'classname'   => 'local_dttutor\external\get_chat_history',
+        'methodname'  => 'execute',
+        'description' => 'Get chat history for a Tutor-AI session',
+        'type'        => 'read',
+        'ajax'        => true,
+        'capabilities' => 'local/dttutor:use',
+    ],
     'local_dttutor_delete_chat_session' => [
         'classname'   => 'local_dttutor\external\delete_chat_session',
         'methodname'  => 'execute',

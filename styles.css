@@ -227,6 +227,28 @@ body.tutor-ia-drawer-open-left .popover-process-monitor {
     }
 }
 
+/* History Loading Indicator */
+.history-loading {
+    text-align: center;
+    padding: 0.5rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
+/* Message Timestamp */
+.message-timestamp {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+    opacity: 0.7;
+}
+
+.tutor-ia-message.user .message-timestamp {
+    color: rgba(255, 255, 255, 0.8);
+    text-align: right;
+}
+
 /* Footer */
 .tutor-ia-footer {
     padding: 1rem;

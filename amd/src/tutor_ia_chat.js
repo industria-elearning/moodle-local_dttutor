@@ -58,6 +58,13 @@ define([
             this.currentSessionId = null;
             this.currentAIMessageEl = null;
 
+            // History pagination state
+            this.historyOffset = 0;
+            this.historyLimit = 20;
+            this.isLoadingHistory = false;
+            this.hasMoreHistory = true;
+            this.historyLoaded = false;
+
             this.drawerElement = document.querySelector(SELECTORS.DRAWER);
             this.pageElement = document.querySelector(SELECTORS.PAGE);
             this.bodyElement = document.querySelector(SELECTORS.BODY);
@@ -140,12 +147,6 @@ define([
                 }
             }
 
-            // Debug logging.
-            window.console.log('Tutor-IA Page Context:', context);
-            window.console.log('Body ID:', document.body.id);
-            window.console.log('Body Classes:', document.body.className);
-            window.console.log('URL Params:', window.location.search);
-
             return context;
         }
 
@@ -191,6 +192,12 @@ define([
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
 
+            // Infinity scroll for history
+            const messagesContainer = this.root.find(SELECTORS.MESSAGES);
+            messagesContainer.on('scroll', () => {
+                this.handleHistoryScroll();
+            });
+
             // Close on Escape key.
             document.addEventListener('keydown', (e) => {
                 if (this.isDrawerOpen() && e.key === 'Escape') {
@@ -220,7 +227,9 @@ define([
         }
 
         openDrawer() {
+            console.log("Open drawer called");
             if (!this.drawerElement) {
+                console.log("Could not open drawer");
                 return;
             }
 
@@ -250,6 +259,12 @@ define([
                 this.jumpTo.setAttribute('tabindex', 0);
                 this.jumpTo.focus();
             }
+
+            // Load chat history on first open
+            //if (!this.historyLoaded && this.currentSessionId) {
+                this.loadChatHistory();
+            console.log("First open");
+            //}
         }
 
         closeDrawer() {
@@ -285,11 +300,182 @@ define([
         }
 
         toggleDrawer() {
+            console.log("Toggle drawer");
             if (this.isDrawerOpen()) {
+                console.log("Drawer is open");
                 this.closeDrawer();
             } else {
+                console.log("Open drawer");
                 this.openDrawer();
             }
+        }
+
+        /**
+         * Load chat history from API
+         */
+        loadChatHistory() {
+            console.log("Loading chat history");
+            //if (this.isLoadingHistory || !this.hasMoreHistory || !this.currentSessionId) {
+                //console.log("Current sessionId is missing");
+                //return;
+            //}
+
+            this.isLoadingHistory = true;
+
+            // Get current scroll position and height to maintain position after loading
+            const messagesContainer = this.root.find(SELECTORS.MESSAGES);
+            const scrollHeightBefore = messagesContainer[0].scrollHeight;
+            const scrollTopBefore = messagesContainer[0].scrollTop;
+
+            // Show loading indicator at top
+            this.showHistoryLoading();
+
+            const requests = Ajax.call([{
+                methodname: "local_dttutor_get_chat_history",
+                args: {
+                    courseid: parseInt(this.courseId, 10),
+                    limit: this.historyLimit,
+                    offset: this.historyOffset
+                },
+            }]);
+
+            requests[0]
+                .then((data) => {
+                    this.hideHistoryLoading();
+
+                    if (data.success && data.messages && data.messages.length > 0) {
+                        const isInitialLoad = this.historyOffset === 0;
+
+                        // Display messages
+                        this.displayHistoryMessages(data.messages, isInitialLoad);
+
+                        // Update pagination state
+                        this.historyOffset += data.messages.length;
+                        this.hasMoreHistory = data.pagination.has_more;
+
+                        if (isInitialLoad) {
+                            // Scroll to bottom to show newest messages
+                            this.scrollToBottom();
+                        } else {
+                            // Maintain scroll position (prevent jump)
+                            const scrollHeightAfter = messagesContainer[0].scrollHeight;
+                            const scrollDiff = scrollHeightAfter - scrollHeightBefore;
+                            messagesContainer[0].scrollTop = scrollTopBefore + scrollDiff;
+                        }
+                    } else {
+                        this.hasMoreHistory = false;
+                    }
+
+                    this.historyLoaded = true;
+                    this.isLoadingHistory = false;
+                    return data;
+                })
+                .catch((err) => {
+                    this.hideHistoryLoading();
+                    this.isLoadingHistory = false;
+                    Notification.exception(err);
+                });
+        }
+
+        /**
+         * Handle scroll event for infinity scroll
+         */
+        handleHistoryScroll() {
+            const messagesContainer = this.root.find(SELECTORS.MESSAGES);
+            const scrollTop = messagesContainer[0].scrollTop;
+
+            // Load more when scrolled near top (within 100px)
+            if (scrollTop < 100 && !this.isLoadingHistory && this.hasMoreHistory) {
+                this.loadChatHistory();
+            }
+        }
+
+        /**
+         * Display history messages in the chat
+         * @param {Array} messages - Array of message objects from API (ordered DESC by timestamp from backend)
+         * @param {boolean} isInitialLoad - True if this is the first load (append), false for loading older (prepend)
+         */
+        displayHistoryMessages(messages, isInitialLoad) {
+            const messagesContainer = this.root.find(SELECTORS.MESSAGES);
+
+            // Remove welcome message if it exists on initial load
+            if (isInitialLoad) {
+                const welcomeMessage = M.util.get_string('welcomemessage', 'local_dttutor');
+                messagesContainer.find('.tutor-ia-message.ai:contains("' + welcomeMessage + '")').remove();
+            }
+
+            if (isInitialLoad) {
+                // Initial load: backend sends DESC [msg_10, msg_9, msg_8]
+                // Iterate in reverse and append to get chronological order: msg_8, msg_9, msg_10
+                for (let i = messages.length - 1; i >= 0; i--) {
+                    const messageDiv = this.createMessageElement(messages[i]);
+                    messagesContainer.append(messageDiv);
+                }
+            } else {
+                // Loading older: backend sends DESC [msg_5, msg_4, msg_3]
+                // Iterate normally and prepend to get: msg_3, msg_4, msg_5 (above existing messages)
+                messages.forEach(msg => {
+                    const messageDiv = this.createMessageElement(msg);
+                    messagesContainer.prepend(messageDiv);
+                });
+            }
+        }
+
+        /**
+         * Create a message element
+         * @param {Object} msg - Message object
+         * @returns {jQuery} Message element
+         */
+        createMessageElement(msg) {
+            const messageDiv = $('<div>')
+                .addClass('tutor-ia-message')
+                .addClass(msg.role === 'user' ? 'user' : 'ai')
+                .attr('data-message-id', msg.id);
+
+            const contentDiv = $('<div>')
+                .addClass('message-content')
+                .text(msg.content);
+
+            const timestampDiv = $('<div>')
+                .addClass('message-timestamp')
+                .text(this.formatTimestamp(msg.timestamp));
+
+            messageDiv.append(contentDiv);
+            messageDiv.append(timestampDiv);
+
+            return messageDiv;
+        }
+
+        /**
+         * Format Unix timestamp to readable time
+         * @param {number} timestamp - Unix timestamp
+         * @returns {string} Formatted time string
+         */
+        formatTimestamp(timestamp) {
+            const date = new Date(timestamp * 1000);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        /**
+         * Show loading indicator at top of messages
+         */
+        showHistoryLoading() {
+            const messagesContainer = this.root.find(SELECTORS.MESSAGES);
+            if (!messagesContainer.find('.history-loading').length) {
+                const loadingDiv = $('<div>')
+                    .addClass('history-loading')
+                    .text('Loading...');
+                messagesContainer.prepend(loadingDiv);
+            }
+        }
+
+        /**
+         * Hide loading indicator
+         */
+        hideHistoryLoading() {
+            this.root.find('.history-loading').remove();
         }
 
         sendMessage() {
@@ -347,9 +533,6 @@ define([
                     metaData.cmid = parseInt(this.cmId, 10);
                 }
 
-                // Debug logging.
-                window.console.log('Tutor-IA sending metadata:', metaData);
-
                 const requests = Ajax.call([{
                     methodname: "local_dttutor_create_chat_message",
                     args: {
@@ -401,7 +584,7 @@ define([
                         }
                         this.appendToAIMessage(text);
                     } catch (e) {
-                        window.console.warn('Invalid token data:', ev.data);
+                        // Invalid token data, skip
                     }
                 });
 
@@ -417,17 +600,15 @@ define([
                     this.finalizeStream(sendBtn);
                 });
 
-                es.addEventListener('error', (e) => {
+                es.addEventListener('error', () => {
                     // Only show error if message did NOT complete successfully.
                     if (!messageCompleted) {
-                        window.console.error('SSE error:', e);
                         this.appendToAIMessage('\n[Connection interrupted]');
                         this.finalizeStream(sendBtn);
                     }
                     // If messageCompleted=true, error is expected (normal closure after completion).
                 });
             } catch (error) {
-                window.console.error('Error starting SSE:', error);
                 this.addMessage('[Error] Could not establish SSE connection', 'ai');
                 this.finalizeStream(sendBtn);
             }
@@ -518,7 +699,7 @@ define([
                 try {
                     this.currentEventSource.close();
                 } catch (e) {
-                    window.console.warn('Error closing EventSource:', e);
+                    // Error closing EventSource, ignore
                 }
             }
             this.currentEventSource = null;
