@@ -154,14 +154,13 @@ class chat_hook {
             $position = 'right'; // Default: right.
         }
 
-        // Get teacher name for display.
-        $teachername = self::get_first_teacher_name($courseid);
-        if (empty($teachername)) {
-            $teachername = get_config('local_dttutor', 'teachername');
-            if (empty($teachername)) {
-                $teachername = get_string('teachername_default', 'local_dttutor');
-            }
+        // Get tutor name from configuration (can contain placeholders).
+        $tutorname = get_config('local_dttutor', 'tutorname');
+        if (empty($tutorname)) {
+            $tutorname = get_string('tutorname_default', 'local_dttutor');
         }
+        // Process placeholders in tutor name (e.g., {teachername} will be replaced with actual teacher name).
+        $tutorname = self::replace_placeholders($tutorname, $courseid);
 
         // Get and process welcome message with placeholders.
         $welcomemessage = get_config('local_dttutor', 'welcomemessage');
@@ -192,7 +191,7 @@ class chat_hook {
             'cmid' => $cmid,
             'userid' => $USER->id,
             'userrole' => $userroledisplay,
-            'teachername' => $teachername,
+            'tutorname' => $tutorname,
             'welcomemessage' => $welcomemessage,
             'avatarurl' => $avatarurl->out(false),
             'position' => $position,
@@ -364,15 +363,14 @@ class chat_hook {
     private static function replace_placeholders(string $text, int $courseid): string {
         global $USER, $COURSE;
 
-        // Get teacher name.
+        // Get teacher name from course.
         $teachername = self::get_first_teacher_name($courseid);
 
-        // If no teacher found, use configured default.
+        // If no teacher found, use a generic placeholder text.
+        // Note: The tutorname config is NOT used here as fallback because it might contain
+        // the {teachername} placeholder itself, which would cause infinite recursion.
         if (empty($teachername)) {
-            $teachername = get_config('local_dttutor', 'teachername');
-            if (empty($teachername)) {
-                $teachername = get_string('teachername_default', 'local_dttutor');
-            }
+            $teachername = get_string('tutorname_default', 'local_dttutor');
         }
 
         // Prepare replacement array.

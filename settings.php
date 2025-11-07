@@ -128,13 +128,13 @@ if ($hassiteconfig) {
         )
     );
 
-    // Teacher Name Display.
+    // Tutor Name Display.
     $settings->add(
         new admin_setting_configtext(
-            'local_dttutor/teachername',
-            get_string('teachername_setting', 'local_dttutor'),
-            get_string('teachername_setting_desc', 'local_dttutor'),
-            get_string('teachername_default', 'local_dttutor'),
+            'local_dttutor/tutorname',
+            get_string('tutorname_setting', 'local_dttutor'),
+            get_string('tutorname_setting_desc', 'local_dttutor'),
+            get_string('tutorname_default', 'local_dttutor'),
             PARAM_TEXT
         )
     );
