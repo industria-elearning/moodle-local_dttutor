@@ -154,6 +154,22 @@ class chat_hook {
             $position = 'right'; // Default: right.
         }
 
+        // Get teacher name for display.
+        $teachername = self::get_first_teacher_name($courseid);
+        if (empty($teachername)) {
+            $teachername = get_config('local_dttutor', 'teachername');
+            if (empty($teachername)) {
+                $teachername = get_string('teachername_default', 'local_dttutor');
+            }
+        }
+
+        // Get and process welcome message with placeholders.
+        $welcomemessage = get_config('local_dttutor', 'welcomemessage');
+        if (empty($welcomemessage)) {
+            $welcomemessage = get_string('welcomemessage_default', 'local_dttutor');
+        }
+        $welcomemessage = self::replace_placeholders($welcomemessage, $courseid);
+
         // Calculate bottom position dynamically based on Moodle's footer-popover.
         // The footer-popover is at bottom: 2rem, and communication at 4rem.
         // We place the avatar at 6rem to be above both.
@@ -176,6 +192,8 @@ class chat_hook {
             'cmid' => $cmid,
             'userid' => $USER->id,
             'userrole' => $userroledisplay,
+            'teachername' => $teachername,
+            'welcomemessage' => $welcomemessage,
             'avatarurl' => $avatarurl->out(false),
             'position' => $position,
         ];
@@ -197,7 +215,30 @@ class chat_hook {
     private static function get_avatar_url(): \moodle_url {
         global $CFG;
 
-        // Get configuration.
+        // First priority: Check if custom avatar exists.
+        $fs = get_file_storage();
+        $files = $fs->get_area_files(
+            \context_system::instance()->id,
+            'local_dttutor',
+            'customavatar',
+            0,
+            'timemodified DESC',
+            false
+        );
+
+        if (!empty($files)) {
+            $file = reset($files);
+            return \moodle_url::make_pluginfile_url(
+                $file->get_contextid(),
+                $file->get_component(),
+                $file->get_filearea(),
+                $file->get_itemid(),
+                $file->get_filepath(),
+                $file->get_filename()
+            );
+        }
+
+        // Second priority: Use selected predefined avatar.
         $avatarnum = get_config('local_dttutor', 'avatar');
 
         // First fallback: If no configuration, use '01'.
@@ -252,5 +293,96 @@ class chat_hook {
         }
 
         return 'student';
+    }
+
+    /**
+     * Gets the first teacher's name from the course.
+     *
+     * @param int $courseid Course ID
+     * @return string First teacher's full name or empty string if not found
+     * @since Moodle 4.5
+     */
+    private static function get_first_teacher_name(int $courseid): string {
+        global $DB;
+
+        if ($courseid <= 1) {
+            return '';
+        }
+
+        $context = \context_course::instance($courseid);
+
+        // Get all users with teacher role capabilities.
+        $teachers = get_enrolled_users(
+            $context,
+            'moodle/course:update',
+            0,
+            'u.id, u.firstname, u.lastname',
+            'u.lastname ASC, u.firstname ASC',
+            0,
+            1
+        );
+
+        if (!empty($teachers)) {
+            $teacher = reset($teachers);
+            return fullname($teacher);
+        }
+
+        // Fallback: search by role shortname.
+        $sql = "SELECT u.id, u.firstname, u.lastname
+                  FROM {user} u
+                  JOIN {role_assignments} ra ON ra.userid = u.id
+                  JOIN {role} r ON r.id = ra.roleid
+                  JOIN {context} ctx ON ctx.id = ra.contextid
+                 WHERE ctx.contextlevel = :contextlevel
+                   AND ctx.instanceid = :courseid
+                   AND r.shortname IN ('teacher', 'editingteacher', 'manager')
+              ORDER BY u.lastname ASC, u.firstname ASC
+                 LIMIT 1";
+
+        $params = [
+            'contextlevel' => CONTEXT_COURSE,
+            'courseid' => $courseid,
+        ];
+
+        $teacher = $DB->get_record_sql($sql, $params);
+
+        if ($teacher) {
+            return fullname($teacher);
+        }
+
+        return '';
+    }
+
+    /**
+     * Replaces placeholders in text with actual values.
+     *
+     * @param string $text Text containing placeholders
+     * @param int $courseid Course ID
+     * @return string Text with placeholders replaced
+     * @since Moodle 4.5
+     */
+    private static function replace_placeholders(string $text, int $courseid): string {
+        global $USER, $COURSE;
+
+        // Get teacher name.
+        $teachername = self::get_first_teacher_name($courseid);
+
+        // If no teacher found, use configured default.
+        if (empty($teachername)) {
+            $teachername = get_config('local_dttutor', 'teachername');
+            if (empty($teachername)) {
+                $teachername = get_string('teachername_default', 'local_dttutor');
+            }
+        }
+
+        // Prepare replacement array.
+        $replacements = [
+            '{teachername}' => $teachername,
+            '{coursename}' => $COURSE->fullname ?? '',
+            '{username}' => fullname($USER),
+            '{firstname}' => $USER->firstname,
+        ];
+
+        return str_replace(array_keys($replacements), array_values($replacements), $text);
     }
 }

@@ -25,6 +25,8 @@
     * cmid - ID del módulo del curso (0 si solo está en el curso)
     * userid - ID del usuario
     * userrole - Rol del usuario (Profesor/Estudiante)
+    * teachername - Nombre del profesor del curso
+    * welcomemessage - Mensaje de bienvenida personalizado con placeholders procesados
     * avatarurl - URL del avatar seleccionado
     * position - Posición del drawer (right/left)
 
@@ -35,16 +37,18 @@
         "cmid": 15,
         "userid": 5,
         "userrole": "Estudiante",
+        "teachername": "Juan Pérez",
+        "welcomemessage": "Hola! Soy Juan Pérez, tu asistente de IA. ¿Cómo puedo ayudarte hoy?",
         "avatarurl": "/local/dttutor/pix/avatars/avatar_profesor_01.png",
         "position": "right"
     }
 }}
-<div class="tutor-ia-drawer tutor-ia-drawer-{{position}}" id="tutor-ia-drawer-{{uniqid}}" data-position="{{position}}" aria-label="{{#str}}pluginname, local_dttutor{{/str}}" tabindex="-1" role="region">
+<div class="tutor-ia-drawer tutor-ia-drawer-{{position}}" id="tutor-ia-drawer-{{uniqid}}" data-position="{{position}}" aria-label="{{teachername}}" tabindex="-1" role="region">
     <div class="tutor-ia-drawer-header">
         <div class="tutor-ia-header-content">
-            <img src="{{avatarurl}}" alt="{{#str}}pluginname, local_dttutor{{/str}}" class="tutor-ia-avatar-small">
+            <img src="{{avatarurl}}" alt="{{teachername}}" class="tutor-ia-avatar-small">
             <div class="tutor-ia-title">
-                <h3>{{#str}}pluginname, local_dttutor{{/str}}</h3>
+                <h3>{{teachername}}</h3>
                 <span class="tutor-ia-role">{{userrole}}</span>
             </div>
         </div>
@@ -53,12 +57,12 @@
             <span class="sr-only">{{#str}}close, local_dttutor{{/str}}</span>
         </button>
     </div>
-    <div class="tutor-ia-drawer-body" id="tutor-ia-drawer-content-{{uniqid}}" data-courseid="{{courseid}}" data-cmid="{{cmid}}" data-userid="{{userid}}">
-        <h2 class="sr-only">{{#str}}pluginname, local_dttutor{{/str}}</h2>
+    <div class="tutor-ia-drawer-body" id="tutor-ia-drawer-content-{{uniqid}}" data-courseid="{{courseid}}" data-cmid="{{cmid}}" data-userid="{{userid}}" data-welcomemessage="{{welcomemessage}}">
+        <h2 class="sr-only">{{teachername}}</h2>
 
         {{! Contenedor de mensajes }}
         <div class="tutor-ia-messages-container" data-region="tutor-ia-messages">
-            <div class="tutor-ia-message ai">{{#str}}welcomemessage, local_dttutor{{/str}}</div>
+            <div class="tutor-ia-message ai">{{welcomemessage}}</div>
         </div>
 
         {{! Footer con input }}

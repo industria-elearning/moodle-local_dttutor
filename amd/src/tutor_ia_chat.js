@@ -57,6 +57,7 @@ define([
             this.currentEventSource = null;
             this.currentSessionId = null;
             this.currentAIMessageEl = null;
+            this.currentAIMessageContainer = null;
 
             // History pagination state
             this.historyOffset = 0;
@@ -64,6 +65,9 @@ define([
             this.isLoadingHistory = false;
             this.hasMoreHistory = true;
             this.historyLoaded = false;
+
+            // Get welcome message from data attribute
+            this.welcomeMessage = root.getAttribute('data-welcomemessage') || '';
 
             this.drawerElement = document.querySelector(SELECTORS.DRAWER);
             this.pageElement = document.querySelector(SELECTORS.PAGE);
@@ -227,9 +231,7 @@ define([
         }
 
         openDrawer() {
-            console.log("Open drawer called");
             if (!this.drawerElement) {
-                console.log("Could not open drawer");
                 return;
             }
 
@@ -261,10 +263,7 @@ define([
             }
 
             // Load chat history on first open
-            //if (!this.historyLoaded && this.currentSessionId) {
-                this.loadChatHistory();
-            console.log("First open");
-            //}
+            this.loadChatHistory();
         }
 
         closeDrawer() {
@@ -300,12 +299,9 @@ define([
         }
 
         toggleDrawer() {
-            console.log("Toggle drawer");
             if (this.isDrawerOpen()) {
-                console.log("Drawer is open");
                 this.closeDrawer();
             } else {
-                console.log("Open drawer");
                 this.openDrawer();
             }
         }
@@ -314,11 +310,10 @@ define([
          * Load chat history from API
          */
         loadChatHistory() {
-            console.log("Loading chat history");
-            //if (this.isLoadingHistory || !this.hasMoreHistory || !this.currentSessionId) {
-                //console.log("Current sessionId is missing");
-                //return;
-            //}
+            // Skip if already loading, no more history, or no session yet
+            if (this.isLoadingHistory || !this.hasMoreHistory) {
+                return;
+            }
 
             this.isLoadingHistory = true;
 
@@ -399,9 +394,8 @@ define([
             const messagesContainer = this.root.find(SELECTORS.MESSAGES);
 
             // Remove welcome message if it exists on initial load
-            if (isInitialLoad) {
-                const welcomeMessage = M.util.get_string('welcomemessage', 'local_dttutor');
-                messagesContainer.find('.tutor-ia-message.ai:contains("' + welcomeMessage + '")').remove();
+            if (isInitialLoad && this.welcomeMessage) {
+                messagesContainer.find('.tutor-ia-message.ai:contains("' + this.welcomeMessage + '")').remove();
             }
 
             if (isInitialLoad) {
@@ -447,15 +441,39 @@ define([
         }
 
         /**
-         * Format Unix timestamp to readable time
+         * Format Unix timestamp to readable date and time
          * @param {number} timestamp - Unix timestamp
-         * @returns {string} Formatted time string
+         * @returns {string} Formatted date and time string
          */
         formatTimestamp(timestamp) {
             const date = new Date(timestamp * 1000);
+            const today = new Date();
+
+            // Reset hours to compare dates only
+            const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const yesterday = new Date(todayDate);
+            yesterday.setDate(yesterday.getDate() - 1);
+
             const hours = date.getHours().toString().padStart(2, '0');
             const minutes = date.getMinutes().toString().padStart(2, '0');
-            return `${hours}:${minutes}`;
+            const time = `${hours}:${minutes}`;
+
+            // If today, show only time
+            if (messageDate.getTime() === todayDate.getTime()) {
+                return time;
+            }
+
+            // If yesterday, show "Yesterday HH:MM"
+            if (messageDate.getTime() === yesterday.getTime()) {
+                return `Yesterday ${time}`;
+            }
+
+            // Otherwise show DD/MM/YYYY HH:MM
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year} ${time}`;
         }
 
         /**
@@ -620,18 +638,30 @@ define([
             }
 
             const messages = this.root.find(SELECTORS.MESSAGES);
-            let el = messages.find('.tutor-ia-typing');
+            let messageContainer;
 
-            if (el.length) {
-                el.removeClass('tutor-ia-typing');
-                el.addClass('tutor-ia-message ai');
-                el.html('');
+            // Check if typing indicator exists
+            const typingEl = messages.find('.tutor-ia-typing');
+            if (typingEl.length) {
+                // Convert typing indicator to message
+                messageContainer = typingEl;
+                messageContainer.removeClass('tutor-ia-typing');
+                messageContainer.addClass('tutor-ia-message ai');
+                messageContainer.html('');
             } else {
-                el = $('<div class="tutor-ia-message ai"></div>');
-                messages.append(el);
+                // Create new message container
+                messageContainer = $('<div class="tutor-ia-message ai"></div>');
+                messages.append(messageContainer);
             }
 
-            this.currentAIMessageEl = el[0];
+            // Create content div for message text
+            const contentDiv = $('<div>')
+                .addClass('message-content');
+            messageContainer.append(contentDiv);
+
+            // Store reference to content div for appending text
+            this.currentAIMessageEl = contentDiv[0];
+            this.currentAIMessageContainer = messageContainer[0];
             return this.currentAIMessageEl;
         }
 
@@ -664,10 +694,25 @@ define([
             }
 
             const messages = this.root.find(SELECTORS.MESSAGES);
+
+            // Create message container
             const messageEl = $('<div></div>')
                 .addClass('tutor-ia-message')
-                .addClass(type)
+                .addClass(type);
+
+            // Add message content
+            const contentDiv = $('<div>')
+                .addClass('message-content')
                 .text(text.substring(0, 10000));
+
+            // Add timestamp (current time)
+            const currentTimestamp = Math.floor(Date.now() / 1000);
+            const timestampDiv = $('<div>')
+                .addClass('message-timestamp')
+                .text(this.formatTimestamp(currentTimestamp));
+
+            messageEl.append(contentDiv);
+            messageEl.append(timestampDiv);
 
             messages.append(messageEl);
             this.scrollToBottom();
@@ -705,10 +750,23 @@ define([
             this.currentEventSource = null;
             this.streaming = false;
             this.currentAIMessageEl = null;
+            this.currentAIMessageContainer = null;
             this.hideTypingIndicator();
         }
 
         finalizeStream(sendBtn) {
+            // Add timestamp to AI message if it exists
+            if (this.currentAIMessageContainer) {
+                const currentTimestamp = Math.floor(Date.now() / 1000);
+                const timestampDiv = $('<div>')
+                    .addClass('message-timestamp')
+                    .text(this.formatTimestamp(currentTimestamp));
+                $(this.currentAIMessageContainer).append(timestampDiv);
+
+                // Clear references
+                this.currentAIMessageContainer = null;
+            }
+
             this.closeCurrentStream();
             if (sendBtn) {
                 sendBtn.prop('disabled', false);

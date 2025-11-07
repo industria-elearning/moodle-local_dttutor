@@ -24,6 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// Load custom admin settings.
+require_once($CFG->dirroot . '/local/dttutor/classes/admin_settings/admin_setting_avatar_selector.php');
+require_once($CFG->dirroot . '/local/dttutor/classes/admin_settings/admin_setting_custom_avatar.php');
+
 if ($hassiteconfig) {
     $settings = new admin_settingpage('local_dttutor', get_string('pluginname', 'local_dttutor'));
     $ADMIN->add('localplugins', $settings);
@@ -73,20 +77,22 @@ if ($hassiteconfig) {
         ''
     ));
 
-    // Build avatar choices array.
-    $avatarchoices = [];
-    for ($i = 1; $i <= 10; $i++) {
-        $num = str_pad($i, 2, '0', STR_PAD_LEFT);
-        $avatarchoices[$num] = get_string('avatar', 'local_dttutor') . ' ' . $i;
-    }
-
+    // Visual avatar selector with previews.
     $settings->add(
-        new admin_setting_configselect(
+        new \local_dttutor\admin_settings\admin_setting_avatar_selector(
             'local_dttutor/avatar',
             get_string('avatar', 'local_dttutor'),
             get_string('avatar_desc', 'local_dttutor'),
-            '01',
-            $avatarchoices
+            '01'
+        )
+    );
+
+    // Custom avatar upload.
+    $settings->add(
+        new \local_dttutor\admin_settings\admin_setting_custom_avatar(
+            'local_dttutor/customavatar',
+            get_string('customavatar', 'local_dttutor'),
+            get_string('customavatar_desc', 'local_dttutor')
         )
     );
 
@@ -101,6 +107,35 @@ if ($hassiteconfig) {
                 'right' => get_string('position_right', 'local_dttutor'),
                 'left' => get_string('position_left', 'local_dttutor'),
             ]
+        )
+    );
+
+    // Welcome Message Section.
+    $settings->add(new admin_setting_heading(
+        'local_dttutor/welcomesettings',
+        get_string('welcomesettings', 'local_dttutor'),
+        ''
+    ));
+
+    // Welcome Message with Placeholder Support.
+    $settings->add(
+        new admin_setting_configtextarea(
+            'local_dttutor/welcomemessage',
+            get_string('welcomemessage_setting', 'local_dttutor'),
+            get_string('welcomemessage_setting_desc', 'local_dttutor'),
+            get_string('welcomemessage_default', 'local_dttutor'),
+            PARAM_TEXT
+        )
+    );
+
+    // Teacher Name Display.
+    $settings->add(
+        new admin_setting_configtext(
+            'local_dttutor/teachername',
+            get_string('teachername_setting', 'local_dttutor'),
+            get_string('teachername_setting_desc', 'local_dttutor'),
+            get_string('teachername_default', 'local_dttutor'),
+            PARAM_TEXT
         )
     );
 }
