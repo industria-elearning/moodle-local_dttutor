@@ -311,11 +311,12 @@ class chat_hook {
         $context = \context_course::instance($courseid);
 
         // Get all users with teacher role capabilities.
+        // Include all fields required by fullname() to avoid debugging warnings.
         $teachers = get_enrolled_users(
             $context,
             'moodle/course:update',
             0,
-            'u.id, u.firstname, u.lastname',
+            'u.id, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename',
             'u.lastname ASC, u.firstname ASC',
             0,
             1
@@ -327,7 +328,8 @@ class chat_hook {
         }
 
         // Fallback: search by role shortname.
-        $sql = "SELECT u.id, u.firstname, u.lastname
+        // Include all fields required by fullname() to avoid debugging warnings.
+        $sql = "SELECT u.id, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename
                   FROM {user} u
                   JOIN {role_assignments} ra ON ra.userid = u.id
                   JOIN {role} r ON r.id = ra.roleid
@@ -361,7 +363,7 @@ class chat_hook {
      * @since Moodle 4.5
      */
     private static function replace_placeholders(string $text, int $courseid): string {
-        global $USER, $COURSE;
+        global $USER, $COURSE, $DB;
 
         // Get teacher name from course.
         $teachername = self::get_first_teacher_name($courseid);
@@ -373,11 +375,15 @@ class chat_hook {
             $teachername = get_string('tutorname_default', 'local_dttutor');
         }
 
+        // Load complete user record to ensure all fields required by fullname() are present.
+        $userrecord = $DB->get_record('user', ['id' => $USER->id],
+            'id, firstname, lastname, firstnamephonetic, lastnamephonetic, middlename, alternatename');
+
         // Prepare replacement array.
         $replacements = [
             '{teachername}' => $teachername,
             '{coursename}' => $COURSE->fullname ?? '',
-            '{username}' => fullname($USER),
+            '{username}' => $userrecord ? fullname($userrecord) : fullname($USER),
             '{firstname}' => $USER->firstname,
         ];
 

@@ -37,6 +37,8 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool false if the file not found, just send the file otherwise and do not return anything
  */
 function local_dttutor_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
+    global $CFG;
+
     // Check the contextlevel is as expected - system context only.
     if ($context->contextlevel != CONTEXT_SYSTEM) {
         return false;
@@ -47,12 +49,13 @@ function local_dttutor_pluginfile($course, $cm, $context, $filearea, $args, $for
         return false;
     }
 
-    // No login required for custom avatar - it's displayed publicly.
-    // But we could add: require_login() if we want to restrict access.
+    // The itemid is always 0 for custom avatar.
+    $itemid = array_shift($args);
 
-    // Extract the filename / filepath from the $args array.
+    // Extract the filename from the remaining args.
     $filename = array_pop($args);
 
+    // Build the filepath.
     if (!$args) {
         $filepath = '/';
     } else {
@@ -61,11 +64,13 @@ function local_dttutor_pluginfile($course, $cm, $context, $filearea, $args, $for
 
     // Retrieve the file from the files API.
     $fs = get_file_storage();
-    $file = $fs->get_file($context->id, 'local_dttutor', $filearea, 0, $filepath, $filename);
-    if (!$file) {
+    $file = $fs->get_file($context->id, 'local_dttutor', $filearea, $itemid, $filepath, $filename);
+
+    if (!$file || $file->is_directory()) {
         return false;
     }
 
-    // We can now send the file back to the browser.
-    send_stored_file($file, 86400, 0, $forcedownload, $options);
+    // Send the file with caching headers (cache for 1 day).
+    // No force download - display inline in browser.
+    send_stored_file($file, 86400, 0, false, $options);
 }

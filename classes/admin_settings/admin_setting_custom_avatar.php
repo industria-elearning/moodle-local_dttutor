@@ -44,13 +44,20 @@ class admin_setting_custom_avatar extends \admin_setting_configstoredfile {
      * @param string $description
      */
     public function __construct($name, $visiblename, $description) {
+        // Call parent constructor with correct parameters.
+        // Parameters: name, visiblename, description, filearea, itemid, options.
         parent::__construct(
             $name,
             $visiblename,
-            $description,
-            'customavatar',
-            0,
-            ['maxfiles' => 1, 'accepted_types' => ['.png', '.jpg', '.jpeg', '.svg']]
+            $description . ' ' . get_string('customavatar_dimensions', 'local_dttutor'),
+            'customavatar',  // Filearea name.
+            0,  // Itemid (0 for single file).
+            [
+                'maxfiles' => 1,
+                'accepted_types' => ['web_image'],  // Use web_image instead of extensions.
+                'subdirs' => 0,
+                'maxbytes' => 512000,  // 512KB max size.
+            ]
         );
     }
 
@@ -66,13 +73,6 @@ class admin_setting_custom_avatar extends \admin_setting_configstoredfile {
 
         $html = parent::output_html($data, $query);
 
-        // Add information about image dimensions.
-        $info = \html_writer::div(
-            get_string('customavatar_dimensions', 'local_dttutor'),
-            'alert alert-info mt-2',
-            ['style' => 'max-width: 600px;']
-        );
-
         // Check if custom avatar exists and show preview.
         $fs = get_file_storage();
         $files = $fs->get_area_files(
@@ -81,7 +81,7 @@ class admin_setting_custom_avatar extends \admin_setting_configstoredfile {
             'customavatar',
             0,
             'timemodified DESC',
-            false
+            false  // Exclude directories.
         );
 
         if (!empty($files)) {
@@ -96,14 +96,18 @@ class admin_setting_custom_avatar extends \admin_setting_configstoredfile {
             );
 
             $preview = \html_writer::div(
-                \html_writer::img($url, 'Custom avatar preview', ['style' => 'max-width: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);']),
+                \html_writer::tag('div',
+                    \html_writer::tag('strong', get_string('preview')) . \html_writer::empty_tag('br') .
+                    \html_writer::img($url, 'Custom avatar preview', [
+                        'style' => 'max-width: 150px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-top: 5px;',
+                    ]),
+                    ['class' => 'alert alert-success']
+                ),
                 'mt-2'
             );
 
             $html .= $preview;
         }
-
-        $html .= $info;
 
         return $html;
     }
