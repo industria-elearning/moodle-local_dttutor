@@ -75,7 +75,7 @@ class admin_setting_avatar_selector extends \admin_setting {
      * @return string HTML
      */
     public function output_html($data, $query = '') {
-        global $OUTPUT, $CFG;
+        global $OUTPUT, $CFG, $PAGE;
 
         $default = $this->get_defaultsetting();
         $current = $this->get_setting();
@@ -85,72 +85,10 @@ class admin_setting_avatar_selector extends \admin_setting {
 
         $html = '';
 
-        // Add custom CSS.
-        $html .= '<style>
-.avatar-selector-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 15px;
-    margin: 20px 0;
-    max-width: 800px;
-}
-.avatar-option {
-    position: relative;
-    cursor: pointer;
-    border: 3px solid transparent;
-    border-radius: 8px;
-    padding: 5px;
-    transition: all 0.2s ease;
-    background: #f8f9fa;
-}
-.avatar-option:hover {
-    border-color: #0f6cbf;
-    transform: scale(1.05);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-.avatar-option.selected {
-    border-color: #0066cc;
-    background: #e3f2fd;
-    box-shadow: 0 2px 8px rgba(0,102,204,0.3);
-}
-.avatar-option img {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 4px;
-}
-.avatar-option-label {
-    text-align: center;
-    font-size: 12px;
-    margin-top: 5px;
-    font-weight: 600;
-    color: #333;
-}
-.avatar-option input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-.avatar-option.selected .avatar-option-label {
-    color: #0066cc;
-}
-</style>';
+        $html .= '<link rel="stylesheet" href="' . $CFG->wwwroot . '/local/dttutor/styles_admin.css">';
 
-        // Add JavaScript for interactive selection.
-        $html .= '<script>
-function selectAvatar(value) {
-    document.querySelectorAll(".avatar-option").forEach(el => el.classList.remove("selected"));
-    const selected = document.querySelector(`.avatar-option[data-value="${value}"]`);
-    if (selected) {
-        selected.classList.add("selected");
-    }
-    document.querySelector("input[name=\"s_local_dttutor_avatar\"]:checked").checked = false;
-    const radio = document.querySelector(`input[name="s_local_dttutor_avatar"][value="${value}"]`);
-    if (radio) {
-        radio.checked = true;
-    }
-}
-</script>';
+        // Load AMD module properly via $PAGE.
+        $PAGE->requires->js_call_amd('local_dttutor/avatar_selector', 'init');
 
         $html .= '<div class="avatar-selector-grid">';
 
@@ -162,7 +100,7 @@ function selectAvatar(value) {
 
             if (file_exists($fullpath)) {
                 $selected = ($current === $num) ? 'selected' : '';
-                $html .= '<div class="avatar-option ' . $selected . '" data-value="' . $num . '" onclick="selectAvatar(\'' . $num . '\')">';
+                $html .= '<div class="avatar-option ' . $selected . '" data-value="' . $num . '" onclick="selectDttutorAvatar(\'' . $num . '\')">';
                 $html .= '<img src="' . $CFG->wwwroot . $avatarpath . '?v=' . time() . '" alt="Avatar ' . $i . '">';
                 $html .= '<div class="avatar-option-label">Avatar ' . $i . '</div>';
                 $html .= '<input type="radio" name="s_local_dttutor_avatar" value="' . $num . '"';
