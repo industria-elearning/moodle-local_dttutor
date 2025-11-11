@@ -36,17 +36,6 @@ require_once($CFG->libdir . '/adminlib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class admin_setting_avatar_selector extends \admin_setting {
-    /**
-     * Constructor
-     *
-     * @param string $name
-     * @param string $visiblename
-     * @param string $description
-     * @param mixed $defaultsetting
-     */
-    public function __construct($name, $visiblename, $description, $defaultsetting) {
-        parent::__construct($name, $visiblename, $description, $defaultsetting);
-    }
 
     /**
      * Return the current setting
@@ -100,8 +89,10 @@ class admin_setting_avatar_selector extends \admin_setting {
 
             if (file_exists($fullpath)) {
                 $selected = ($current === $num) ? 'selected' : '';
-                $html .= '<div class="avatar-option ' . $selected . '" data-value="' . $num . '" onclick="selectDttutorAvatar(\'' . $num . '\')">';
-                $html .= '<img src="' . $CFG->wwwroot . $avatarpath . '?v=' . time() . '" alt="Avatar ' . $i . '">';
+                $html .= '<div class="avatar-option ' . $selected . '" data-value="' . $num . '" ';
+                $html .= 'onclick="selectDttutorAvatar(\'' . $num . '\')">';
+                $html .= '<img src="' . $CFG->wwwroot . $avatarpath . '?v=' . time() . '" ';
+                $html .= 'alt="Avatar ' . $i . '">';
                 $html .= '<div class="avatar-option-label">Avatar ' . $i . '</div>';
                 $html .= '<input type="radio" name="s_local_dttutor_avatar" value="' . $num . '"';
                 if ($current === $num) {

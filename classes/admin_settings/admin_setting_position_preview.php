@@ -31,24 +31,13 @@ require_once($CFG->libdir . '/adminlib.php');
 /**
  * Admin setting for avatar position with live preview
  *
- * Stores position as JSON: {"preset":"right|left|custom","x":"value","y":"value","drawerside":"right|left","xref":"left|right","yref":"bottom|top"}
+ * Stores position as JSON with preset, coordinates, drawer side and reference edges
  *
  * @package    local_dttutor
  * @copyright  2025 Datacurso
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class admin_setting_position_preview extends \admin_setting {
-    /**
-     * Constructor
-     *
-     * @param string $name
-     * @param string $visiblename
-     * @param string $description
-     * @param mixed $defaultsetting
-     */
-    public function __construct($name, $visiblename, $description, $defaultsetting) {
-        parent::__construct($name, $visiblename, $description, $defaultsetting);
-    }
 
     /**
      * Return the current setting
@@ -56,11 +45,7 @@ class admin_setting_position_preview extends \admin_setting {
      * @return mixed
      */
     public function get_setting() {
-        $value = $this->config_read($this->name);
-        if ($value === null) {
-            return $this->get_defaultsetting();
-        }
-        return $value;
+        return $this->config_read($this->name);
     }
 
     /**
@@ -76,8 +61,10 @@ class admin_setting_position_preview extends \admin_setting {
                 return get_string('error_invalid_position', 'local_dttutor');
             }
 
-            if (!isset($decoded['preset']) || !isset($decoded['x']) || !isset($decoded['y']) ||
-                !isset($decoded['drawerside']) || !isset($decoded['xref']) || !isset($decoded['yref'])) {
+            if (
+                !isset($decoded['preset']) || !isset($decoded['x']) || !isset($decoded['y']) ||
+                !isset($decoded['drawerside']) || !isset($decoded['xref']) || !isset($decoded['yref'])
+            ) {
                 return get_string('error_invalid_position', 'local_dttutor');
             }
 
@@ -176,7 +163,8 @@ class admin_setting_position_preview extends \admin_setting {
             $checked = ($preset === $value) ? 'checked' : '';
             $selected = ($preset === $value) ? 'selected' : '';
             $html .= '<div class="preset-option ' . $selected . '" data-preset="' . $value . '">';
-            $html .= '<input type="radio" name="position_preset" value="' . $value . '" id="preset_' . $value . '" ' . $checked . '>';
+            $html .= '<input type="radio" name="position_preset" value="' . $value . '" ';
+            $html .= 'id="preset_' . $value . '" ' . $checked . '>';
             $html .= '<label for="preset_' . $value . '">' . $label . '</label>';
             $html .= '</div>';
         }
@@ -211,16 +199,24 @@ class admin_setting_position_preview extends \admin_setting {
         $html .= '<div class="reference-edge-group">';
         $html .= '<label>' . get_string('reference_edge_x', 'local_dttutor') . ':</label>';
         $html .= '<div class="reference-edge-options">';
-        $html .= '<label><input type="radio" name="ref_x" value="left"' . ($xref === 'left' ? ' checked' : '') . '> ' . get_string('ref_left', 'local_dttutor') . '</label>';
-        $html .= '<label><input type="radio" name="ref_x" value="right"' . ($xref === 'right' ? ' checked' : '') . '> ' . get_string('ref_right', 'local_dttutor') . '</label>';
+        $html .= '<label><input type="radio" name="ref_x" value="left"';
+        $html .= ($xref === 'left' ? ' checked' : '') . '> ';
+        $html .= get_string('ref_left', 'local_dttutor') . '</label>';
+        $html .= '<label><input type="radio" name="ref_x" value="right"';
+        $html .= ($xref === 'right' ? ' checked' : '') . '> ';
+        $html .= get_string('ref_right', 'local_dttutor') . '</label>';
         $html .= '</div>';
         $html .= '</div>';
 
         $html .= '<div class="reference-edge-group">';
         $html .= '<label>' . get_string('reference_edge_y', 'local_dttutor') . ':</label>';
         $html .= '<div class="reference-edge-options">';
-        $html .= '<label><input type="radio" name="ref_y" value="bottom"' . ($yref === 'bottom' ? ' checked' : '') . '> ' . get_string('ref_bottom', 'local_dttutor') . '</label>';
-        $html .= '<label><input type="radio" name="ref_y" value="top"' . ($yref === 'top' ? ' checked' : '') . '> ' . get_string('ref_top', 'local_dttutor') . '</label>';
+        $html .= '<label><input type="radio" name="ref_y" value="bottom"';
+        $html .= ($yref === 'bottom' ? ' checked' : '') . '> ';
+        $html .= get_string('ref_bottom', 'local_dttutor') . '</label>';
+        $html .= '<label><input type="radio" name="ref_y" value="top"';
+        $html .= ($yref === 'top' ? ' checked' : '') . '> ';
+        $html .= get_string('ref_top', 'local_dttutor') . '</label>';
         $html .= '</div>';
         $html .= '</div>';
 

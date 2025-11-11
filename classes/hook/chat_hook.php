@@ -422,8 +422,11 @@ class chat_hook {
         }
 
         // Load complete user record to ensure all fields required by fullname() are present.
-        $userrecord = $DB->get_record('user', ['id' => $USER->id],
-            'id, firstname, lastname, firstnamephonetic, lastnamephonetic, middlename, alternatename');
+        $userrecord = $DB->get_record(
+            'user',
+            ['id' => $USER->id],
+            'id, firstname, lastname, firstnamephonetic, lastnamephonetic, middlename, alternatename'
+        );
 
         $replacements = [
             '{teachername}' => $teachername,

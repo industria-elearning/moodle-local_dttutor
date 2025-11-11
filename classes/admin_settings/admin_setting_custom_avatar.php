@@ -50,13 +50,13 @@ class admin_setting_custom_avatar extends \admin_setting_configstoredfile {
             $name,
             $visiblename,
             $description . ' ' . get_string('customavatar_dimensions', 'local_dttutor'),
-            'customavatar',  // Filearea name.
-            0,  // Itemid (0 for single file).
+            'customavatar', // Filearea name.
+            0, // Itemid (0 for single file).
             [
                 'maxfiles' => 1,
-                'accepted_types' => ['web_image'],  // Use web_image instead of extensions.
+                'accepted_types' => ['web_image'], // Use web_image instead of extensions.
                 'subdirs' => 0,
-                'maxbytes' => 512000,  // 512KB max size.
+                'maxbytes' => 512000, // 512KB max size.
             ]
         );
     }
@@ -96,11 +96,18 @@ class admin_setting_custom_avatar extends \admin_setting_configstoredfile {
             );
 
             $preview = \html_writer::div(
-                \html_writer::tag('div',
-                    \html_writer::tag('strong', get_string('preview')) . \html_writer::empty_tag('br') .
-                    \html_writer::img($url, 'Custom avatar preview', [
-                        'style' => 'max-width: 150px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-top: 5px;',
-                    ]),
+                \html_writer::tag(
+                    'div',
+                    \html_writer::tag('strong', get_string('preview')) .
+                    \html_writer::empty_tag('br') .
+                    \html_writer::img(
+                        $url,
+                        'Custom avatar preview',
+                        [
+                            'style' => 'max-width: 150px; max-height: 150px; ' .
+                                'border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-top: 5px;',
+                        ]
+                    ),
                     ['class' => 'alert alert-success']
                 ),
                 'mt-2'
