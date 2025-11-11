@@ -72,45 +72,36 @@ class create_chat_message extends external_api {
     public static function execute($courseid, $message, $meta = '{}'): array {
         global $CFG, $USER;
 
-        // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
             'message' => $message,
             'meta' => $meta,
         ]);
 
-        // Check if chat is enabled globally.
         if (!get_config('local_dttutor', 'enabled')) {
             throw new \moodle_exception('error_api_not_configured', 'local_dttutor');
         }
 
-        // Validate course access permissions.
         $context = \context_course::instance($params['courseid']);
         require_capability('moodle/course:view', $context);
 
-        // Initialize Tutor-IA API client.
         $tutoriaapi = new tutoria_api();
 
-        // Parse metadata.
         $metaarray = json_decode($params['meta'], true);
         if ($metaarray === null) {
             $metaarray = [];
         }
 
-        // Add userid to metadata from backend.
         $metaarray['userid'] = $USER->id;
 
-        // Get or create session using only course ID (cmid is sent in metadata).
         $session = $tutoriaapi->start_session($params['courseid']);
 
         if (!isset($session['ready']) || !$session['ready']) {
             throw new \moodle_exception('sessionnotready', 'local_dttutor');
         }
 
-        // Send message to Tutor-IA with metadata (includes cmid).
         $tutoriaapi->send_message($session['session_id'], $params['message'], $metaarray);
 
-        // Build streaming URL with authentication.
         $streamurl = $tutoriaapi->get_stream_url($session['session_id']);
 
         return [

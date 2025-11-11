@@ -71,19 +71,16 @@ class get_chat_history extends external_api {
      * @since Moodle 4.5
      */
     public static function execute($courseid, $limit = 20, $offset = 0): array {
-        // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'limit' => $limit,
             'offset' => $offset,
             'courseid' => $courseid,
         ]);
 
-        // Check if chat is enabled globally.
         if (!get_config('local_dttutor', 'enabled')) {
             throw new \moodle_exception('error_api_not_configured', 'local_dttutor');
         }
 
-        // Validate limit bounds.
         if ($params['limit'] < 1) {
             $params['limit'] = 20;
         }
@@ -91,25 +88,20 @@ class get_chat_history extends external_api {
             $params['limit'] = 100;
         }
 
-        // Validate offset.
         if ($params['offset'] < 0) {
             $params['offset'] = 0;
         }
 
-        // Initialize Tutor-IA API client.
         $tutoriaapi = new tutoria_api();
 
-        // Get or create session using only course ID (cmid is sent in metadata).
         $session = $tutoriaapi->start_session($params['courseid']);
 
-        // Get history from external API.
         $response = $tutoriaapi->get_history(
             $session['session_id'],
             $params['limit'],
             $params['offset']
         );
 
-        // Return the response from the API (already formatted correctly).
         return $response;
     }
 

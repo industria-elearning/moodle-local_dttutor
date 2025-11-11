@@ -70,33 +70,33 @@ class admin_setting_position_preview extends \admin_setting {
      * @return string Empty string if ok, error message otherwise
      */
     public function write_setting($data) {
-        // Data comes as JSON string from JavaScript.
         if (is_string($data)) {
             $decoded = json_decode($data, true);
             if ($decoded === null) {
                 return get_string('error_invalid_position', 'local_dttutor');
             }
-            // Validate data structure.
+
             if (!isset($decoded['preset']) || !isset($decoded['x']) || !isset($decoded['y']) ||
                 !isset($decoded['drawerside']) || !isset($decoded['xref']) || !isset($decoded['yref'])) {
                 return get_string('error_invalid_position', 'local_dttutor');
             }
-            // Validate preset.
+
             if (!in_array($decoded['preset'], ['right', 'left', 'custom'])) {
                 return get_string('error_invalid_position', 'local_dttutor');
             }
-            // Validate drawer side.
+
             if (!in_array($decoded['drawerside'], ['right', 'left'])) {
                 return get_string('error_invalid_position', 'local_dttutor');
             }
-            // Validate reference edges.
+
             if (!in_array($decoded['xref'], ['left', 'right'])) {
                 return get_string('error_invalid_position', 'local_dttutor');
             }
+
             if (!in_array($decoded['yref'], ['bottom', 'top'])) {
                 return get_string('error_invalid_position', 'local_dttutor');
             }
-            // Validate coordinates (should be valid CSS values).
+
             if ($decoded['preset'] === 'custom') {
                 if (!$this->validate_css_value($decoded['x']) || !$this->validate_css_value($decoded['y'])) {
                     return get_string('error_invalid_coordinates', 'local_dttutor');
@@ -113,7 +113,6 @@ class admin_setting_position_preview extends \admin_setting {
      * @return bool
      */
     private function validate_css_value($value) {
-        // Allow numeric values with units: px, rem, em, %, vh, vw.
         return preg_match('/^-?\d+(\.\d+)?(px|rem|em|%|vh|vw)$/', $value) === 1;
     }
 
@@ -133,27 +132,22 @@ class admin_setting_position_preview extends \admin_setting {
             $current = $default;
         }
 
-        // Decode current value.
         $currentdata = json_decode($current, true);
         if ($currentdata === null) {
-            // Fallback to right corner default.
-            $currentdata = ['preset' => 'right', 'x' => '2rem', 'y' => '6rem', 'drawerside' => 'right', 'xref' => 'left', 'yref' => 'bottom'];
+            $currentdata = ['preset' => 'right', 'x' => '2rem', 'y' => '6rem',
+                'drawerside' => 'right', 'xref' => 'left', 'yref' => 'bottom'];
         }
 
         $preset = $currentdata['preset'] ?? 'right';
         $xvalue = $currentdata['x'] ?? '2rem';
         $yvalue = $currentdata['y'] ?? '6rem';
         $drawerside = $currentdata['drawerside'] ?? 'right';
-
-        // Infer reference edges from negative values if not explicitly set.
         $xref = $currentdata['xref'] ?? (strpos($xvalue, '-') === 0 ? 'right' : 'left');
         $yref = $currentdata['yref'] ?? (strpos($yvalue, '-') === 0 ? 'top' : 'bottom');
 
-        // Get current avatar for preview.
         $avatar = get_config('local_dttutor', 'avatar') ?? '01';
         $avatarurl = $CFG->wwwroot . '/local/dttutor/pix/avatars/avatar_profesor_' . $avatar . '.png';
 
-        // Check if custom avatar exists.
         $customavatarurl = $this->get_custom_avatar_url();
         if ($customavatarurl) {
             $avatarurl = $customavatarurl;
@@ -161,7 +155,6 @@ class admin_setting_position_preview extends \admin_setting {
 
         $html = '';
 
-        // Add CSS for the position configurator.
         $html .= '<style>
 .position-configurator {
     background: #fff;
@@ -345,7 +338,6 @@ class admin_setting_position_preview extends \admin_setting {
 }
 </style>';
 
-        // Add JavaScript for interactive controls.
         $html .= '<script>
 function initPositionConfigurator() {
     const presetRadios = document.querySelectorAll(\'input[name="position_preset"]\');
@@ -398,12 +390,10 @@ function initPositionConfigurator() {
         let x = xInput.value;
         let y = yInput.value;
 
-        // Update visibility of custom coords.
         if (preset === \'custom\') {
             customCoordsDiv.classList.add(\'active\');
         } else {
             customCoordsDiv.classList.remove(\'active\');
-            // Set default values for presets.
             if (preset === \'right\') {
                 x = \'2rem\';
                 y = \'6rem\';
@@ -413,7 +403,6 @@ function initPositionConfigurator() {
             }
         }
 
-        // Update preview avatar position.
         if (preset === \'right\') {
             previewAvatar.style.right = x;
             previewAvatar.style.left = \'auto\';
@@ -425,7 +414,6 @@ function initPositionConfigurator() {
             previewAvatar.style.bottom = y;
             previewAvatar.style.top = \'auto\';
         } else {
-            // Custom positioning - convert to absolute pixels for consistent drag behavior.
             const rect = previewContainer.getBoundingClientRect();
             const avatarWidth = previewAvatar.offsetWidth;
             const avatarHeight = previewAvatar.offsetHeight;
@@ -436,11 +424,9 @@ function initPositionConfigurator() {
             const xValue = x.replace(\'-\', \'\');
             const yValue = y.replace(\'-\', \'\');
 
-            // Convert CSS values to pixels.
             const xPx = cssValueToPixels(xValue, rect.width);
             const yPx = cssValueToPixels(yValue, rect.height);
 
-            // Calculate absolute left and top positions.
             let leftPx, topPx;
 
             if (xSide === \'left\') {
@@ -455,19 +441,16 @@ function initPositionConfigurator() {
                 topPx = yPx;
             }
 
-            // Set absolute positioning.
             previewAvatar.style.left = leftPx + \'px\';
             previewAvatar.style.top = topPx + \'px\';
             previewAvatar.style.right = \'auto\';
             previewAvatar.style.bottom = \'auto\';
         }
 
-        // Update coordinates display.
         const xDisplay = preset === \'custom\' ? `${x} (from ${xRef})` : x;
         const yDisplay = preset === \'custom\' ? `${y} (from ${yRef})` : y;
         coordsDisplay.textContent = `Position: ${preset === \'custom\' ? `X: ${xDisplay}, Y: ${yDisplay}` : preset + \' corner\'} | Drawer: ${drawerSide}`;
 
-        // Update hidden input with JSON data.
         const data = {
             preset: preset,
             x: x,
@@ -478,7 +461,6 @@ function initPositionConfigurator() {
         };
         hiddenInput.value = JSON.stringify(data);
 
-        // Update preset option styling.
         document.querySelectorAll(\'.preset-option\').forEach(opt => opt.classList.remove(\'selected\'));
         const selectedOption = document.querySelector(`.preset-option[data-preset="${preset}"]`);
         if (selectedOption) {
@@ -486,7 +468,6 @@ function initPositionConfigurator() {
         }
     }
 
-    // Drag and drop functionality.
     function handleMouseMove(e) {
         if (!isDragging) return;
 
@@ -499,42 +480,34 @@ function initPositionConfigurator() {
         let newLeft = initialLeft + deltaX;
         let newTop = initialTop + deltaY;
 
-        // Constrain within preview container.
         const avatarWidth = previewAvatar.offsetWidth;
         const avatarHeight = previewAvatar.offsetHeight;
         newLeft = Math.max(0, Math.min(newLeft, rect.width - avatarWidth));
         newTop = Math.max(0, Math.min(newTop, rect.height - avatarHeight));
 
-        // Calculate position from edges.
         const fromRight = rect.width - newLeft - avatarWidth;
         const fromBottom = rect.height - newTop - avatarHeight;
 
-        // Get selected reference edges.
         const xRef = document.querySelector(\'input[name="ref_x"]:checked\')?.value || \'left\';
         const yRef = document.querySelector(\'input[name="ref_y"]:checked\')?.value || \'bottom\';
 
-        // Calculate and set values based on reference edges.
         if (xRef === \'left\') {
             xInput.value = pixelsToRem(newLeft);
         } else {
-            // Reference from right - use negative value.
             xInput.value = \'-\' + pixelsToRem(fromRight);
         }
 
         if (yRef === \'bottom\') {
             yInput.value = pixelsToRem(fromBottom);
         } else {
-            // Reference from top - use negative value.
             yInput.value = \'-\' + pixelsToRem(newTop);
         }
 
-        // Update avatar position visually using absolute positioning.
         previewAvatar.style.left = newLeft + \'px\';
         previewAvatar.style.top = newTop + \'px\';
         previewAvatar.style.right = \'auto\';
         previewAvatar.style.bottom = \'auto\';
 
-        // Update display.
         coordsDisplay.textContent = \'Position: X: \' + xInput.value + \' (from \' + xRef + \'), Y: \' + yInput.value + \' (from \' + yRef + \') | Drawer: \' + drawerSideSelect.value;
     }
 
@@ -544,8 +517,6 @@ function initPositionConfigurator() {
             previewAvatar.classList.remove(\'dragging\');
             document.removeEventListener(\'mousemove\', handleMouseMove);
             document.removeEventListener(\'mouseup\', handleMouseUp);
-
-            // Update the hidden input with final values.
             updatePreview();
         }
     }
@@ -561,23 +532,19 @@ function initPositionConfigurator() {
         startX = e.clientX;
         startY = e.clientY;
 
-        // Get current position relative to container.
         initialLeft = avatarRect.left - rect.left;
         initialTop = avatarRect.top - rect.top;
 
-        // Switch to custom preset when dragging.
         const customRadio = document.querySelector(\'input[name="position_preset"][value="custom"]\');
         if (customRadio) {
             customRadio.checked = true;
             customCoordsDiv.classList.add(\'active\');
         }
 
-        // Attach move and up handlers.
         document.addEventListener(\'mousemove\', handleMouseMove);
         document.addEventListener(\'mouseup\', handleMouseUp);
     });
 
-    // Event listeners.
     presetRadios.forEach(radio => {
         radio.addEventListener(\'change\', updatePreview);
     });
@@ -594,7 +561,6 @@ function initPositionConfigurator() {
         radio.addEventListener(\'change\', updatePreview);
     });
 
-    // Preset option click handlers.
     document.querySelectorAll(\'.preset-option\').forEach(opt => {
         opt.addEventListener(\'click\', function() {
             const preset = this.dataset.preset;
@@ -603,11 +569,9 @@ function initPositionConfigurator() {
         });
     });
 
-    // Initial update.
     updatePreview();
 }
 
-// Run on page load.
 if (document.readyState === \'loading\') {
     document.addEventListener(\'DOMContentLoaded\', initPositionConfigurator);
 } else {
@@ -615,16 +579,12 @@ if (document.readyState === \'loading\') {
 }
 </script>';
 
-        // Build the HTML structure.
         $html .= '<div class="position-configurator">';
         $html .= '<div class="position-controls">';
-
-        // Left panel: Controls.
         $html .= '<div class="position-control-left">';
         $html .= '<div class="position-preset-group">';
         $html .= '<label>' . get_string('position_preset', 'local_dttutor') . '</label>';
 
-        // Preset options.
         $presets = [
             'right' => get_string('position_right', 'local_dttutor'),
             'left' => get_string('position_left', 'local_dttutor'),
@@ -642,17 +602,17 @@ if (document.readyState === \'loading\') {
 
         $html .= '</div>';
 
-        // Drawer side selector.
         $html .= '<div class="drawer-side-group">';
         $html .= '<label for="drawer_side">' . get_string('drawer_side', 'local_dttutor') . '</label>';
         $html .= '<select id="drawer_side" name="drawer_side">';
-        $html .= '<option value="right"' . ($drawerside === 'right' ? ' selected' : '') . '>' . get_string('drawer_side_right', 'local_dttutor') . '</option>';
-        $html .= '<option value="left"' . ($drawerside === 'left' ? ' selected' : '') . '>' . get_string('drawer_side_left', 'local_dttutor') . '</option>';
+        $html .= '<option value="right"' . ($drawerside === 'right' ? ' selected' : '') . '>' .
+            get_string('drawer_side_right', 'local_dttutor') . '</option>';
+        $html .= '<option value="left"' . ($drawerside === 'left' ? ' selected' : '') . '>' .
+            get_string('drawer_side_left', 'local_dttutor') . '</option>';
         $html .= '</select>';
         $html .= '<div class="coord-help">' . get_string('drawer_side_help', 'local_dttutor') . '</div>';
         $html .= '</div>';
 
-        // Custom coordinates (shown when custom is selected).
         $activeclass = ($preset === 'custom') ? 'active' : '';
         $html .= '<div class="custom-coords ' . $activeclass . '" id="custom-coords">';
         $html .= '<div class="coord-input-group">';
@@ -667,7 +627,6 @@ if (document.readyState === \'loading\') {
         $html .= '</div>';
         $html .= '<div class="coord-help">' . get_string('position_y_help', 'local_dttutor') . '</div>';
 
-        // Reference edge selectors.
         $html .= '<div class="reference-edge-group">';
         $html .= '<label>' . get_string('reference_edge_x', 'local_dttutor') . ':</label>';
         $html .= '<div class="reference-edge-options">';
@@ -688,7 +647,6 @@ if (document.readyState === \'loading\') {
 
         $html .= '</div>';
 
-        // Right panel: Preview.
         $html .= '<div class="position-control-right">';
         $html .= '<div class="position-preview">';
         $html .= '<div class="preview-grid"></div>';
@@ -701,8 +659,8 @@ if (document.readyState === \'loading\') {
         $html .= '</div>';
         $html .= '</div>';
 
-        // Hidden input to store the JSON data.
-        $html .= '<input type="hidden" name="s_local_dttutor_avatar_position_data" id="id_s_local_dttutor_avatar_position_data" value="' . s($current) . '">';
+        $html .= '<input type="hidden" name="s_local_dttutor_avatar_position_data" ' .
+            'id="id_s_local_dttutor_avatar_position_data" value="' . s($current) . '">';
 
         return format_admin_setting($this, $this->visiblename, $html, $this->description, true, '', $default, $query);
     }

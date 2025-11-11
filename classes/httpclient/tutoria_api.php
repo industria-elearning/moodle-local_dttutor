@@ -61,7 +61,6 @@ class tutoria_api {
      * @since Moodle 4.5
      */
     public function start_session(int $courseid): array {
-        // Check cache first using course ID only.
         $cachekey = "session_{$courseid}";
         $cached = $this->cache->get($cachekey);
 
@@ -69,15 +68,12 @@ class tutoria_api {
             return $cached;
         }
 
-        // Create new session with course ID only (cmid sent in metadata with messages).
         $requestdata = ['course_id' => (string)$courseid];
 
         $response = $this->aiservice->request('POST', '/chat/start', $requestdata);
 
-        // Add creation timestamp for validation.
         $response['created_at'] = time();
 
-        // Store in cache with TTL (session TTL minus 1 hour margin).
         $ttl = ($response['session_ttl_seconds'] ?? 604800) - 3600;
         $this->cache->set($cachekey, $response);
 

@@ -46,7 +46,6 @@ class chat_hook {
     private static function is_course_context(): bool {
         global $PAGE, $COURSE;
 
-        // Check if we are on a course page.
         if (
             $PAGE->pagelayout === 'course' ||
             $PAGE->pagelayout === 'incourse' ||
@@ -56,12 +55,10 @@ class chat_hook {
             return true;
         }
 
-        // Check if there is a valid course.
         if (isset($COURSE) && $COURSE->id > 1) {
             return true;
         }
 
-        // Check context.
         $context = $PAGE->context;
         if (!$context) {
             return false;
@@ -88,19 +85,16 @@ class chat_hook {
 
         $context = $PAGE->context;
 
-        // Only check if we're in a module context.
         if ($context->contextlevel != CONTEXT_MODULE) {
             return false;
         }
 
-        // Get the course module information.
         $cm = get_coursemodule_from_id('', $context->instanceid, 0, false, IGNORE_MISSING);
 
         if (!$cm) {
             return false;
         }
 
-        // Check if the module is a quiz.
         return ($cm->modname === 'quiz');
     }
 
@@ -113,7 +107,6 @@ class chat_hook {
     private static function add_float_chat(before_footer_html_generation $hook): void {
         global $PAGE, $COURSE, $USER, $OUTPUT;
 
-        // Check if chat is enabled globally.
         if (!get_config('local_dttutor', 'enabled')) {
             return;
         }
@@ -139,43 +132,30 @@ class chat_hook {
             $cmid = $context->instanceid;
         }
 
-        // Detect user role.
         $userrole = self::get_user_role_in_course();
         $userroledisplay = ($userrole === 'teacher')
             ? get_string('teacher', 'local_dttutor')
             : get_string('student', 'local_dttutor');
 
-        // Get configured avatar with fallback system.
         $avatarurl = self::get_avatar_url();
-
-        // Get avatar position data (new JSON format).
         $positiondata = self::get_position_data();
 
-        // Get tutor name from configuration (can contain placeholders).
         $tutorname = get_config('local_dttutor', 'tutorname');
         if (empty($tutorname)) {
             $tutorname = get_string('tutorname_default', 'local_dttutor');
         }
-        // Process placeholders in tutor name (e.g., {teachername} will be replaced with actual teacher name).
         $tutorname = self::replace_placeholders($tutorname, $courseid);
 
-        // Get and process welcome message with placeholders.
         $welcomemessage = get_config('local_dttutor', 'welcomemessage');
         if (empty($welcomemessage)) {
             $welcomemessage = get_string('welcomemessage_default', 'local_dttutor');
         }
         $welcomemessage = self::replace_placeholders($welcomemessage, $courseid);
 
-        // Generate unique ID.
         $uniqid = uniqid('tia_');
-
-        // Calculate position style for toggle button.
         $positionstyle = self::calculate_position_style($positiondata);
-
-        // Get drawer side from configuration.
         $drawerside = $positiondata['drawerside'] ?? 'right';
 
-        // Prepare data for templates.
         $toggledata = [
             'uniqid' => $uniqid,
             'avatarurl' => $avatarurl->out(false),
@@ -192,14 +172,12 @@ class chat_hook {
             'tutorname' => $tutorname,
             'welcomemessage' => $welcomemessage,
             'avatarurl' => $avatarurl->out(false),
-            'position' => $drawerside, // Use drawer side from configuration.
+            'position' => $drawerside,
         ];
 
-        // Render templates.
         $toggle = $OUTPUT->render_from_template('local_dttutor/tutor_ia_toggle', $toggledata);
         $drawer = $OUTPUT->render_from_template('local_dttutor/tutor_ia_drawer', $drawerdata);
 
-        // Add HTML directly to footer using the hook.
         $hook->add_html($toggle . $drawer);
     }
 
@@ -217,7 +195,6 @@ class chat_hook {
 
         $style = '';
 
-        // Handle preset positions.
         if ($preset === 'right') {
             $style = "right: {$x}; bottom: {$y};";
         } else if ($preset === 'left') {
@@ -225,20 +202,16 @@ class chat_hook {
         } else if ($preset === 'custom') {
             // For custom, check if values are negative (position from opposite side).
             if (strpos($x, '-') === 0) {
-                // Negative X means position from right.
                 $xvalue = ltrim($x, '-');
                 $style .= "right: {$xvalue}; ";
             } else {
-                // Positive X means position from left.
                 $style .= "left: {$x}; ";
             }
 
             if (strpos($y, '-') === 0) {
-                // Negative Y means position from top.
                 $yvalue = ltrim($y, '-');
                 $style .= "top: {$yvalue};";
             } else {
-                // Positive Y means position from bottom.
                 $style .= "bottom: {$y};";
             }
         }
@@ -256,7 +229,6 @@ class chat_hook {
      * @since Moodle 4.5
      */
     private static function get_position_data(): array {
-        // Try new JSON format first.
         $positiondata = get_config('local_dttutor', 'avatar_position_data');
 
         if (!empty($positiondata)) {
@@ -264,7 +236,6 @@ class chat_hook {
             if ($decoded !== null && isset($decoded['preset'], $decoded['x'], $decoded['y'])) {
                 // Ensure drawerside exists (backward compatibility).
                 if (!isset($decoded['drawerside'])) {
-                    // Infer from preset or default to right.
                     $decoded['drawerside'] = isset($decoded['preset']) && $decoded['preset'] === 'left' ? 'left' : 'right';
                 }
                 return $decoded;
@@ -282,7 +253,6 @@ class chat_hook {
             ];
         }
 
-        // Default to right corner.
         return [
             'preset' => 'right',
             'x' => '2rem',
@@ -300,7 +270,6 @@ class chat_hook {
     private static function get_avatar_url(): \moodle_url {
         global $CFG;
 
-        // First priority: Check if custom avatar exists.
         $fs = get_file_storage();
         $files = $fs->get_area_files(
             \context_system::instance()->id,
@@ -323,15 +292,12 @@ class chat_hook {
             );
         }
 
-        // Second priority: Use selected predefined avatar.
         $avatarnum = get_config('local_dttutor', 'avatar');
 
-        // First fallback: If no configuration, use '01'.
         if (empty($avatarnum)) {
             $avatarnum = '01';
         }
 
-        // Second fallback: If file doesn't exist, use '01'.
         $avatarpath = $CFG->dirroot . '/local/dttutor/pix/avatars/avatar_profesor_' . $avatarnum . '.png';
         if (!file_exists($avatarpath)) {
             $avatarnum = '01';
@@ -339,7 +305,6 @@ class chat_hook {
             // Last fallback: If even '01' doesn't exist, use generic Moodle icon.
             $defaultpath = $CFG->dirroot . '/local/dttutor/pix/avatars/avatar_profesor_01.png';
             if (!file_exists($defaultpath)) {
-                // Use generic Moodle user icon.
                 return new \moodle_url('/pix/u/f1.png');
             }
         }
@@ -369,7 +334,6 @@ class chat_hook {
             return 'teacher';
         }
 
-        // Verify specific roles.
         $roles = get_user_roles($context, $USER->id);
         foreach ($roles as $role) {
             if (in_array($role->shortname, ['teacher', 'editingteacher', 'manager', 'coursecreator'])) {
@@ -396,7 +360,6 @@ class chat_hook {
 
         $context = \context_course::instance($courseid);
 
-        // Get all users with teacher role capabilities.
         // Include all fields required by fullname() to avoid debugging warnings.
         $teachers = get_enrolled_users(
             $context,
@@ -413,7 +376,6 @@ class chat_hook {
             return fullname($teacher);
         }
 
-        // Fallback: search by role shortname.
         // Include all fields required by fullname() to avoid debugging warnings.
         $sql = "SELECT u.id, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename
                   FROM {user} u
@@ -451,10 +413,8 @@ class chat_hook {
     private static function replace_placeholders(string $text, int $courseid): string {
         global $USER, $COURSE, $DB;
 
-        // Get teacher name from course.
         $teachername = self::get_first_teacher_name($courseid);
 
-        // If no teacher found, use a generic placeholder text.
         // Note: The tutorname config is NOT used here as fallback because it might contain
         // the {teachername} placeholder itself, which would cause infinite recursion.
         if (empty($teachername)) {
@@ -465,7 +425,6 @@ class chat_hook {
         $userrecord = $DB->get_record('user', ['id' => $USER->id],
             'id, firstname, lastname, firstnamephonetic, lastnamephonetic, middlename, alternatename');
 
-        // Prepare replacement array.
         $replacements = [
             '{teachername}' => $teachername,
             '{coursename}' => $COURSE->fullname ?? '',

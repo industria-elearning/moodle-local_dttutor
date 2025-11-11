@@ -66,16 +66,13 @@ class delete_chat_session extends external_api {
      * @since Moodle 4.5
      */
     public static function execute($sessionid): array {
-        // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'sessionid' => $sessionid,
         ]);
 
-        // Initialize Tutor-IA API client.
         $tutoriaapi = new tutoria_api();
 
         try {
-            // Attempt to delete the session.
             $result = $tutoriaapi->delete_session($params['sessionid']);
 
             return [
