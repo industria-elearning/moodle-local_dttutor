@@ -5,7 +5,7 @@
 /* Toggle Button */
 .tutor-ia-toggle-button {
     position: fixed;
-    /* bottom is set inline via template (6rem by default) */
+    /* Position (left/right and bottom/top) is set inline via template */
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -17,19 +17,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, left 0.3s ease, right 0.3s ease, top 0.3s ease, bottom 0.3s ease;
     padding: 0;
     overflow: hidden;
 }
 
-/* Position: Right (default) */
-.tutor-ia-position-right {
-    right: 2rem;
-}
-
-/* Position: Left */
-.tutor-ia-position-left {
-    left: 2rem;
+/* Position classes for preset identification */
+.tutor-ia-position-right,
+.tutor-ia-position-left,
+.tutor-ia-position-custom {
+    /* Actual positioning is done via inline style */
+    /* These classes are for JavaScript identification and drawer positioning */
 }
 
 .tutor-ia-toggle-button:hover {

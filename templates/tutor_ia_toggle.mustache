@@ -17,20 +17,20 @@
 {{!
     @template local_dttutor/tutor_ia_toggle
 
-    Botón flotante toggle para abrir/cerrar el drawer del Tutor-IA.
+    Floating toggle button to open/close the Tutor-IA drawer.
 
     Context variables required for this template:
     * uniqid - Unique identifier
-    * avatarurl - URL del avatar seleccionado
-    * position - Posición del botón (right/left)
-    * bottomposition - Distancia desde el bottom (ej: 6rem)
+    * avatarurl - URL of the selected avatar
+    * position - Position preset (right/left/custom)
+    * position_style - Inline CSS style for positioning (calculated in PHP)
 
     Example context (json):
     {
         "uniqid": "tia_123456",
         "avatarurl": "/local/dttutor/pix/avatars/avatar_profesor_01.png",
         "position": "right",
-        "bottomposition": "6rem"
+        "position_style": "right: 2rem; bottom: 6rem;"
     }
 }}
 <button
@@ -40,7 +40,7 @@
     type="button"
     data-action="tutor-ia-toggle"
     data-position="{{position}}"
-    style="bottom: {{bottomposition}};"
+    style="{{position_style}}"
     title="{{#str}}open, local_dttutor{{/str}}"
     aria-label="{{#str}}open, local_dttutor{{/str}}">
     <img src="{{avatarurl}}" alt="{{#str}}pluginname, local_dttutor{{/str}}" class="tutor-ia-avatar-toggle">

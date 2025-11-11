@@ -148,11 +148,8 @@ class chat_hook {
         // Get configured avatar with fallback system.
         $avatarurl = self::get_avatar_url();
 
-        // Get avatar position (right/left).
-        $position = get_config('local_dttutor', 'avatar_position');
-        if (empty($position)) {
-            $position = 'right'; // Default: right.
-        }
+        // Get avatar position data (new JSON format).
+        $positiondata = self::get_position_data();
 
         // Get tutor name from configuration (can contain placeholders).
         $tutorname = get_config('local_dttutor', 'tutorname');
@@ -169,20 +166,18 @@ class chat_hook {
         }
         $welcomemessage = self::replace_placeholders($welcomemessage, $courseid);
 
-        // Calculate bottom position dynamically based on Moodle's footer-popover.
-        // The footer-popover is at bottom: 2rem, and communication at 4rem.
-        // We place the avatar at 6rem to be above both.
-        $bottomposition = '6rem';
-
         // Generate unique ID.
         $uniqid = uniqid('tia_');
+
+        // Calculate position style for toggle button.
+        $positionstyle = self::calculate_position_style($positiondata);
 
         // Prepare data for templates.
         $toggledata = [
             'uniqid' => $uniqid,
             'avatarurl' => $avatarurl->out(false),
-            'position' => $position,
-            'bottomposition' => $bottomposition,
+            'position' => $positiondata['preset'],
+            'position_style' => $positionstyle,
         ];
 
         $drawerdata = [
@@ -194,7 +189,7 @@ class chat_hook {
             'tutorname' => $tutorname,
             'welcomemessage' => $welcomemessage,
             'avatarurl' => $avatarurl->out(false),
-            'position' => $position,
+            'position' => $positiondata['preset'],
         ];
 
         // Render templates.
@@ -203,6 +198,87 @@ class chat_hook {
 
         // Add HTML directly to footer using the hook.
         $hook->add_html($toggle . $drawer);
+    }
+
+    /**
+     * Calculates the CSS inline style for button positioning.
+     *
+     * @param array $positiondata Position data array with 'preset', 'x', 'y' keys
+     * @return string CSS style string
+     * @since Moodle 4.5
+     */
+    private static function calculate_position_style(array $positiondata): string {
+        $preset = $positiondata['preset'];
+        $x = $positiondata['x'];
+        $y = $positiondata['y'];
+
+        $style = '';
+
+        // Handle preset positions.
+        if ($preset === 'right') {
+            $style = "right: {$x}; bottom: {$y};";
+        } else if ($preset === 'left') {
+            $style = "left: {$x}; bottom: {$y};";
+        } else if ($preset === 'custom') {
+            // For custom, check if values are negative (position from opposite side).
+            if (strpos($x, '-') === 0) {
+                // Negative X means position from right.
+                $xvalue = ltrim($x, '-');
+                $style .= "right: {$xvalue}; ";
+            } else {
+                // Positive X means position from left.
+                $style .= "left: {$x}; ";
+            }
+
+            if (strpos($y, '-') === 0) {
+                // Negative Y means position from top.
+                $yvalue = ltrim($y, '-');
+                $style .= "top: {$yvalue};";
+            } else {
+                // Positive Y means position from bottom.
+                $style .= "bottom: {$y};";
+            }
+        }
+
+        return $style;
+    }
+
+    /**
+     * Gets the position data from configuration with fallback support.
+     *
+     * Returns array with 'preset', 'x', and 'y' keys.
+     * Provides backward compatibility with old 'avatar_position' config.
+     *
+     * @return array Position data array
+     * @since Moodle 4.5
+     */
+    private static function get_position_data(): array {
+        // Try new JSON format first.
+        $positiondata = get_config('local_dttutor', 'avatar_position_data');
+
+        if (!empty($positiondata)) {
+            $decoded = json_decode($positiondata, true);
+            if ($decoded !== null && isset($decoded['preset'], $decoded['x'], $decoded['y'])) {
+                return $decoded;
+            }
+        }
+
+        // Fallback to old format for backward compatibility.
+        $oldposition = get_config('local_dttutor', 'avatar_position');
+        if ($oldposition === 'left') {
+            return [
+                'preset' => 'left',
+                'x' => '2rem',
+                'y' => '6rem',
+            ];
+        }
+
+        // Default to right corner.
+        return [
+            'preset' => 'right',
+            'x' => '2rem',
+            'y' => '6rem',
+        ];
     }
 
     /**

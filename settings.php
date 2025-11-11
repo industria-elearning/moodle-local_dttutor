@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 // Load custom admin settings.
 require_once($CFG->dirroot . '/local/dttutor/classes/admin_settings/admin_setting_avatar_selector.php');
 require_once($CFG->dirroot . '/local/dttutor/classes/admin_settings/admin_setting_custom_avatar.php');
+require_once($CFG->dirroot . '/local/dttutor/classes/admin_settings/admin_setting_position_preview.php');
 
 if ($hassiteconfig) {
     $settings = new admin_settingpage('local_dttutor', get_string('pluginname', 'local_dttutor'));
@@ -68,17 +69,13 @@ if ($hassiteconfig) {
         )
     );
 
-    // Avatar Position.
+    // Avatar Position with Preview.
     $settings->add(
-        new admin_setting_configselect(
-            'local_dttutor/avatar_position',
+        new \local_dttutor\admin_settings\admin_setting_position_preview(
+            'local_dttutor/avatar_position_data',
             get_string('avatar_position', 'local_dttutor'),
             get_string('avatar_position_desc', 'local_dttutor'),
-            'right',
-            [
-                'right' => get_string('position_right', 'local_dttutor'),
-                'left' => get_string('position_left', 'local_dttutor'),
-            ]
+            '{"preset":"right","x":"2rem","y":"6rem"}'
         )
     );
 
