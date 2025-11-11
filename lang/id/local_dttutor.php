@@ -42,6 +42,7 @@ $string['enabled'] = 'Aktifkan Chat';
 $string['enabled_desc'] = 'Aktifkan atau nonaktifkan chat Tutor-IA secara global';
 $string['error_api_not_configured'] = 'Konfigurasi API tidak ada. Silakan periksa pengaturan Anda.';
 $string['error_api_request_failed'] = 'Kesalahan permintaan API: {$a}';
+$string['error_cache_unavailable'] = 'Layanan chat sementara tidak tersedia. Silakan coba refresh halaman.';
 $string['error_http_code'] = 'Kesalahan HTTP {$a}';
 $string['error_invalid_api_response'] = 'Respons API tidak valid';
 $string['error_invalid_coordinates'] = 'Koordinat tidak valid. Silakan gunakan nilai CSS yang valid (mis: 10px, 2rem, 50%)';

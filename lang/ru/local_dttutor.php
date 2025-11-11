@@ -42,6 +42,7 @@ $string['enabled'] = 'Включить чат';
 $string['enabled_desc'] = 'Включить или отключить чат Tutor-IA глобально';
 $string['error_api_not_configured'] = 'Конфигурация API отсутствует. Пожалуйста, проверьте настройки.';
 $string['error_api_request_failed'] = 'Ошибка запроса API: {$a}';
+$string['error_cache_unavailable'] = 'Служба чата временно недоступна. Пожалуйста, попробуйте обновить страницу.';
 $string['error_http_code'] = 'Ошибка HTTP {$a}';
 $string['error_invalid_api_response'] = 'Недействительный ответ API';
 $string['error_invalid_coordinates'] = 'Недействительные координаты. Пожалуйста, используйте допустимые значения CSS (например: 10px, 2rem, 50%)';

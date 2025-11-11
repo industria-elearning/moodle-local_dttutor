@@ -42,6 +42,7 @@ $string['enabled'] = 'Ativar chat';
 $string['enabled_desc'] = 'Ativar ou desativar o chat Tutor-IA globalmente';
 $string['error_api_not_configured'] = 'A configuração da API está ausente. Por favor, verifique suas configurações.';
 $string['error_api_request_failed'] = 'Erro na solicitação da API: {$a}';
+$string['error_cache_unavailable'] = 'O serviço de chat está temporariamente indisponível. Por favor, tente atualizar a página.';
 $string['error_http_code'] = 'Erro HTTP {$a}';
 $string['error_invalid_api_response'] = 'Resposta da API inválida';
 $string['error_invalid_coordinates'] = 'Coordenadas inválidas. Por favor, use valores CSS válidos (ex: 10px, 2rem, 50%)';

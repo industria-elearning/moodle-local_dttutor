@@ -39,8 +39,8 @@ class tutoria_api {
     /** @var ai_services_api AI services API client instance. */
     private ai_services_api $aiservice;
 
-    /** @var cache Cache instance for storing sessions. */
-    private cache $cache;
+    /** @var cache|null Cache instance for storing sessions. */
+    private ?cache $cache;
 
     /**
      * Constructor to initialize the Tutor-IA API client.
@@ -49,7 +49,13 @@ class tutoria_api {
      */
     public function __construct() {
         $this->aiservice = new ai_services_api();
-        $this->cache = cache::make('local_dttutor', 'sessions');
+
+        try {
+            $this->cache = cache::make('local_dttutor', 'sessions');
+        } catch (\Exception $e) {
+            debugging('Cache initialization failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            $this->cache = null;
+        }
     }
 
     /**
@@ -62,7 +68,11 @@ class tutoria_api {
      */
     public function start_session(int $courseid): array {
         $cachekey = "session_{$courseid}";
-        $cached = $this->cache->get($cachekey);
+        $cached = null;
+
+        if ($this->cache !== null) {
+            $cached = $this->cache->get($cachekey);
+        }
 
         if ($cached && $this->is_session_valid($cached)) {
             return $cached;
@@ -74,8 +84,10 @@ class tutoria_api {
 
         $response['created_at'] = time();
 
-        $ttl = ($response['session_ttl_seconds'] ?? 604800) - 3600;
-        $this->cache->set($cachekey, $response);
+        if ($this->cache !== null) {
+            $ttl = ($response['session_ttl_seconds'] ?? 604800) - 3600;
+            $this->cache->set($cachekey, $response);
+        }
 
         return $response;
     }
