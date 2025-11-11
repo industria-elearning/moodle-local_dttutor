@@ -172,6 +172,9 @@ class chat_hook {
         // Calculate position style for toggle button.
         $positionstyle = self::calculate_position_style($positiondata);
 
+        // Get drawer side from configuration.
+        $drawerside = $positiondata['drawerside'] ?? 'right';
+
         // Prepare data for templates.
         $toggledata = [
             'uniqid' => $uniqid,
@@ -189,7 +192,7 @@ class chat_hook {
             'tutorname' => $tutorname,
             'welcomemessage' => $welcomemessage,
             'avatarurl' => $avatarurl->out(false),
-            'position' => $positiondata['preset'],
+            'position' => $drawerside, // Use drawer side from configuration.
         ];
 
         // Render templates.
@@ -246,7 +249,7 @@ class chat_hook {
     /**
      * Gets the position data from configuration with fallback support.
      *
-     * Returns array with 'preset', 'x', and 'y' keys.
+     * Returns array with 'preset', 'x', 'y', and 'drawerside' keys.
      * Provides backward compatibility with old 'avatar_position' config.
      *
      * @return array Position data array
@@ -259,6 +262,11 @@ class chat_hook {
         if (!empty($positiondata)) {
             $decoded = json_decode($positiondata, true);
             if ($decoded !== null && isset($decoded['preset'], $decoded['x'], $decoded['y'])) {
+                // Ensure drawerside exists (backward compatibility).
+                if (!isset($decoded['drawerside'])) {
+                    // Infer from preset or default to right.
+                    $decoded['drawerside'] = isset($decoded['preset']) && $decoded['preset'] === 'left' ? 'left' : 'right';
+                }
                 return $decoded;
             }
         }
@@ -270,6 +278,7 @@ class chat_hook {
                 'preset' => 'left',
                 'x' => '2rem',
                 'y' => '6rem',
+                'drawerside' => 'left',
             ];
         }
 
@@ -278,6 +287,7 @@ class chat_hook {
             'preset' => 'right',
             'x' => '2rem',
             'y' => '6rem',
+            'drawerside' => 'right',
         ];
     }
 

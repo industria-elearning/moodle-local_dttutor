@@ -17,18 +17,18 @@
 {{!
     @template local_dttutor/tutor_ia_drawer
 
-    Drawer lateral para el chat Tutor-IA (basado en aiplacement_courseassist).
+    Lateral drawer for Tutor-IA chat (based on aiplacement_courseassist).
 
     Context variables required for this template:
     * uniqid - Unique identifier
-    * courseid - ID del curso
-    * cmid - ID del módulo del curso (0 si solo está en el curso)
-    * userid - ID del usuario
-    * userrole - Rol del usuario (Profesor/Estudiante)
-    * tutorname - Nombre del tutor (puede incluir nombre del profesor o personalizado)
-    * welcomemessage - Mensaje de bienvenida personalizado con placeholders procesados
-    * avatarurl - URL del avatar seleccionado
-    * position - Posición del drawer (right/left)
+    * courseid - Course ID
+    * cmid - Course module ID (0 if only in course)
+    * userid - User ID
+    * userrole - User role display (Teacher/Student)
+    * tutorname - Tutor name (may include teacher name or custom)
+    * welcomemessage - Welcome message with processed placeholders
+    * avatarurl - Selected avatar URL
+    * position - Drawer side (right/left, auto-determined for custom positions)
 
     Example context (json):
     {
@@ -36,9 +36,9 @@
         "courseid": 2,
         "cmid": 15,
         "userid": 5,
-        "userrole": "Estudiante",
-        "tutorname": "Juan Pérez",
-        "welcomemessage": "Hola! Soy Juan Pérez, tu asistente de IA. ¿Cómo puedo ayudarte hoy?",
+        "userrole": "Student",
+        "tutorname": "John Doe",
+        "welcomemessage": "Hello! I'm John Doe, your AI assistant. How can I help you today?",
         "avatarurl": "/local/dttutor/pix/avatars/avatar_profesor_01.png",
         "position": "right"
     }

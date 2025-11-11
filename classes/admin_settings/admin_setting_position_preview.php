@@ -31,7 +31,7 @@ require_once($CFG->libdir . '/adminlib.php');
 /**
  * Admin setting for avatar position with live preview
  *
- * Stores position as JSON: {"preset":"right|left|custom","x":"value","y":"value"}
+ * Stores position as JSON: {"preset":"right|left|custom","x":"value","y":"value","drawerside":"right|left","xref":"left|right","yref":"bottom|top"}
  *
  * @package    local_dttutor
  * @copyright  2025 Datacurso
@@ -77,11 +77,23 @@ class admin_setting_position_preview extends \admin_setting {
                 return get_string('error_invalid_position', 'local_dttutor');
             }
             // Validate data structure.
-            if (!isset($decoded['preset']) || !isset($decoded['x']) || !isset($decoded['y'])) {
+            if (!isset($decoded['preset']) || !isset($decoded['x']) || !isset($decoded['y']) ||
+                !isset($decoded['drawerside']) || !isset($decoded['xref']) || !isset($decoded['yref'])) {
                 return get_string('error_invalid_position', 'local_dttutor');
             }
             // Validate preset.
             if (!in_array($decoded['preset'], ['right', 'left', 'custom'])) {
+                return get_string('error_invalid_position', 'local_dttutor');
+            }
+            // Validate drawer side.
+            if (!in_array($decoded['drawerside'], ['right', 'left'])) {
+                return get_string('error_invalid_position', 'local_dttutor');
+            }
+            // Validate reference edges.
+            if (!in_array($decoded['xref'], ['left', 'right'])) {
+                return get_string('error_invalid_position', 'local_dttutor');
+            }
+            if (!in_array($decoded['yref'], ['bottom', 'top'])) {
                 return get_string('error_invalid_position', 'local_dttutor');
             }
             // Validate coordinates (should be valid CSS values).
@@ -125,12 +137,17 @@ class admin_setting_position_preview extends \admin_setting {
         $currentdata = json_decode($current, true);
         if ($currentdata === null) {
             // Fallback to right corner default.
-            $currentdata = ['preset' => 'right', 'x' => '2rem', 'y' => '6rem'];
+            $currentdata = ['preset' => 'right', 'x' => '2rem', 'y' => '6rem', 'drawerside' => 'right', 'xref' => 'left', 'yref' => 'bottom'];
         }
 
         $preset = $currentdata['preset'] ?? 'right';
         $xvalue = $currentdata['x'] ?? '2rem';
         $yvalue = $currentdata['y'] ?? '6rem';
+        $drawerside = $currentdata['drawerside'] ?? 'right';
+
+        // Infer reference edges from negative values if not explicitly set.
+        $xref = $currentdata['xref'] ?? (strpos($xvalue, '-') === 0 ? 'right' : 'left');
+        $yref = $currentdata['yref'] ?? (strpos($yvalue, '-') === 0 ? 'top' : 'bottom');
 
         // Get current avatar for preview.
         $avatar = get_config('local_dttutor', 'avatar') ?? '01';
@@ -171,6 +188,24 @@ class admin_setting_position_preview extends \admin_setting {
     display: block;
     margin-bottom: 5px;
     font-weight: 600;
+}
+.drawer-side-group {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+.drawer-side-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+.drawer-side-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1rem;
 }
 .preset-option {
     display: flex;
@@ -222,6 +257,32 @@ class admin_setting_position_preview extends \admin_setting {
     color: #6c757d;
     margin-top: 5px;
 }
+.reference-edge-group {
+    margin-top: 15px;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+.reference-edge-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+.reference-edge-options {
+    display: flex;
+    gap: 15px;
+}
+.reference-edge-options label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    margin-bottom: 0;
+}
+.reference-edge-options input[type="radio"] {
+    margin-right: 5px;
+}
 .position-preview {
     position: relative;
     width: 100%;
@@ -247,11 +308,17 @@ class admin_setting_position_preview extends \admin_setting {
     height: 60px;
     border-radius: 50%;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-    cursor: pointer;
+    cursor: move;
+    user-select: none;
 }
 .preview-avatar:hover {
-    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+.preview-avatar.dragging {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    opacity: 0.9;
+    cursor: grabbing;
+    z-index: 1000;
 }
 .preview-coordinates {
     position: absolute;
@@ -285,12 +352,49 @@ function initPositionConfigurator() {
     const customCoordsDiv = document.getElementById(\'custom-coords\');
     const xInput = document.getElementById(\'position_x\');
     const yInput = document.getElementById(\'position_y\');
+    const xRefRadios = document.querySelectorAll(\'input[name="ref_x"]\');
+    const yRefRadios = document.querySelectorAll(\'input[name="ref_y"]\');
+    const drawerSideSelect = document.getElementById(\'drawer_side\');
     const previewAvatar = document.getElementById(\'preview-avatar\');
+    const previewContainer = document.querySelector(\'.position-preview\');
     const coordsDisplay = document.getElementById(\'coords-display\');
     const hiddenInput = document.getElementById(\'id_s_local_dttutor_avatar_position_data\');
 
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let initialLeft = 0;
+    let initialTop = 0;
+
+    function pixelsToRem(pixels) {
+        const fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        return (pixels / fontSize).toFixed(2) + \'rem\';
+    }
+
+    function cssValueToPixels(value, containerSize) {
+        if (value.endsWith(\'px\')) {
+            return parseFloat(value);
+        } else if (value.endsWith(\'rem\')) {
+            const fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+            return parseFloat(value) * fontSize;
+        } else if (value.endsWith(\'em\')) {
+            const fontSize = parseFloat(getComputedStyle(previewAvatar).fontSize);
+            return parseFloat(value) * fontSize;
+        } else if (value.endsWith(\'%\')) {
+            return (parseFloat(value) / 100) * containerSize;
+        } else if (value.endsWith(\'vh\')) {
+            return (parseFloat(value) / 100) * window.innerHeight;
+        } else if (value.endsWith(\'vw\')) {
+            return (parseFloat(value) / 100) * window.innerWidth;
+        }
+        return 0;
+    }
+
     function updatePreview() {
         const preset = document.querySelector(\'input[name="position_preset"]:checked\').value;
+        const drawerSide = drawerSideSelect.value;
+        const xRef = document.querySelector(\'input[name="ref_x"]:checked\')?.value || \'left\';
+        const yRef = document.querySelector(\'input[name="ref_y"]:checked\')?.value || \'bottom\';
         let x = xInput.value;
         let y = yInput.value;
 
@@ -321,24 +425,56 @@ function initPositionConfigurator() {
             previewAvatar.style.bottom = y;
             previewAvatar.style.top = \'auto\';
         } else {
-            // Custom positioning.
+            // Custom positioning - convert to absolute pixels for consistent drag behavior.
+            const rect = previewContainer.getBoundingClientRect();
+            const avatarWidth = previewAvatar.offsetWidth;
+            const avatarHeight = previewAvatar.offsetHeight;
+
             const xSide = x.startsWith(\'-\') ? \'right\' : \'left\';
             const ySide = y.startsWith(\'-\') ? \'top\' : \'bottom\';
 
-            previewAvatar.style[xSide] = x.replace(\'-\', \'\');
-            previewAvatar.style[xSide === \'left\' ? \'right\' : \'left\'] = \'auto\';
-            previewAvatar.style[ySide] = y.replace(\'-\', \'\');
-            previewAvatar.style[ySide === \'bottom\' ? \'top\' : \'bottom\'] = \'auto\';
+            const xValue = x.replace(\'-\', \'\');
+            const yValue = y.replace(\'-\', \'\');
+
+            // Convert CSS values to pixels.
+            const xPx = cssValueToPixels(xValue, rect.width);
+            const yPx = cssValueToPixels(yValue, rect.height);
+
+            // Calculate absolute left and top positions.
+            let leftPx, topPx;
+
+            if (xSide === \'left\') {
+                leftPx = xPx;
+            } else {
+                leftPx = rect.width - xPx - avatarWidth;
+            }
+
+            if (ySide === \'bottom\') {
+                topPx = rect.height - yPx - avatarHeight;
+            } else {
+                topPx = yPx;
+            }
+
+            // Set absolute positioning.
+            previewAvatar.style.left = leftPx + \'px\';
+            previewAvatar.style.top = topPx + \'px\';
+            previewAvatar.style.right = \'auto\';
+            previewAvatar.style.bottom = \'auto\';
         }
 
         // Update coordinates display.
-        coordsDisplay.textContent = `Position: ${preset === \'custom\' ? `X: ${x}, Y: ${y}` : preset + \' corner\'}`;
+        const xDisplay = preset === \'custom\' ? `${x} (from ${xRef})` : x;
+        const yDisplay = preset === \'custom\' ? `${y} (from ${yRef})` : y;
+        coordsDisplay.textContent = `Position: ${preset === \'custom\' ? `X: ${xDisplay}, Y: ${yDisplay}` : preset + \' corner\'} | Drawer: ${drawerSide}`;
 
         // Update hidden input with JSON data.
         const data = {
             preset: preset,
             x: x,
-            y: y
+            y: y,
+            drawerside: drawerSide,
+            xref: xRef,
+            yref: yRef
         };
         hiddenInput.value = JSON.stringify(data);
 
@@ -350,6 +486,97 @@ function initPositionConfigurator() {
         }
     }
 
+    // Drag and drop functionality.
+    function handleMouseMove(e) {
+        if (!isDragging) return;
+
+        e.preventDefault();
+
+        const rect = previewContainer.getBoundingClientRect();
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
+
+        // Constrain within preview container.
+        const avatarWidth = previewAvatar.offsetWidth;
+        const avatarHeight = previewAvatar.offsetHeight;
+        newLeft = Math.max(0, Math.min(newLeft, rect.width - avatarWidth));
+        newTop = Math.max(0, Math.min(newTop, rect.height - avatarHeight));
+
+        // Calculate position from edges.
+        const fromRight = rect.width - newLeft - avatarWidth;
+        const fromBottom = rect.height - newTop - avatarHeight;
+
+        // Get selected reference edges.
+        const xRef = document.querySelector(\'input[name="ref_x"]:checked\')?.value || \'left\';
+        const yRef = document.querySelector(\'input[name="ref_y"]:checked\')?.value || \'bottom\';
+
+        // Calculate and set values based on reference edges.
+        if (xRef === \'left\') {
+            xInput.value = pixelsToRem(newLeft);
+        } else {
+            // Reference from right - use negative value.
+            xInput.value = \'-\' + pixelsToRem(fromRight);
+        }
+
+        if (yRef === \'bottom\') {
+            yInput.value = pixelsToRem(fromBottom);
+        } else {
+            // Reference from top - use negative value.
+            yInput.value = \'-\' + pixelsToRem(newTop);
+        }
+
+        // Update avatar position visually using absolute positioning.
+        previewAvatar.style.left = newLeft + \'px\';
+        previewAvatar.style.top = newTop + \'px\';
+        previewAvatar.style.right = \'auto\';
+        previewAvatar.style.bottom = \'auto\';
+
+        // Update display.
+        coordsDisplay.textContent = \'Position: X: \' + xInput.value + \' (from \' + xRef + \'), Y: \' + yInput.value + \' (from \' + yRef + \') | Drawer: \' + drawerSideSelect.value;
+    }
+
+    function handleMouseUp() {
+        if (isDragging) {
+            isDragging = false;
+            previewAvatar.classList.remove(\'dragging\');
+            document.removeEventListener(\'mousemove\', handleMouseMove);
+            document.removeEventListener(\'mouseup\', handleMouseUp);
+
+            // Update the hidden input with final values.
+            updatePreview();
+        }
+    }
+
+    previewAvatar.addEventListener(\'mousedown\', function(e) {
+        e.preventDefault();
+        isDragging = true;
+        previewAvatar.classList.add(\'dragging\');
+
+        const rect = previewContainer.getBoundingClientRect();
+        const avatarRect = previewAvatar.getBoundingClientRect();
+
+        startX = e.clientX;
+        startY = e.clientY;
+
+        // Get current position relative to container.
+        initialLeft = avatarRect.left - rect.left;
+        initialTop = avatarRect.top - rect.top;
+
+        // Switch to custom preset when dragging.
+        const customRadio = document.querySelector(\'input[name="position_preset"][value="custom"]\');
+        if (customRadio) {
+            customRadio.checked = true;
+            customCoordsDiv.classList.add(\'active\');
+        }
+
+        // Attach move and up handlers.
+        document.addEventListener(\'mousemove\', handleMouseMove);
+        document.addEventListener(\'mouseup\', handleMouseUp);
+    });
+
     // Event listeners.
     presetRadios.forEach(radio => {
         radio.addEventListener(\'change\', updatePreview);
@@ -357,6 +584,15 @@ function initPositionConfigurator() {
 
     xInput.addEventListener(\'input\', updatePreview);
     yInput.addEventListener(\'input\', updatePreview);
+    drawerSideSelect.addEventListener(\'change\', updatePreview);
+
+    xRefRadios.forEach(radio => {
+        radio.addEventListener(\'change\', updatePreview);
+    });
+
+    yRefRadios.forEach(radio => {
+        radio.addEventListener(\'change\', updatePreview);
+    });
 
     // Preset option click handlers.
     document.querySelectorAll(\'.preset-option\').forEach(opt => {
@@ -406,6 +642,16 @@ if (document.readyState === \'loading\') {
 
         $html .= '</div>';
 
+        // Drawer side selector.
+        $html .= '<div class="drawer-side-group">';
+        $html .= '<label for="drawer_side">' . get_string('drawer_side', 'local_dttutor') . '</label>';
+        $html .= '<select id="drawer_side" name="drawer_side">';
+        $html .= '<option value="right"' . ($drawerside === 'right' ? ' selected' : '') . '>' . get_string('drawer_side_right', 'local_dttutor') . '</option>';
+        $html .= '<option value="left"' . ($drawerside === 'left' ? ' selected' : '') . '>' . get_string('drawer_side_left', 'local_dttutor') . '</option>';
+        $html .= '</select>';
+        $html .= '<div class="coord-help">' . get_string('drawer_side_help', 'local_dttutor') . '</div>';
+        $html .= '</div>';
+
         // Custom coordinates (shown when custom is selected).
         $activeclass = ($preset === 'custom') ? 'active' : '';
         $html .= '<div class="custom-coords ' . $activeclass . '" id="custom-coords">';
@@ -420,6 +666,24 @@ if (document.readyState === \'loading\') {
         $html .= '<input type="text" id="position_y" value="' . s($yvalue) . '" placeholder="6rem">';
         $html .= '</div>';
         $html .= '<div class="coord-help">' . get_string('position_y_help', 'local_dttutor') . '</div>';
+
+        // Reference edge selectors.
+        $html .= '<div class="reference-edge-group">';
+        $html .= '<label>' . get_string('reference_edge_x', 'local_dttutor') . ':</label>';
+        $html .= '<div class="reference-edge-options">';
+        $html .= '<label><input type="radio" name="ref_x" value="left"' . ($xref === 'left' ? ' checked' : '') . '> ' . get_string('ref_left', 'local_dttutor') . '</label>';
+        $html .= '<label><input type="radio" name="ref_x" value="right"' . ($xref === 'right' ? ' checked' : '') . '> ' . get_string('ref_right', 'local_dttutor') . '</label>';
+        $html .= '</div>';
+        $html .= '</div>';
+
+        $html .= '<div class="reference-edge-group">';
+        $html .= '<label>' . get_string('reference_edge_y', 'local_dttutor') . ':</label>';
+        $html .= '<div class="reference-edge-options">';
+        $html .= '<label><input type="radio" name="ref_y" value="bottom"' . ($yref === 'bottom' ? ' checked' : '') . '> ' . get_string('ref_bottom', 'local_dttutor') . '</label>';
+        $html .= '<label><input type="radio" name="ref_y" value="top"' . ($yref === 'top' ? ' checked' : '') . '> ' . get_string('ref_top', 'local_dttutor') . '</label>';
+        $html .= '</div>';
+        $html .= '</div>';
+
         $html .= '</div>';
 
         $html .= '</div>';
