@@ -24,10 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['apitoken'] = 'Token autentikasi';
-$string['apitoken_desc'] = 'Token autentikasi untuk API Tutor-IA';
-$string['apiurl'] = 'URL API Tutor-IA';
-$string['apiurl_desc'] = 'URL dasar API Tutor-IA (contoh: https://plugins-ai-dev.datacurso.com)';
 $string['avatar'] = 'Avatar Tutor-IA';
 $string['avatar_desc'] = 'Pilih avatar yang akan ditampilkan pada tombol chat mengambang Tutor-IA. Jika tidak ada yang dipilih atau file tidak ada, Avatar 1 akan digunakan secara default.';
 $string['avatar_position'] = 'Posisi avatar';

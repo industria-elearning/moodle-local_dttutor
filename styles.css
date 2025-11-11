@@ -1,11 +1,11 @@
 /* ============================================
-   TUTOR-IA DRAWER (basado en aiplacement_courseassist)
+   TUTOR-IA DRAWER (based on aiplacement_courseassist)
    ============================================ */
 
 /* Toggle Button */
 .tutor-ia-toggle-button {
     position: fixed;
-    /* bottom is set inline via template (6rem por defecto) */
+    /* bottom is set inline via template (6rem by default) */
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -81,10 +81,10 @@
 
 /* ============================================
    Footer Popover Positioning
-   Mover footer-popover cuando el drawer del Tutor-IA está abierto
+   Move footer-popover when Tutor-IA drawer is open
    ============================================ */
 
-/* Cuando el drawer del Tutor-IA está abierto a la DERECHA */
+/* When Tutor-IA drawer is open on the RIGHT */
 body.tutor-ia-drawer-open-right .btn-footer-popover,
 body.tutor-ia-drawer-open-right .btn-footer-communication,
 body.tutor-ia-drawer-open-right .popover-process-monitor {
@@ -100,11 +100,11 @@ body.tutor-ia-drawer-open-right .maintenancewarning {
     transition: right 0.2s ease;
 }
 
-/* Cuando el drawer del Tutor-IA está abierto a la IZQUIERDA */
+/* When Tutor-IA drawer is open on the LEFT */
 body.tutor-ia-drawer-open-left .btn-footer-popover,
 body.tutor-ia-drawer-open-left .btn-footer-communication,
 body.tutor-ia-drawer-open-left .popover-process-monitor {
-    /* Mantener posición derecha normal, no se mueven */
+    /* Keep normal right position, don't move */
     /* stylelint-disable-next-line declaration-no-important */
     right: 2rem !important;
 }

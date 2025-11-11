@@ -32,34 +32,6 @@ if ($hassiteconfig) {
     $settings = new admin_settingpage('local_dttutor', get_string('pluginname', 'local_dttutor'));
     $ADMIN->add('localplugins', $settings);
 
-    // API Settings Section.
-    $settings->add(new admin_setting_heading(
-        'local_dttutor/apisettings',
-        get_string('apiurl', 'local_dttutor'),
-        ''
-    ));
-
-    // API URL.
-    $settings->add(
-        new admin_setting_configtext(
-            'local_dttutor/apiurl',
-            get_string('apiurl', 'local_dttutor'),
-            get_string('apiurl_desc', 'local_dttutor'),
-            'https://plugins-ai-dev.datacurso.com',
-            PARAM_URL
-        )
-    );
-
-    // API Token.
-    $settings->add(
-        new admin_setting_configpasswordunmask(
-            'local_dttutor/apitoken',
-            get_string('apitoken', 'local_dttutor'),
-            get_string('apitoken_desc', 'local_dttutor'),
-            ''
-        )
-    );
-
     // Enable/Disable Chat.
     $settings->add(
         new admin_setting_configcheckbox(

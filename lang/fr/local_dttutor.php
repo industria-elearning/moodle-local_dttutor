@@ -24,10 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['apitoken'] = 'Jeton d\'authentification';
-$string['apitoken_desc'] = 'Jeton d\'authentification pour l\'API Tutor-IA';
-$string['apiurl'] = 'URL de l\'API Tutor-IA';
-$string['apiurl_desc'] = 'URL de base de l\'API Tutor-IA (ex: https://plugins-ai-dev.datacurso.com)';
 $string['avatar'] = 'Avatar Tutor-IA';
 $string['avatar_desc'] = 'Sélectionnez l\'avatar à afficher sur le bouton flottant du chat Tutor-IA. Si aucun n\'est sélectionné ou si le fichier n\'existe pas, l\'Avatar 1 sera utilisé par défaut.';
 $string['avatar_position'] = 'Position de l\'avatar';

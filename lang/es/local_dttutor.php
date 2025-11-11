@@ -24,10 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['apitoken'] = 'Token de autenticación';
-$string['apitoken_desc'] = 'Token de autenticación para la API de Tutor-IA';
-$string['apiurl'] = 'URL de API Tutor-IA';
-$string['apiurl_desc'] = 'URL base de la API de Tutor-IA (ej: https://plugins-ai-dev.datacurso.com)';
 $string['avatar'] = 'Avatar del Tutor-IA';
 $string['avatar_desc'] = 'Selecciona el avatar que se mostrará en el botón flotante del chat Tutor-IA. Si no se selecciona ninguno o el archivo no existe, se usará el Avatar 1 por defecto.';
 $string['avatar_position'] = 'Posición del avatar';

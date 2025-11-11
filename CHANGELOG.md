@@ -45,8 +45,6 @@ Nothing yet.
 - **Responsive**: Adapts to different screen sizes
 
 #### Configuration
-- **API URL**: Configurable base URL for Tutor-IA API
-- **API Token**: Bearer authentication token
 - **Enable/Disable**: Global toggle for chat functionality
 - **Avatar selection**: 10 predefined avatars to choose from
 - **Avatar position**: Right or left corner placement
@@ -109,8 +107,6 @@ Nothing yet.
 - **Impact**: All PHP namespaces, web services, config keys, and string keys updated
 
 #### Config Key Simplification
-- `tutoraiapiurl` → `apiurl` (clearer, shorter)
-- `tutoraitoken` → `apitoken` (clearer, shorter)
 - `enablechat` → `enabled` (standard naming)
 - `tutoria_avatar` → `avatar` (no ambiguity in dedicated plugin)
 - `tutoria_avatar_position` → `avatar_position` (simpler)
