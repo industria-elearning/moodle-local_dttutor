@@ -45,7 +45,7 @@
 /* Drawer Container */
 .tutor-ia-drawer {
     position: fixed;
-    top: 60px;
+    top: var(--tutor-ia-drawer-top, 60px); /* Default 60px, adjusted by JavaScript */
     bottom: 0;
     width: 380px;
     background-color: #f8f9fa;

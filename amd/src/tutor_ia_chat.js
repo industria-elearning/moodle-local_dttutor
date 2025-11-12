@@ -85,7 +85,57 @@ define([
             // Capture contextual information from the page.
             this.pageContext = this.detectPageContext();
 
+            // Adjust drawer top position based on navbar height.
+            this.adjustDrawerTopPosition();
+
             this.init();
+        }
+
+        /**
+         * Adjusts the drawer top position based on the navbar height.
+         * This ensures compatibility with different Moodle themes that may have
+         * different navbar heights (e.g., 60px, 80px, etc.).
+         */
+        adjustDrawerTopPosition() {
+            if (!this.drawerElement) {
+                return;
+            }
+
+            // Try to find the navbar using common Moodle selectors.
+            const navbarSelectors = [
+                '.navbar.fixed-top',
+                '.fixed-top.navbar',
+                '#page-header.fixed-top',
+                'nav.fixed-top',
+                '.navbar-fixed-top'
+            ];
+
+            let navbarHeight = 60; // Default fallback height.
+
+            for (const selector of navbarSelectors) {
+                const navbar = document.querySelector(selector);
+                if (navbar) {
+                    // Get the computed height including padding and border.
+                    navbarHeight = navbar.offsetHeight;
+
+                    // If the navbar is hidden or has 0 height, skip it.
+                    if (navbarHeight > 0) {
+                        break;
+                    }
+                }
+            }
+
+            // Set the CSS variable for drawer top position.
+            this.drawerElement.style.setProperty('--tutor-ia-drawer-top', navbarHeight + 'px');
+
+            // Also listen for window resize to recalculate if needed.
+            window.addEventListener('resize', () => {
+                const navbar = document.querySelector(navbarSelectors[0]);
+                if (navbar) {
+                    const newHeight = navbar.offsetHeight;
+                    this.drawerElement.style.setProperty('--tutor-ia-drawer-top', newHeight + 'px');
+                }
+            });
         }
 
         /**
