@@ -94,6 +94,16 @@ class create_chat_message extends external_api {
 
         $metaarray['userid'] = $USER->id;
 
+        // Add off-topic detection settings to metadata.
+        $metaarray['off_topic_detection_enabled'] = (bool)get_config('local_dttutor', 'offtopic_detection_enabled');
+        $metaarray['off_topic_strictness'] = get_config('local_dttutor', 'offtopic_strictness') ?: 'permissive';
+
+        // Add custom prompt to metadata if configured.
+        $customprompt = get_config('local_dttutor', 'custom_prompt');
+        if (!empty($customprompt)) {
+            $metaarray['custom_prompt'] = $customprompt;
+        }
+
         $session = $tutoriaapi->start_session($params['courseid']);
 
         if (!isset($session['ready']) || !$session['ready']) {

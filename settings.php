@@ -43,6 +43,31 @@ if ($hassiteconfig) {
         )
     );
 
+    // Off-topic Detection.
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'local_dttutor/offtopic_detection_enabled',
+            get_string('offtopic_detection_enabled', 'local_dttutor'),
+            get_string('offtopic_detection_enabled_desc', 'local_dttutor'),
+            '0'
+        )
+    );
+
+    // Off-topic Strictness.
+    $settings->add(
+        new admin_setting_configselect(
+            'local_dttutor/offtopic_strictness',
+            get_string('offtopic_strictness', 'local_dttutor'),
+            get_string('offtopic_strictness_desc', 'local_dttutor'),
+            'permissive',
+            [
+                'permissive' => get_string('offtopic_strictness_permissive', 'local_dttutor'),
+                'moderate' => get_string('offtopic_strictness_moderate', 'local_dttutor'),
+                'strict' => get_string('offtopic_strictness_strict', 'local_dttutor'),
+            ]
+        )
+    );
+
     // Avatar Selection.
     $settings->add(new admin_setting_heading(
         'local_dttutor/avatarsettings',
@@ -79,10 +104,10 @@ if ($hassiteconfig) {
         )
     );
 
-    // Welcome Message Section.
+    // Tutor Customization Section.
     $settings->add(new admin_setting_heading(
-        'local_dttutor/welcomesettings',
-        get_string('welcomesettings', 'local_dttutor'),
+        'local_dttutor/tutorcustomization',
+        get_string('tutorcustomization', 'local_dttutor'),
         ''
     ));
 
@@ -104,6 +129,17 @@ if ($hassiteconfig) {
             get_string('tutorname_setting', 'local_dttutor'),
             get_string('tutorname_setting_desc', 'local_dttutor'),
             get_string('tutorname_default', 'local_dttutor'),
+            PARAM_TEXT
+        )
+    );
+
+    // Custom Prompt for AI Tutor.
+    $settings->add(
+        new admin_setting_configtextarea(
+            'local_dttutor/custom_prompt',
+            get_string('custom_prompt', 'local_dttutor'),
+            get_string('custom_prompt_desc', 'local_dttutor'),
+            '',
             PARAM_TEXT
         )
     );
