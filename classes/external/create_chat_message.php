@@ -85,6 +85,15 @@ class create_chat_message extends external_api {
         $context = \context_course::instance($params['courseid']);
         require_capability('moodle/course:view', $context);
 
+        // Validate message content.
+        $trimmedmessage = trim($params['message']);
+        if (empty($trimmedmessage)) {
+            throw new \moodle_exception('error_empty_message', 'local_dttutor');
+        }
+        if ($trimmedmessage === '.') {
+            throw new \moodle_exception('error_invalid_message', 'local_dttutor');
+        }
+
         $tutoriaapi = new tutoria_api();
 
         $metaarray = json_decode($params['meta'], true);

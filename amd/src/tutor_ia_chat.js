@@ -551,10 +551,19 @@ define([
             const sendBtn = this.root.find(SELECTORS.SEND_BTN);
 
             const messageText = input.val().trim();
+
+            // Validation: Empty messages or streaming in progress.
             if (!messageText || this.streaming) {
                 return;
             }
 
+            // Validation: Message contains only a single dot.
+            if (messageText === '.') {
+                this.addMessage('[Error] Please enter a valid message.', 'ai');
+                return;
+            }
+
+            // Validation: Message exceeds maximum length.
             if (messageText.length > 4000) {
                 this.addMessage('[Error] Message is too long. Maximum 4000 characters.', 'ai');
                 return;
