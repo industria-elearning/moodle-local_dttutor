@@ -51,6 +51,11 @@ $string['error_invalid_api_response'] = 'Недействительный отв
 $string['error_invalid_coordinates'] = 'Недействительные координаты. Пожалуйста, используйте допустимые значения CSS (например: 10px, 2rem, 50%)';
 $string['error_invalid_message'] = 'Пожалуйста, введите действительное сообщение';
 $string['error_invalid_position'] = 'Недействительные данные о положении';
+$string['configure_now'] = 'Настроить сейчас';
+$string['error_webservice_not_configured'] = 'Чат ИИ-репетитора еще не готов. Пожалуйста, свяжитесь с администратором сайта для завершения настройки.';
+$string['error_webservice_not_configured_admin'] = 'Веб-сервис провайдера ИИ Datacurso должен быть настроен перед использованием ИИ-репетитора. <a href="{$a}" target="_blank">Нажмите здесь, чтобы настроить его сейчас</a>.';
+$string['error_webservice_not_configured_admin_inline'] = 'Веб-сервис провайдера ИИ Datacurso должен быть настроен перед использованием ИИ-репетитора.';
+$string['error_webservice_not_configured_short'] = 'Настройка ИИ-репетитора не завершена';
 $string['off_topic_detection_enabled'] = 'Включить обнаружение сообщений вне темы';
 $string['off_topic_detection_enabled_desc'] = 'При включении AI-репетитор будет обнаруживать и реагировать на сообщения вне темы в соответствии с уровнем строгости, настроенным ниже.';
 $string['off_topic_strictness'] = 'Строгость обнаружения вне темы';

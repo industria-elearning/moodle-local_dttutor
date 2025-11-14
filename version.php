@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_dttutor';
-$plugin->version = 2025110714;
+$plugin->version = 2025110718;
 $plugin->requires = 2024042200;
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '1.4.2';
+$plugin->release = '1.6.1';

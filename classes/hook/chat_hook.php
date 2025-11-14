@@ -152,6 +152,25 @@ class chat_hook {
         }
         $welcomemessage = self::replace_placeholders($welcomemessage, $courseid);
 
+        // Check if webservice is configured.
+        $isconfigured = false;
+        $isadmin = false;
+        $configurl = '';
+
+        if (class_exists('\aiprovider_datacurso\webservice_config')) {
+            $isconfigured = \aiprovider_datacurso\webservice_config::is_configured();
+
+            if (!$isconfigured) {
+                // Check if user is admin.
+                $syscontext = \context_system::instance();
+                $isadmin = has_capability('moodle/site:config', $syscontext);
+
+                if ($isadmin) {
+                    $configurl = (new \moodle_url('/ai/provider/datacurso/admin/webservice_config.php'))->out(false);
+                }
+            }
+        }
+
         $uniqid = uniqid('tia_');
         $positionstyle = self::calculate_position_style($positiondata);
         $drawerside = $positiondata['drawerside'] ?? 'right';
@@ -173,6 +192,9 @@ class chat_hook {
             'welcomemessage' => $welcomemessage,
             'avatarurl' => $avatarurl->out(false),
             'position' => $drawerside,
+            'is_configured' => $isconfigured,
+            'is_admin' => $isadmin,
+            'config_url' => $configurl,
         ];
 
         $toggle = $OUTPUT->render_from_template('local_dttutor/tutor_ia_toggle', $toggledata);

@@ -187,6 +187,78 @@ body.tutor-ia-drawer-open-left .popover-process-monitor {
     align-self: flex-end;
 }
 
+/* Warning Message */
+.tutor-ia-warning-message {
+    margin-bottom: 1rem;
+    padding: 0;
+}
+
+.tutor-ia-warning-message .alert {
+    margin: 0;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    border-radius: 8px;
+}
+
+.tutor-ia-warning-message .alert i {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+}
+
+.tutor-ia-warning-message .warning-content {
+    flex: 1;
+}
+
+.tutor-ia-warning-message .warning-content strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.tutor-ia-warning-message .warning-content p {
+    margin-bottom: 0.5rem;
+}
+
+.tutor-ia-warning-message .warning-content p:last-child {
+    margin-bottom: 0;
+}
+
+.tutor-ia-warning-message .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    font-weight: 600;
+    border-radius: 6px;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.tutor-ia-warning-message .btn:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+.tutor-ia-warning-message .btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+}
+
+.tutor-ia-warning-message .btn i {
+    font-size: 1rem;
+    margin: 0;
+}
+
 /* Typing Indicator */
 .tutor-ia-typing {
     display: flex;
@@ -274,4 +346,34 @@ body.tutor-ia-drawer-open-left .popover-process-monitor {
 
 .tutor-ia-send svg {
     display: block;
+}
+
+/* Error Modal Styles */
+.tutor-ia-error-modal {
+    padding: 1rem;
+}
+
+.tutor-ia-error-modal .alert {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 0.375rem;
+}
+
+.tutor-ia-error-modal .alert i {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.tutor-ia-error-modal .alert span {
+    flex: 1;
+    line-height: 1.5;
+}
+
+.tutor-ia-error-modal .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }

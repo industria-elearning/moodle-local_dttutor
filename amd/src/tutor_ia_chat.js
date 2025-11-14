@@ -25,12 +25,14 @@ define([
     'jquery',
     'core/ajax',
     'core/notification',
-    'core/pubsub'
+    'core/pubsub',
+    'local_dttutor/error_modal'
 ], function(
     $,
     Ajax,
     Notification,
-    PubSub
+    PubSub,
+    ErrorModal
 ) {
     'use strict';
 
@@ -68,6 +70,10 @@ define([
 
             // Get welcome message from data attribute
             this.welcomeMessage = root.getAttribute('data-welcomemessage') || '';
+
+            // Check if webservice is configured
+            this.isConfigured = root.getAttribute('data-is-configured') === '1' ||
+                                root.getAttribute('data-is-configured') === 'true';
 
             this.drawerElement = document.querySelector(SELECTORS.DRAWER);
             this.pageElement = document.querySelector(SELECTORS.PAGE);
@@ -312,8 +318,10 @@ define([
                 this.jumpTo.focus();
             }
 
-            // Load chat history on first open
-            this.loadChatHistory();
+            // Load chat history on first open (only if configured)
+            if (this.isConfigured) {
+                this.loadChatHistory();
+            }
         }
 
         closeDrawer() {
@@ -418,7 +426,17 @@ define([
                 .catch((err) => {
                     this.hideHistoryLoading();
                     this.isLoadingHistory = false;
-                    Notification.exception(err);
+
+                    // Show error in modal instead of notification
+                    const errorMessage = this.getFriendlyErrorMessage(err);
+                    const isConfigError = this.isWebserviceConfigError(err);
+                    const configUrl = this.extractConfigUrl(err);
+
+                    if (isConfigError) {
+                        ErrorModal.showConfigError(errorMessage, configUrl);
+                    } else {
+                        ErrorModal.showGeneralError(errorMessage);
+                    }
                 });
         }
 
@@ -547,6 +565,11 @@ define([
         }
 
         sendMessage() {
+            // Do not send messages if webservice is not configured
+            if (!this.isConfigured) {
+                return;
+            }
+
             const input = this.root.find(SELECTORS.INPUT);
             const sendBtn = this.root.find(SELECTORS.SEND_BTN);
 
@@ -630,14 +653,23 @@ define([
                     })
                     .catch((err) => {
                         this.hideTypingIndicator();
-                        this.addMessage('[Error] ' + (err.message || 'Unknown error'), 'ai');
                         sendBtn.prop('disabled', false);
-                        Notification.exception(err);
+
+                        // Show error in modal instead of notification
+                        const errorMessage = this.getFriendlyErrorMessage(err);
+                        const isConfigError = this.isWebserviceConfigError(err);
+                        const configUrl = this.extractConfigUrl(err);
+
+                        if (isConfigError) {
+                            ErrorModal.showConfigError(errorMessage, configUrl);
+                        } else {
+                            ErrorModal.showGeneralError(errorMessage);
+                        }
                     });
             } catch (error) {
                 this.hideTypingIndicator();
-                this.addMessage('[Error] Internal error: ' + error.message, 'ai');
                 sendBtn.prop('disabled', false);
+                ErrorModal.showGeneralError('Internal error: ' + error.message);
             }
         }
 
@@ -837,6 +869,70 @@ define([
                 return '';
             }
             return str.replace(/[<>]/g, '');
+        }
+
+        /**
+         * Check if error is related to webservice configuration
+         * @param {Object} err - Error object
+         * @returns {boolean}
+         */
+        isWebserviceConfigError(err) {
+            if (!err || !err.message) {
+                return false;
+            }
+            const message = err.message.toLowerCase();
+            return message.includes('webservice_not_configured') ||
+                   message.includes('webservice not configured') ||
+                   message.includes('error_webservice_not_configured');
+        }
+
+        /**
+         * Get friendly error message from exception
+         * @param {Object} err - Error object
+         * @returns {string} Friendly error message
+         */
+        getFriendlyErrorMessage(err) {
+            if (!err) {
+                return 'An unknown error occurred. Please try again.';
+            }
+
+            // Check if it's a webservice configuration error
+            if (this.isWebserviceConfigError(err)) {
+                // Return the error message as-is since it's already friendly
+                // (comes from our language strings)
+                return err.message || err.error || 'Configuration error';
+            }
+
+            // For other errors, provide generic friendly message
+            if (err.message) {
+                return err.message;
+            }
+
+            if (err.error) {
+                return err.error;
+            }
+
+            return 'An error occurred. Please try again later.';
+        }
+
+        /**
+         * Extract configuration URL from error message (for admin users)
+         * @param {Object} err - Error object
+         * @returns {string|null} Configuration URL or null
+         */
+        extractConfigUrl(err) {
+            if (!err || !err.message) {
+                return null;
+            }
+
+            // Try to extract URL from error message
+            // Format: <a href="URL" target="_blank">
+            const hrefMatch = err.message.match(/href="([^"]+)"/);
+            if (hrefMatch && hrefMatch[1]) {
+                return hrefMatch[1];
+            }
+
+            return null;
         }
 
         cleanup() {
