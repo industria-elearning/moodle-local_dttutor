@@ -19,6 +19,34 @@ The chat interface features:
 - Keyboard shortcuts (Enter to send, Escape to close)
 - Mobile-responsive design
 
+## Screenshots
+
+### Admin Settings
+
+![Admin Settings - Chat Configuration](pix/screenshots/1.png)
+
+**Configuration panel** showing global chat enable toggle, off-topic detection settings, and avatar selection with 10 built-in avatar options.
+
+---
+
+![Avatar Position Configuration](pix/screenshots/2.png)
+
+**Avatar positioning** with preset corner positions (bottom-right/bottom-left), custom positioning options, drawer side selection, and live preview showing how the avatar will appear on course pages.
+
+---
+
+![Tutor Customization](pix/screenshots/3.png)
+
+**Tutor customization settings** allowing you to personalize the welcome message, tutor name, and custom AI behavior prompts. Supports placeholders like {teachername}, {coursename}, {username}, and {firstname}.
+
+---
+
+### Chat Interface
+
+![Chat Drawer in Action](pix/screenshots/4.png)
+
+**Live chat interface** showing the AI tutor drawer open on a course page, with real-time conversation support, role detection (Teacher), and personalized welcome message.
+
 ## Explore the suite
 
 AI Tutor Chat is part of the **Datacurso AI Suite**, a collection of intelligent tools designed to enhance the Moodle learning experience:
