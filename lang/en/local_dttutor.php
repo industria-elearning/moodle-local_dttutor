@@ -52,10 +52,11 @@ $string['error_invalid_coordinates'] = 'Invalid coordinates. Please use valid CS
 $string['error_invalid_message'] = 'Please enter a valid message';
 $string['error_invalid_position'] = 'Invalid position data';
 $string['configure_now'] = 'Configure Now';
-$string['error_webservice_not_configured'] = 'The AI Tutor chat is not ready yet. Please contact your site administrator to complete the setup.';
+$string['error_webservice_not_configured'] = 'The AI Tutor chat is not properly configured and is currently unavailable.';
+$string['error_webservice_not_configured_action'] = 'Please contact your site administrator or report this issue to get the chat service activated.';
 $string['error_webservice_not_configured_admin'] = 'The Datacurso AI Provider webservice needs to be configured before using the AI Tutor. <a href="{$a}" target="_blank">Click here to configure it now</a>.';
 $string['error_webservice_not_configured_admin_inline'] = 'The Datacurso AI Provider webservice needs to be configured before using the AI Tutor.';
-$string['error_webservice_not_configured_short'] = 'AI Tutor setup incomplete';
+$string['error_webservice_not_configured_short'] = 'Chat Service Unavailable';
 $string['off_topic_detection_enabled'] = 'Enable off-topic detection';
 $string['off_topic_detection_enabled_desc'] = 'When enabled, the AI tutor will detect and respond to off-topic messages according to the strictness level configured below.';
 $string['off_topic_strictness'] = 'Off-topic strictness';

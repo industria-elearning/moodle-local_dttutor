@@ -52,10 +52,11 @@ $string['error_invalid_coordinates'] = 'Koordinat tidak valid. Silakan gunakan n
 $string['error_invalid_message'] = 'Silakan masukkan pesan yang valid';
 $string['error_invalid_position'] = 'Data posisi tidak valid';
 $string['configure_now'] = 'Konfigurasi sekarang';
-$string['error_webservice_not_configured'] = 'Chat Tutor AI belum siap. Silakan hubungi administrator situs untuk menyelesaikan pengaturan.';
+$string['error_webservice_not_configured'] = 'Chat Tutor AI tidak dikonfigurasi dengan benar dan saat ini tidak tersedia.';
+$string['error_webservice_not_configured_action'] = 'Silakan hubungi administrator situs atau laporkan masalah ini untuk mengaktifkan layanan chat.';
 $string['error_webservice_not_configured_admin'] = 'Webservice Penyedia AI Datacurso perlu dikonfigurasi sebelum menggunakan Tutor AI. <a href="{$a}" target="_blank">Klik di sini untuk mengkonfigurasinya sekarang</a>.';
 $string['error_webservice_not_configured_admin_inline'] = 'Webservice Penyedia AI Datacurso perlu dikonfigurasi sebelum menggunakan Tutor AI.';
-$string['error_webservice_not_configured_short'] = 'Pengaturan Tutor AI tidak lengkap';
+$string['error_webservice_not_configured_short'] = 'Layanan Chat Tidak Tersedia';
 $string['off_topic_detection_enabled'] = 'Aktifkan deteksi topik di luar konteks';
 $string['off_topic_detection_enabled_desc'] = 'Saat diaktifkan, tutor AI akan mendeteksi dan merespons pesan di luar konteks sesuai dengan tingkat keketatan yang dikonfigurasi di bawah.';
 $string['off_topic_strictness'] = 'Keketatan deteksi di luar konteks';

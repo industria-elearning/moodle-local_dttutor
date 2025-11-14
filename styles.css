@@ -219,10 +219,17 @@ body.tutor-ia-drawer-open-left .popover-process-monitor {
 
 .tutor-ia-warning-message .warning-content p {
     margin-bottom: 0.5rem;
+    line-height: 1.5;
 }
 
 .tutor-ia-warning-message .warning-content p:last-child {
     margin-bottom: 0;
+}
+
+.tutor-ia-warning-message .warning-content p strong {
+    display: inline;
+    color: #856404;
+    font-size: 0.95rem;
 }
 
 .tutor-ia-warning-message .btn {

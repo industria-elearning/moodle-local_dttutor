@@ -52,10 +52,11 @@ $string['error_invalid_coordinates'] = 'Coordonnées invalides. Veuillez utilise
 $string['error_invalid_message'] = 'Veuillez entrer un message valide';
 $string['error_invalid_position'] = 'Données de position invalides';
 $string['configure_now'] = 'Configurer maintenant';
-$string['error_webservice_not_configured'] = 'Le chat du Tuteur IA n'''est pas encore prêt. Veuillez contacter l'''administrateur du site pour terminer la configuration.';
+$string['error_webservice_not_configured'] = 'Le chat du Tuteur IA n'''est pas correctement configuré et est actuellement indisponible.';
+$string['error_webservice_not_configured_action'] = 'Veuillez contacter l'''administrateur du site ou signaler ce problème pour activer le service de chat.';
 $string['error_webservice_not_configured_admin'] = 'Le webservice du Fournisseur IA Datacurso doit être configuré avant d'''utiliser le Tuteur IA. <a href="{$a}" target="_blank">Cliquez ici pour le configurer maintenant</a>.';
 $string['error_webservice_not_configured_admin_inline'] = 'Le webservice du Fournisseur IA Datacurso doit être configuré avant d'''utiliser le Tuteur IA.';
-$string['error_webservice_not_configured_short'] = 'Configuration du Tuteur IA incomplète';
+$string['error_webservice_not_configured_short'] = 'Service de chat indisponible';
 $string['off_topic_detection_enabled'] = 'Activer la détection hors sujet';
 $string['off_topic_detection_enabled_desc'] = 'Lorsqu\'activé, le tuteur IA détectera et répondra aux messages hors sujet selon le niveau de rigueur configuré ci-dessous.';
 $string['off_topic_strictness'] = 'Rigueur hors sujet';

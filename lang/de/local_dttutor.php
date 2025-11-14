@@ -52,10 +52,11 @@ $string['error_invalid_coordinates'] = 'Ungültige Koordinaten. Bitte verwenden 
 $string['error_invalid_message'] = 'Bitte geben Sie eine gültige Nachricht ein';
 $string['error_invalid_position'] = 'Ungültige Positionsdaten';
 $string['configure_now'] = 'Jetzt konfigurieren';
-$string['error_webservice_not_configured'] = 'Der KI-Tutor-Chat ist noch nicht bereit. Bitte kontaktieren Sie Ihren Website-Administrator, um die Einrichtung abzuschließen.';
+$string['error_webservice_not_configured'] = 'Der KI-Tutor-Chat ist nicht richtig konfiguriert und ist derzeit nicht verfügbar.';
+$string['error_webservice_not_configured_action'] = 'Bitte kontaktieren Sie Ihren Website-Administrator oder melden Sie dieses Problem, um den Chat-Service zu aktivieren.';
 $string['error_webservice_not_configured_admin'] = 'Der Webservice des Datacurso KI-Providers muss konfiguriert werden, bevor der KI-Tutor verwendet werden kann. <a href="{$a}" target="_blank">Klicken Sie hier, um ihn jetzt zu konfigurieren</a>.';
 $string['error_webservice_not_configured_admin_inline'] = 'Der Webservice des Datacurso KI-Providers muss konfiguriert werden, bevor der KI-Tutor verwendet werden kann.';
-$string['error_webservice_not_configured_short'] = 'KI-Tutor-Einrichtung unvollständig';
+$string['error_webservice_not_configured_short'] = 'Chat-Service nicht verfügbar';
 $string['off_topic_detection_enabled'] = 'Off-Topic-Erkennung aktivieren';
 $string['off_topic_detection_enabled_desc'] = 'Wenn aktiviert, erkennt der KI-Tutor Off-Topic-Nachrichten und reagiert entsprechend der unten konfigurierten Strenge.';
 $string['off_topic_strictness'] = 'Off-Topic-Strenge';

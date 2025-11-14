@@ -52,10 +52,11 @@ $string['error_invalid_coordinates'] = 'Coordenadas inválidas. Por favor usa va
 $string['error_invalid_message'] = 'Por favor ingresa un mensaje válido';
 $string['error_invalid_position'] = 'Datos de posición inválidos';
 $string['configure_now'] = 'Configurar ahora';
-$string['error_webservice_not_configured'] = 'El chat del Tutor IA aún no está listo. Por favor, contacta al administrador del sitio para completar la configuración.';
+$string['error_webservice_not_configured'] = 'El chat del Tutor IA no está configurado correctamente y actualmente no está disponible.';
+$string['error_webservice_not_configured_action'] = 'Por favor, contacta al administrador del sitio o reporta este problema para activar el servicio de chat.';
 $string['error_webservice_not_configured_admin'] = 'El webservice del Proveedor de IA Datacurso necesita ser configurado antes de usar el Tutor IA. <a href="{$a}" target="_blank">Haz clic aquí para configurarlo ahora</a>.';
 $string['error_webservice_not_configured_admin_inline'] = 'El webservice del Proveedor de IA Datacurso necesita ser configurado antes de usar el Tutor IA.';
-$string['error_webservice_not_configured_short'] = 'Configuración del Tutor IA incompleta';
+$string['error_webservice_not_configured_short'] = 'Servicio de Chat No Disponible';
 $string['off_topic_detection_enabled'] = 'Habilitar detección de temas fuera de contexto';
 $string['off_topic_detection_enabled_desc'] = 'Cuando está habilitado, el tutor IA detectará y responderá a mensajes fuera de contexto según el nivel de rigurosidad configurado a continuación.';
 $string['off_topic_strictness'] = 'Rigurosidad de detección fuera de contexto';

@@ -74,17 +74,16 @@
                     <i class="fa fa-exclamation-triangle"></i>
                     <div class="warning-content">
                         <strong>{{#str}}error_webservice_not_configured_short, local_dttutor{{/str}}</strong>
-                        <p>
-                            {{#is_admin}}
-                                {{#str}}error_webservice_not_configured_admin_inline, local_dttutor{{/str}}
-                                <a href="{{config_url}}" target="_blank" class="btn btn-sm btn-primary mt-2">
-                                    <i class="fa fa-cog"></i> {{#str}}configure_now, local_dttutor{{/str}}
-                                </a>
-                            {{/is_admin}}
-                            {{^is_admin}}
-                                {{#str}}error_webservice_not_configured, local_dttutor{{/str}}
-                            {{/is_admin}}
-                        </p>
+                        {{#is_admin}}
+                            <p>{{#str}}error_webservice_not_configured_admin_inline, local_dttutor{{/str}}</p>
+                            <a href="{{config_url}}" target="_blank" class="btn btn-sm btn-primary mt-2">
+                                <i class="fa fa-cog"></i> {{#str}}configure_now, local_dttutor{{/str}}
+                            </a>
+                        {{/is_admin}}
+                        {{^is_admin}}
+                            <p>{{#str}}error_webservice_not_configured, local_dttutor{{/str}}</p>
+                            <p class="mb-0"><strong>{{#str}}error_webservice_not_configured_action, local_dttutor{{/str}}</strong></p>
+                        {{/is_admin}}
                     </div>
                 </div>
             </div>
