@@ -266,6 +266,50 @@ body.tutor-ia-drawer-open-left .popover-process-monitor {
     margin: 0;
 }
 
+/* No Credits Warning */
+.tutor-ia-no-credits-warning {
+    padding: 1rem 0;
+}
+
+.tutor-ia-no-credits-warning .alert {
+    margin: 0;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    border-radius: 8px;
+}
+
+.tutor-ia-no-credits-warning .alert i {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.tutor-ia-no-credits-warning .warning-content {
+    flex: 1;
+}
+
+.tutor-ia-no-credits-warning .warning-content strong {
+    display: block;
+    font-size: 1.05rem;
+    margin-bottom: 0.5rem;
+}
+
+.tutor-ia-no-credits-warning .warning-content p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.tutor-ia-no-credits-warning .warning-content a {
+    color: #0056b3;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.tutor-ia-no-credits-warning .warning-content a:hover {
+    color: #003d82;
+}
+
 /* Typing Indicator */
 .tutor-ia-typing {
     display: flex;

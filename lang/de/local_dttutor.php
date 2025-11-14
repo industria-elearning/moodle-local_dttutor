@@ -52,6 +52,8 @@ $string['error_invalid_api_response'] = 'Ungültige API-Antwort';
 $string['error_invalid_coordinates'] = 'Ungültige Koordinaten. Bitte verwenden Sie gültige CSS-Werte (z.B. 10px, 2rem, 50%)';
 $string['error_invalid_message'] = 'Bitte geben Sie eine gültige Nachricht ein';
 $string['error_invalid_position'] = 'Ungültige Positionsdaten';
+$string['error_no_credits'] = 'Unzureichende KI-Credits verfügbar.';
+$string['error_no_credits_short'] = 'Keine Credits Verfügbar';
 $string['error_webservice_not_configured'] = 'Der KI-Tutor-Chat ist nicht richtig konfiguriert und ist derzeit nicht verfügbar.';
 $string['error_webservice_not_configured_action'] = 'Bitte kontaktieren Sie Ihren Website-Administrator oder melden Sie dieses Problem, um den Chat-Service zu aktivieren.';
 $string['error_webservice_not_configured_admin'] = 'Der Webservice des Datacurso KI-Providers muss konfiguriert werden, bevor der KI-Tutor verwendet werden kann. <a href="{$a}" target="_blank">Klicken Sie hier, um ihn jetzt zu konfigurieren</a>.';

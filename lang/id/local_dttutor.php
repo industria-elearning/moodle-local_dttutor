@@ -52,6 +52,8 @@ $string['error_invalid_api_response'] = 'Respons API tidak valid';
 $string['error_invalid_coordinates'] = 'Koordinat tidak valid. Silakan gunakan nilai CSS yang valid (mis: 10px, 2rem, 50%)';
 $string['error_invalid_message'] = 'Silakan masukkan pesan yang valid';
 $string['error_invalid_position'] = 'Data posisi tidak valid';
+$string['error_no_credits'] = 'Kredit AI tidak mencukupi.';
+$string['error_no_credits_short'] = 'Tidak Ada Kredit Tersedia';
 $string['error_webservice_not_configured'] = 'Chat Tutor AI tidak dikonfigurasi dengan benar dan saat ini tidak tersedia.';
 $string['error_webservice_not_configured_action'] = 'Silakan hubungi administrator situs atau laporkan masalah ini untuk mengaktifkan layanan chat.';
 $string['error_webservice_not_configured_admin'] = 'Webservice Penyedia AI Datacurso perlu dikonfigurasi sebelum menggunakan Tutor AI. <a href="{$a}" target="_blank">Klik di sini untuk mengkonfigurasinya sekarang</a>.';

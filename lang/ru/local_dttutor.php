@@ -52,6 +52,8 @@ $string['error_invalid_api_response'] = 'Недействительный отв
 $string['error_invalid_coordinates'] = 'Недействительные координаты. Пожалуйста, используйте допустимые значения CSS (например: 10px, 2rem, 50%)';
 $string['error_invalid_message'] = 'Пожалуйста, введите действительное сообщение';
 $string['error_invalid_position'] = 'Недействительные данные о положении';
+$string['error_no_credits'] = 'Недостаточно кредитов ИИ.';
+$string['error_no_credits_short'] = 'Нет Доступных Кредитов';
 $string['error_webservice_not_configured'] = 'Чат ИИ-репетитора не настроен правильно и в настоящее время недоступен.';
 $string['error_webservice_not_configured_action'] = 'Пожалуйста, свяжитесь с администратором сайта или сообщите об этой проблеме для активации службы чата.';
 $string['error_webservice_not_configured_admin'] = 'Веб-сервис провайдера ИИ Datacurso должен быть настроен перед использованием ИИ-репетитора. <a href="{$a}" target="_blank">Нажмите здесь, чтобы настроить его сейчас</a>.';

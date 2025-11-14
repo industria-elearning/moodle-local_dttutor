@@ -21,7 +21,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery', 'core/modal_factory', 'core/modal_events', 'core/str'], function($, ModalFactory, ModalEvents, Str) {
+define(['jquery', 'core/modal_factory', 'core/modal_events', 'core/str', 'core/templates'],
+    function($, ModalFactory, ModalEvents, Str, Templates) {
     'use strict';
 
     /**
@@ -33,37 +34,36 @@ define(['jquery', 'core/modal_factory', 'core/modal_events', 'core/str'], functi
      * @returns {Promise} Promise that resolves when modal is created
      */
     var showError = function(message, isConfigError, configUrl) {
+        var modalTitle = '';
+
         return Str.get_strings([
             {key: 'error_webservice_not_configured_short', component: 'local_dttutor'},
-            {key: 'pluginname', component: 'local_dttutor'}
+            {key: 'pluginname', component: 'local_dttutor'},
+            {key: 'configure_now', component: 'local_dttutor'}
         ]).then(function(strings) {
-            var title = isConfigError ? strings[0] : strings[1];
-            var body = '<div class="tutor-ia-error-modal">';
-            body += '<div class="alert alert-warning">';
-            body += '<i class="fa fa-exclamation-triangle"></i> ';
-            body += '<span>' + message + '</span>';
-            body += '</div>';
+            modalTitle = isConfigError ? strings[0] : strings[1];
+            var configureNowStr = strings[2];
 
-            if (configUrl) {
-                body += '<div class="mt-3">';
-                body += '<a href="' + configUrl + '" class="btn btn-primary" target="_blank">';
-                body += '<i class="fa fa-cog"></i> ';
-                body += 'Configure Now';
-                body += '</a>';
-                body += '</div>';
-            }
+            // Prepare template context.
+            var context = {
+                message: message,
+                has_config_url: !!configUrl,
+                config_url: configUrl || '',
+                str_configure_now: configureNowStr
+            };
 
-            body += '</div>';
-
+            // Render template.
+            return Templates.render('local_dttutor/error_modal_body', context);
+        }).then(function(html) {
             return ModalFactory.create({
                 type: ModalFactory.types.DEFAULT,
-                title: title,
-                body: body
+                title: modalTitle,
+                body: html
             });
         }).then(function(modal) {
             modal.show();
 
-            // Auto-hide after 10 seconds if not a config error
+            // Auto-hide after 10 seconds if not a config error.
             if (!isConfigError) {
                 setTimeout(function() {
                     modal.hide();
@@ -72,7 +72,7 @@ define(['jquery', 'core/modal_factory', 'core/modal_events', 'core/str'], functi
 
             return modal;
         }).catch(function(error) {
-            // Fallback to alert if modal creation fails
+            // Fallback to alert if modal/template fails.
             window.alert(message);
             throw error;
         });

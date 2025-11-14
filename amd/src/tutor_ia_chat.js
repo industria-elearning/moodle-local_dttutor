@@ -653,17 +653,31 @@ define([
                     })
                     .catch((err) => {
                         this.hideTypingIndicator();
-                        sendBtn.prop('disabled', false);
 
-                        // Show error in modal instead of notification
-                        const errorMessage = this.getFriendlyErrorMessage(err);
-                        const isConfigError = this.isWebserviceConfigError(err);
-                        const configUrl = this.extractConfigUrl(err);
+                        // Check if it's a no credits error - show in chat and disable input.
+                        if (this.isNoCreditsError(err)) {
+                            // Display error message in chat.
+                            const errorHtml = err.message || 'Insufficient AI credits available.';
+                            this.showNoCreditsWarning(errorHtml);
 
-                        if (isConfigError) {
-                            ErrorModal.showConfigError(errorMessage, configUrl);
+                            // Disable chat input and button.
+                            const input = this.root.find(SELECTORS.INPUT);
+                            input.prop('disabled', true);
+                            sendBtn.prop('disabled', true);
                         } else {
-                            ErrorModal.showGeneralError(errorMessage);
+                            // Re-enable button for other errors.
+                            sendBtn.prop('disabled', false);
+
+                            // Show error in modal instead of notification.
+                            const errorMessage = this.getFriendlyErrorMessage(err);
+                            const isConfigError = this.isWebserviceConfigError(err);
+                            const configUrl = this.extractConfigUrl(err);
+
+                            if (isConfigError) {
+                                ErrorModal.showConfigError(errorMessage, configUrl);
+                            } else {
+                                ErrorModal.showGeneralError(errorMessage);
+                            }
                         }
                     });
             } catch (error) {
@@ -825,6 +839,32 @@ define([
             this.root.find('.tutor-ia-typing').remove();
         }
 
+        /**
+         * Show no credits warning in chat
+         * @param {string} errorHtml - HTML error message from provider
+         */
+        showNoCreditsWarning(errorHtml) {
+            const messages = this.root.find(SELECTORS.MESSAGES);
+
+            // Remove existing no-credits warning if any.
+            messages.find('.tutor-ia-no-credits-warning').remove();
+
+            // Create warning message.
+            const warningDiv = $('<div class="tutor-ia-no-credits-warning"></div>');
+            const alertDiv = $('<div class="alert alert-danger"></div>');
+            alertDiv.html(
+                '<i class="fa fa-exclamation-circle"></i> ' +
+                '<div class="warning-content">' +
+                '<strong>No Credits Available</strong>' +
+                '<p>' + errorHtml + '</p>' +
+                '</div>'
+            );
+
+            warningDiv.append(alertDiv);
+            messages.append(warningDiv);
+            this.scrollToBottom();
+        }
+
         scrollToBottom() {
             const messages = this.root.find(SELECTORS.MESSAGES);
             messages.scrollTop(messages[0].scrollHeight);
@@ -884,6 +924,22 @@ define([
             return message.includes('webservice_not_configured') ||
                    message.includes('webservice not configured') ||
                    message.includes('error_webservice_not_configured');
+        }
+
+        /**
+         * Check if error is related to insufficient AI credits
+         * @param {Object} err - Error object
+         * @returns {boolean}
+         */
+        isNoCreditsError(err) {
+            if (!err || !err.message) {
+                return false;
+            }
+            const message = err.message.toLowerCase();
+            return message.includes('notenoughtokens') ||
+                   message.includes('insufficient ai credits') ||
+                   message.includes('no credits') ||
+                   message.includes('out of credits');
         }
 
         /**

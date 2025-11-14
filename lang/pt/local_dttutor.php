@@ -52,6 +52,8 @@ $string['error_invalid_api_response'] = 'Resposta da API inválida';
 $string['error_invalid_coordinates'] = 'Coordenadas inválidas. Por favor, use valores CSS válidos (ex: 10px, 2rem, 50%)';
 $string['error_invalid_message'] = 'Por favor, insira uma mensagem válida';
 $string['error_invalid_position'] = 'Dados de posição inválidos';
+$string['error_no_credits'] = 'Créditos de IA insuficientes disponíveis.';
+$string['error_no_credits_short'] = 'Sem Créditos Disponíveis';
 $string['error_webservice_not_configured'] = 'O chat do Tutor IA não está configurado corretamente e está atualmente indisponível.';
 $string['error_webservice_not_configured_action'] = 'Por favor, entre em contato com o administrador do site ou relate este problema para ativar o serviço de chat.';
 $string['error_webservice_not_configured_admin'] = 'O webservice do Provedor de IA Datacurso precisa ser configurado antes de usar o Tutor IA. <a href="{$a}" target="_blank">Clique aqui para configurá-lo agora</a>.';

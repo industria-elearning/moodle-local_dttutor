@@ -52,6 +52,8 @@ $string['error_invalid_api_response'] = 'Invalid API response';
 $string['error_invalid_coordinates'] = 'Invalid coordinates. Please use valid CSS values (e.g., 10px, 2rem, 50%)';
 $string['error_invalid_message'] = 'Please enter a valid message';
 $string['error_invalid_position'] = 'Invalid position data';
+$string['error_no_credits'] = 'Insufficient AI credits available.';
+$string['error_no_credits_short'] = 'No Credits Available';
 $string['error_webservice_not_configured'] = 'The AI Tutor chat is not properly configured and is currently unavailable.';
 $string['error_webservice_not_configured_action'] = 'Please contact your site administrator or report this issue to get the chat service activated.';
 $string['error_webservice_not_configured_admin'] = 'The Datacurso AI Provider webservice needs to be configured before using the AI Tutor. <a href="{$a}" target="_blank">Click here to configure it now</a>.';
