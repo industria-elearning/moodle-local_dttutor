@@ -38,7 +38,6 @@ require_once($CFG->libdir . '/adminlib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class admin_setting_position_preview extends \admin_setting {
-
     /**
      * Return the current setting
      *
@@ -121,8 +120,14 @@ class admin_setting_position_preview extends \admin_setting {
 
         $currentdata = json_decode($current, true);
         if ($currentdata === null) {
-            $currentdata = ['preset' => 'right', 'x' => '2rem', 'y' => '6rem',
-                'drawerside' => 'right', 'xref' => 'left', 'yref' => 'bottom'];
+            $currentdata = [
+                'preset' => 'right',
+                'x' => '2rem',
+                'y' => '6rem',
+                'drawerside' => 'right',
+                'xref' => 'left',
+                'yref' => 'bottom',
+            ];
         }
 
         $preset = $currentdata['preset'] ?? 'right';
@@ -140,104 +145,63 @@ class admin_setting_position_preview extends \admin_setting {
             $avatarurl = $customavatarurl;
         }
 
-        $html = '';
-
-        $html .= '<link rel="stylesheet" href="' . $CFG->wwwroot . '/local/dttutor/styles_admin.css">';
+        // Load CSS for admin settings.
+        $html = '<link rel="stylesheet" href="' . $CFG->wwwroot . '/local/dttutor/styles_admin.css">';
 
         // Load AMD module properly via $PAGE.
         $PAGE->requires->js_call_amd('local_dttutor/position_configurator', 'init');
 
-        $html .= '<div class="position-configurator">';
-        $html .= '<div class="position-controls">';
-        $html .= '<div class="position-control-left">';
-        $html .= '<div class="position-preset-group">';
-        $html .= '<label>' . get_string('position_preset', 'local_dttutor') . '</label>';
-
+        // Prepare preset options for template.
         $presets = [
-            'right' => get_string('position_right', 'local_dttutor'),
-            'left' => get_string('position_left', 'local_dttutor'),
-            'custom' => get_string('position_custom', 'local_dttutor'),
+            ['value' => 'right', 'label' => get_string('position_right', 'local_dttutor'), 'selected' => ($preset === 'right')],
+            ['value' => 'left', 'label' => get_string('position_left', 'local_dttutor'), 'selected' => ($preset === 'left')],
+            ['value' => 'custom', 'label' => get_string('position_custom', 'local_dttutor'), 'selected' => ($preset === 'custom')],
         ];
 
-        foreach ($presets as $value => $label) {
-            $checked = ($preset === $value) ? 'checked' : '';
-            $selected = ($preset === $value) ? 'selected' : '';
-            $html .= '<div class="preset-option ' . $selected . '" data-preset="' . $value . '">';
-            $html .= '<input type="radio" name="position_preset" value="' . $value . '" ';
-            $html .= 'id="preset_' . $value . '" ' . $checked . '>';
-            $html .= '<label for="preset_' . $value . '">' . $label . '</label>';
-            $html .= '</div>';
-        }
+        // Prepare drawer side options.
+        $drawersideoptions = [
+            ['value' => 'right', 'label' => get_string('drawer_side_right', 'local_dttutor'),
+                'selected' => ($drawerside === 'right')],
+            ['value' => 'left', 'label' => get_string('drawer_side_left', 'local_dttutor'),
+                'selected' => ($drawerside === 'left')],
+        ];
 
-        $html .= '</div>';
+        // Prepare reference edge options.
+        $xrefoptions = [
+            ['value' => 'left', 'label' => get_string('ref_left', 'local_dttutor'), 'selected' => ($xref === 'left')],
+            ['value' => 'right', 'label' => get_string('ref_right', 'local_dttutor'), 'selected' => ($xref === 'right')],
+        ];
 
-        $html .= '<div class="drawer-side-group">';
-        $html .= '<label for="drawer_side">' . get_string('drawer_side', 'local_dttutor') . '</label>';
-        $html .= '<select id="drawer_side" name="drawer_side">';
-        $html .= '<option value="right"' . ($drawerside === 'right' ? ' selected' : '') . '>' .
-            get_string('drawer_side_right', 'local_dttutor') . '</option>';
-        $html .= '<option value="left"' . ($drawerside === 'left' ? ' selected' : '') . '>' .
-            get_string('drawer_side_left', 'local_dttutor') . '</option>';
-        $html .= '</select>';
-        $html .= '<div class="coord-help">' . get_string('drawer_side_help', 'local_dttutor') . '</div>';
-        $html .= '</div>';
+        $yrefoptions = [
+            ['value' => 'bottom', 'label' => get_string('ref_bottom', 'local_dttutor'), 'selected' => ($yref === 'bottom')],
+            ['value' => 'top', 'label' => get_string('ref_top', 'local_dttutor'), 'selected' => ($yref === 'top')],
+        ];
 
-        $activeclass = ($preset === 'custom') ? 'active' : '';
-        $html .= '<div class="custom-coords ' . $activeclass . '" id="custom-coords">';
-        $html .= '<div class="coord-input-group">';
-        $html .= '<label for="position_x">' . get_string('position_x', 'local_dttutor') . ':</label>';
-        $html .= '<input type="text" id="position_x" value="' . s($xvalue) . '" placeholder="2rem">';
-        $html .= '</div>';
-        $html .= '<div class="coord-help">' . get_string('position_x_help', 'local_dttutor') . '</div>';
+        // Prepare template context.
+        $templatecontext = [
+            'presets' => $presets,
+            'drawerside_options' => $drawersideoptions,
+            'xref_options' => $xrefoptions,
+            'yref_options' => $yrefoptions,
+            'xvalue' => s($xvalue),
+            'yvalue' => s($yvalue),
+            'avatarurl' => $avatarurl,
+            'hiddenvalue' => s($current),
+            'str_position_preset' => get_string('position_preset', 'local_dttutor'),
+            'str_drawer_side' => get_string('drawer_side', 'local_dttutor'),
+            'str_drawer_side_help' => get_string('drawer_side_help', 'local_dttutor'),
+            'str_position_x' => get_string('position_x', 'local_dttutor'),
+            'str_position_y' => get_string('position_y', 'local_dttutor'),
+            'str_position_x_help' => get_string('position_x_help', 'local_dttutor'),
+            'str_position_y_help' => get_string('position_y_help', 'local_dttutor'),
+            'str_reference_edge_x' => get_string('reference_edge_x', 'local_dttutor'),
+            'str_reference_edge_y' => get_string('reference_edge_y', 'local_dttutor'),
+            'str_preview' => get_string('preview', 'local_dttutor'),
+            'custom_active' => ($preset === 'custom'),
+        ];
 
-        $html .= '<div class="coord-input-group">';
-        $html .= '<label for="position_y">' . get_string('position_y', 'local_dttutor') . ':</label>';
-        $html .= '<input type="text" id="position_y" value="' . s($yvalue) . '" placeholder="6rem">';
-        $html .= '</div>';
-        $html .= '<div class="coord-help">' . get_string('position_y_help', 'local_dttutor') . '</div>';
-
-        $html .= '<div class="reference-edge-group">';
-        $html .= '<label>' . get_string('reference_edge_x', 'local_dttutor') . ':</label>';
-        $html .= '<div class="reference-edge-options">';
-        $html .= '<label><input type="radio" name="ref_x" value="left"';
-        $html .= ($xref === 'left' ? ' checked' : '') . '> ';
-        $html .= get_string('ref_left', 'local_dttutor') . '</label>';
-        $html .= '<label><input type="radio" name="ref_x" value="right"';
-        $html .= ($xref === 'right' ? ' checked' : '') . '> ';
-        $html .= get_string('ref_right', 'local_dttutor') . '</label>';
-        $html .= '</div>';
-        $html .= '</div>';
-
-        $html .= '<div class="reference-edge-group">';
-        $html .= '<label>' . get_string('reference_edge_y', 'local_dttutor') . ':</label>';
-        $html .= '<div class="reference-edge-options">';
-        $html .= '<label><input type="radio" name="ref_y" value="bottom"';
-        $html .= ($yref === 'bottom' ? ' checked' : '') . '> ';
-        $html .= get_string('ref_bottom', 'local_dttutor') . '</label>';
-        $html .= '<label><input type="radio" name="ref_y" value="top"';
-        $html .= ($yref === 'top' ? ' checked' : '') . '> ';
-        $html .= get_string('ref_top', 'local_dttutor') . '</label>';
-        $html .= '</div>';
-        $html .= '</div>';
-
-        $html .= '</div>';
-
-        $html .= '</div>';
-
-        $html .= '<div class="position-control-right">';
-        $html .= '<div class="position-preview">';
-        $html .= '<div class="preview-grid"></div>';
-        $html .= '<div class="preview-label">' . get_string('preview', 'local_dttutor') . '</div>';
-        $html .= '<img id="preview-avatar" class="preview-avatar" src="' . $avatarurl . '" alt="Avatar Preview">';
-        $html .= '<div class="preview-coordinates" id="coords-display"></div>';
-        $html .= '</div>';
-        $html .= '</div>';
-
-        $html .= '</div>';
-        $html .= '</div>';
-
-        $html .= '<input type="hidden" name="s_local_dttutor_avatar_position_data" ' .
-            'id="id_s_local_dttutor_avatar_position_data" value="' . s($current) . '">';
+        // Render template.
+        $html .= $OUTPUT->render_from_template('local_dttutor/admin_position_preview', $templatecontext);
 
         return format_admin_setting($this, $this->visiblename, $html, $this->description, true, '', $default, $query);
     }

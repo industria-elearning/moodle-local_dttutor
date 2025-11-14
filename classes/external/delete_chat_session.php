@@ -52,6 +52,7 @@ class delete_chat_session extends external_api {
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
+            'courseid' => new external_value(PARAM_INT, 'Course ID', VALUE_REQUIRED),
             'sessionid' => new external_value(PARAM_TEXT, 'Chat session ID', VALUE_REQUIRED),
         ]);
     }
@@ -59,16 +60,41 @@ class delete_chat_session extends external_api {
     /**
      * Delete a Tutor-IA chat session.
      *
+     * @param int $courseid Course ID where the session was created.
      * @param string $sessionid Session ID to delete.
      * @return array Deletion status.
      * @throws \invalid_parameter_exception
      * @throws \moodle_exception
+     * @throws \require_login_exception
+     * @throws \required_capability_exception
      * @since Moodle 4.5
      */
-    public static function execute($sessionid): array {
+    public static function execute($courseid, $sessionid): array {
+        global $USER;
+
+        // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
+            'courseid' => $courseid,
             'sessionid' => $sessionid,
         ]);
+
+        // Check if user is logged in.
+        require_login();
+
+        // Verify plugin is enabled.
+        if (!get_config('local_dttutor', 'enabled')) {
+            throw new \moodle_exception('error_api_not_configured', 'local_dttutor');
+        }
+
+        // Validate course context and permissions.
+        $context = \context_course::instance($params['courseid']);
+        self::validate_context($context);
+
+        // Verify user has permission to use Tutor-IA.
+        require_capability('local/dttutor:use', $context);
+
+        // Additional check: user must have at least course view permission.
+        require_capability('moodle/course:view', $context);
 
         $tutoriaapi = new tutoria_api();
 

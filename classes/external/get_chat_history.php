@@ -68,19 +68,37 @@ class get_chat_history extends external_api {
      * @return array History data with messages and pagination info.
      * @throws \invalid_parameter_exception
      * @throws \moodle_exception
+     * @throws \require_login_exception
+     * @throws \required_capability_exception
      * @since Moodle 4.5
      */
     public static function execute($courseid, $limit = 20, $offset = 0): array {
+        // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'limit' => $limit,
             'offset' => $offset,
             'courseid' => $courseid,
         ]);
 
+        // Check if user is logged in.
+        require_login();
+
+        // Verify plugin is enabled.
         if (!get_config('local_dttutor', 'enabled')) {
             throw new \moodle_exception('error_api_not_configured', 'local_dttutor');
         }
 
+        // Validate course context and permissions.
+        $context = \context_course::instance($params['courseid']);
+        self::validate_context($context);
+
+        // Verify user has permission to use Tutor-IA.
+        require_capability('local/dttutor:use', $context);
+
+        // Additional check: user must have at least course view permission.
+        require_capability('moodle/course:view', $context);
+
+        // Sanitize pagination parameters.
         if ($params['limit'] < 1) {
             $params['limit'] = 20;
         }

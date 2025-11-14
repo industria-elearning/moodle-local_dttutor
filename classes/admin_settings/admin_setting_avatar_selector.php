@@ -36,7 +36,6 @@ require_once($CFG->libdir . '/adminlib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class admin_setting_avatar_selector extends \admin_setting {
-
     /**
      * Return the current setting
      *
@@ -72,38 +71,33 @@ class admin_setting_avatar_selector extends \admin_setting {
             $current = $default;
         }
 
-        $html = '';
-
-        $html .= '<link rel="stylesheet" href="' . $CFG->wwwroot . '/local/dttutor/styles_admin.css">';
+        // Load CSS for admin settings.
+        $html = '<link rel="stylesheet" href="' . $CFG->wwwroot . '/local/dttutor/styles_admin.css">';
 
         // Load AMD module properly via $PAGE.
         $PAGE->requires->js_call_amd('local_dttutor/avatar_selector', 'init');
 
-        $html .= '<div class="avatar-selector-grid">';
-
-        // Display all available avatars.
+        // Prepare avatar data for template.
+        $avatars = [];
         for ($i = 1; $i <= 10; $i++) {
             $num = str_pad($i, 2, '0', STR_PAD_LEFT);
             $avatarpath = '/local/dttutor/pix/avatars/avatar_profesor_' . $num . '.png';
             $fullpath = $CFG->dirroot . $avatarpath;
 
             if (file_exists($fullpath)) {
-                $selected = ($current === $num) ? 'selected' : '';
-                $html .= '<div class="avatar-option ' . $selected . '" data-value="' . $num . '" ';
-                $html .= 'onclick="selectDttutorAvatar(\'' . $num . '\')">';
-                $html .= '<img src="' . $CFG->wwwroot . $avatarpath . '?v=' . time() . '" ';
-                $html .= 'alt="Avatar ' . $i . '">';
-                $html .= '<div class="avatar-option-label">Avatar ' . $i . '</div>';
-                $html .= '<input type="radio" name="s_local_dttutor_avatar" value="' . $num . '"';
-                if ($current === $num) {
-                    $html .= ' checked="checked"';
-                }
-                $html .= '>';
-                $html .= '</div>';
+                $avatars[] = [
+                    'num' => $num,
+                    'path' => $CFG->wwwroot . $avatarpath,
+                    'selected' => ($current === $num),
+                    'label' => 'Avatar ' . $i,
+                    'cachebuster' => time(),
+                ];
             }
         }
 
-        $html .= '</div>';
+        // Render template.
+        $templatecontext = ['avatars' => $avatars];
+        $html .= $OUTPUT->render_from_template('local_dttutor/admin_avatar_selector', $templatecontext);
 
         return format_admin_setting($this, $this->visiblename, $html, $this->description, true, '', $default, $query);
     }

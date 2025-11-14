@@ -69,7 +69,7 @@ class admin_setting_custom_avatar extends \admin_setting_configstoredfile {
      * @return string HTML
      */
     public function output_html($data, $query = '') {
-        global $CFG, $OUTPUT;
+        global $OUTPUT;
 
         $html = parent::output_html($data, $query);
 
@@ -95,25 +95,12 @@ class admin_setting_custom_avatar extends \admin_setting_configstoredfile {
                 $file->get_filename()
             );
 
-            $preview = \html_writer::div(
-                \html_writer::tag(
-                    'div',
-                    \html_writer::tag('strong', get_string('preview')) .
-                    \html_writer::empty_tag('br') .
-                    \html_writer::img(
-                        $url,
-                        'Custom avatar preview',
-                        [
-                            'style' => 'max-width: 150px; max-height: 150px; ' .
-                                'border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-top: 5px;',
-                        ]
-                    ),
-                    ['class' => 'alert alert-success']
-                ),
-                'mt-2'
-            );
-
-            $html .= $preview;
+            // Render preview using template.
+            $templatecontext = [
+                'url' => $url->out(),
+                'str_preview' => get_string('preview'),
+            ];
+            $html .= $OUTPUT->render_from_template('local_dttutor/admin_custom_avatar_preview', $templatecontext);
         }
 
         return $html;
