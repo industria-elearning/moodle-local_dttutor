@@ -120,12 +120,10 @@ class chat_hook {
             return; // Don't show on frontpage.
         }
 
-        // Do not show chat in quiz activities.
         if (self::is_quiz_module()) {
             return;
         }
 
-        // Detect cmid (Course Module ID) if we are in a module context.
         $cmid = 0;
         $context = $PAGE->context;
         if ($context->contextlevel == CONTEXT_MODULE) {
@@ -152,16 +150,16 @@ class chat_hook {
         }
         $welcomemessage = self::replace_placeholders($welcomemessage, $courseid);
 
-        // Check if webservice is configured.
         $isconfigured = false;
         $isadmin = false;
         $configurl = '';
 
         if (class_exists('\aiprovider_datacurso\webservice_config')) {
-            $isconfigured = \aiprovider_datacurso\webservice_config::is_configured();
+            if (method_exists('\aiprovider_datacurso\webservice_config', 'is_configured')) {
+                $isconfigured = \aiprovider_datacurso\webservice_config::is_configured();
+            }
 
             if (!$isconfigured) {
-                // Check if user is admin.
                 $syscontext = \context_system::instance();
                 $isadmin = has_capability('moodle/site:config', $syscontext);
 

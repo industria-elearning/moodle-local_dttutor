@@ -25,7 +25,12 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_dttutor';
-$plugin->version = 2025110723;
+$plugin->version = 2025110725;
 $plugin->requires = 2024042200;
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '1.7.0';
+$plugin->release = '1.7.2';
+
+// Plugin dependencies.
+$plugin->dependencies = [
+    'aiprovider_datacurso' => 2024100100, // Datacurso AI Provider with is_configured() method.
+];

@@ -602,18 +602,15 @@ define([
                 this.scrollToBottom();
                 this.showTypingIndicator();
 
-                // Build metadata object with contextual information.
                 const metaData = {
                     user_role: 'Student',
                     timestamp: Math.floor(Date.now() / 1000)
                 };
 
-                // Add page information if available.
                 if (this.pageContext.pagetype) {
                     metaData.page = this.pageContext.pagetype;
                 }
 
-                // Add specific contextual parameters.
                 if (this.pageContext.discussionid) {
                     metaData.discussionid = this.pageContext.discussionid;
                 }
@@ -654,21 +651,16 @@ define([
                     .catch((err) => {
                         this.hideTypingIndicator();
 
-                        // Check if it's a no credits error - show in chat and disable input.
                         if (this.isNoCreditsError(err)) {
-                            // Display error message in chat.
                             const errorHtml = err.message || 'Insufficient AI credits available.';
                             this.showNoCreditsWarning(errorHtml);
 
-                            // Disable chat input and button.
                             const input = this.root.find(SELECTORS.INPUT);
                             input.prop('disabled', true);
                             sendBtn.prop('disabled', true);
                         } else {
-                            // Re-enable button for other errors.
                             sendBtn.prop('disabled', false);
 
-                            // Show error in modal instead of notification.
                             const errorMessage = this.getFriendlyErrorMessage(err);
                             const isConfigError = this.isWebserviceConfigError(err);
                             const configUrl = this.extractConfigUrl(err);
@@ -693,7 +685,7 @@ define([
                 this.currentEventSource = es;
                 this.streaming = true;
                 let firstToken = true;
-                let messageCompleted = false; // Flag to track if message completed successfully.
+                let messageCompleted = false;
 
                 es.addEventListener('token', (ev) => {
                     try {
@@ -846,10 +838,8 @@ define([
         showNoCreditsWarning(errorHtml) {
             const messages = this.root.find(SELECTORS.MESSAGES);
 
-            // Remove existing no-credits warning if any.
             messages.find('.tutor-ia-no-credits-warning').remove();
 
-            // Create warning message.
             const warningDiv = $('<div class="tutor-ia-no-credits-warning"></div>');
             const alertDiv = $('<div class="alert alert-danger"></div>');
             alertDiv.html(
@@ -875,7 +865,7 @@ define([
                 try {
                     this.currentEventSource.close();
                 } catch (e) {
-                    // Error closing EventSource, ignore
+                    // Ignore.
                 }
             }
             this.currentEventSource = null;
@@ -886,7 +876,6 @@ define([
         }
 
         finalizeStream(sendBtn) {
-            // Add timestamp to AI message if it exists
             if (this.currentAIMessageContainer) {
                 const currentTimestamp = Math.floor(Date.now() / 1000);
                 const timestampDiv = $('<div>')
@@ -894,7 +883,6 @@ define([
                     .text(this.formatTimestamp(currentTimestamp));
                 $(this.currentAIMessageContainer).append(timestampDiv);
 
-                // Clear references
                 this.currentAIMessageContainer = null;
             }
 
