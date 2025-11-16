@@ -95,6 +95,16 @@
 
         {{! Footer con input }}
         <div class="tutor-ia-footer" data-region="tutor-ia-footer">
+            {{! Selection indicator badge }}
+            <div class="tutor-ia-selection-indicator" data-region="selection-indicator" style="display: none;">
+                <div class="selection-badge">
+                    <i class="fa fa-i-cursor"></i>
+                    <span class="selection-count" data-region="selection-count">0 lines selected</span>
+                    <button class="btn-clear-selection" data-action="clear-selection" aria-label="{{#str}}clear_selection, local_dttutor{{/str}}" title="{{#str}}clear_selection, local_dttutor{{/str}}">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
             <div class="tutor-ia-input-wrapper">
                 <textarea
                     class="form-control tutor-ia-input"

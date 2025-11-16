@@ -399,6 +399,69 @@ body.tutor-ia-drawer-open-left .popover-process-monitor {
     display: block;
 }
 
+/* Text Selection Indicator */
+.tutor-ia-selection-indicator {
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+    background: #e7f3ff;
+    border-left: 3px solid #0d6efd;
+    border-radius: 4px;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.selection-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #0d6efd;
+}
+
+.selection-badge i.fa-i-cursor {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.selection-count {
+    flex: 1;
+    font-weight: 500;
+    color: #495057;
+}
+
+.btn-clear-selection {
+    background: transparent;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    color: #6c757d;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-clear-selection:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #dc3545;
+}
+
+.btn-clear-selection i {
+    font-size: 0.875rem;
+}
+
 /* Error Modal Styles */
 .tutor-ia-error-modal {
     padding: 1rem;
@@ -427,4 +490,23 @@ body.tutor-ia-drawer-open-left .popover-process-monitor {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+/* ============================================
+   Persistent Text Highlight
+   Visual indicator for selected text context
+   ============================================ */
+
+.tutor-ia-text-highlight {
+    background: rgba(255, 235, 59, 0.4); /* Soft yellow highlight */
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3); /* Subtle outline */
+    border-radius: 2px;
+    padding: 2px 0;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Slightly more prominent on hover to show it's interactive */
+.tutor-ia-text-highlight:hover {
+    background: rgba(255, 235, 59, 0.5);
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5);
 }

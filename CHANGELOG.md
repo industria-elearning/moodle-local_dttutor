@@ -9,6 +9,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
+## [1.8.0] - 2025-11-17
+
+### Added
+
+#### Text Selection Context Feature
+- **Text selection detection**: Automatically captures text selected by the user on course pages and activities
+- **Selection metadata**: Selected text is sent as context with chat messages to provide more relevant AI responses
+- **Persistent visual highlighting**: Selected text remains visually highlighted with yellow background and subtle outline even after clicking chat input
+- **Selection indicator badge**: Shows line count and character count in chat footer with clear button
+- **Backend validation**: Robust validation and sanitization of selected text (100KB metadata limit, 50KB text limit)
+- **Security**: XSS prevention through clean_param() sanitization and PARAM_TEXT filtering
+- **Language support**: Translations for text selection feature added to all 7 supported languages (en, es, de, fr, pt, ru, id)
+- **Error handling**: User-friendly error messages for oversized metadata or selected text
+- **Documentation**: Complete backend specification document (BACKEND_TEXT_SELECTION_SPEC.md) with API integration guidelines
+
+#### Backend Improvements
+- Enhanced metadata validation in `create_chat_message.php` with size limits and type checking
+- Server-side sanitization of user-selected content
+- Improved debugging output for metadata validation errors
+
+#### Frontend Enhancements
+- Real-time text selection handling with mouseup and keyboard event listeners
+- Internal state management for selected text, line count, and character count
+- Persistent highlighting using DOM manipulation (wraps selected text in styled span element)
+- Smart selection persistence - only updates on new selection, never auto-clears when clicking elsewhere
+- Automatic selection clearing after message is sent or when clear button clicked
+- Visual indicator badge with line count, character count, and clear button
+- Smooth animations for badge appearance and highlight transitions
+- Interactive highlight with hover effect
+
+#### UX Improvements
+- **Context clarity**: Users can clearly see what text they're asking about while typing their question
+- **Selection persistence**: Text selection doesn't disappear when clicking chat input to type
+- **Visual feedback**: Highlighted text uses soft yellow background with subtle outline shadow
+- **Graceful cleanup**: Highlight properly removed when selection cleared or message sent
+
+### Technical Details
+- Backend validation: 100KB max metadata, 50KB max selected text
+- UTF-8 safe byte counting using `strlen()`
+- Defense-in-depth security approach
+- Compatible with Moodle 4.5+
+- DOM manipulation: Uses Range.extractContents() and insertNode() for highlight wrapping
+- Proper cleanup: Unwraps highlight span and normalizes parent nodes on removal
+- Error handling: Try-catch blocks prevent failures in non-editable areas
+
 ## [1.0.0] - 2025-10-07
 
 ### Added
