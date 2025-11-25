@@ -76,6 +76,10 @@ define([
             this.hasMoreHistory = true;
             this.historyLoaded = false;
 
+            // Language strings (loaded asynchronously)
+            this.strings = {};
+            this.stringsLoaded = false;
+
             // Get welcome message from data attribute
             this.welcomeMessage = root.getAttribute('data-welcomemessage') || '';
 
@@ -219,8 +223,94 @@ define([
         }
 
         init() {
+            this.loadStrings();
             this.registerEventListeners();
             window.addEventListener('beforeunload', () => this.cleanup());
+        }
+
+        /**
+         * Load language strings asynchronously.
+         * Strings are stored in this.strings object for later use.
+         */
+        loadStrings() {
+            Str.get_strings([
+                {key: 'line', component: 'local_dttutor'},
+                {key: 'lines', component: 'local_dttutor'},
+                {key: 'char', component: 'local_dttutor'},
+                {key: 'chars', component: 'local_dttutor'},
+                {key: 'selected', component: 'local_dttutor'},
+                {key: 'yesterday', component: 'local_dttutor'},
+                {key: 'loading', component: 'local_dttutor'},
+                {key: 'error_invalid_message', component: 'local_dttutor'},
+                {key: 'error_message_too_long', component: 'local_dttutor'},
+                {key: 'error_no_credits', component: 'local_dttutor'},
+                {key: 'error_no_credits_short', component: 'local_dttutor'},
+                {key: 'error_internal', component: 'local_dttutor'},
+                {key: 'connection_interrupted', component: 'local_dttutor'},
+                {key: 'error_establish_sse_connection', component: 'local_dttutor'},
+                {key: 'error_unexpected', component: 'local_dttutor'},
+                {key: 'error_unknown', component: 'local_dttutor'},
+                {key: 'configuration_error', component: 'local_dttutor'},
+                {key: 'error_attempt_later', component: 'local_dttutor'},
+                {key: 'error_license_fallback', component: 'local_dttutor'},
+                {key: 'error_license_fallback_short', component: 'local_dttutor'},
+                {key: 'error_no_credits_fallback', component: 'local_dttutor'},
+                {key: 'error_insufficient_tokens_short', component: 'local_dttutor'}
+            ]).then((strings) => {
+                this.strings = {
+                    line: strings[0],
+                    lines: strings[1],
+                    char: strings[2],
+                    chars: strings[3],
+                    selected: strings[4],
+                    yesterday: strings[5],
+                    loading: strings[6],
+                    errorInvalidMessage: strings[7],
+                    errorMessageTooLong: strings[8],
+                    errorNoCredits: strings[9],
+                    errorNoCreditsShort: strings[10],
+                    errorInternal: strings[11],
+                    connectionInterrupted: strings[12],
+                    errorEstablishSse: strings[13],
+                    errorUnexpected: strings[14],
+                    errorUnknown: strings[15],
+                    configurationError: strings[16],
+                    errorAttemptLater: strings[17],
+                    errorLicenseFallback: strings[18],
+                    errorLicenseFallbackShort: strings[19],
+                    errorNoCreditssFallback: strings[20],
+                    errorInsufficientTokensShort: strings[21]
+                };
+                this.stringsLoaded = true;
+                return;
+            }).catch(() => {
+                // Fallback to English if strings fail to load.
+                this.strings = {
+                    line: 'line',
+                    lines: 'lines',
+                    char: 'char',
+                    chars: 'chars',
+                    selected: 'selected',
+                    yesterday: 'Yesterday',
+                    loading: 'Loading...',
+                    errorInvalidMessage: 'Please enter a valid message',
+                    errorMessageTooLong: '[Error] Message is too long. Maximum 4000 characters.',
+                    errorNoCredits: 'Insufficient AI credits available.',
+                    errorNoCreditsShort: 'No Credits Available',
+                    errorInternal: 'Internal error: {$a}',
+                    connectionInterrupted: '[Connection interrupted]',
+                    errorEstablishSse: '[Error] Could not establish SSE connection',
+                    errorUnexpected: 'An unexpected error occurred. Please try again.',
+                    errorUnknown: 'An unknown error occurred. Please try again.',
+                    configurationError: 'Configuration error',
+                    errorAttemptLater: 'An error occurred. Please try again later.',
+                    errorLicenseFallback: 'License error: {$a}',
+                    errorLicenseFallbackShort: 'License Error',
+                    errorNoCreditssFallback: 'Insufficient credits: {$a}',
+                    errorInsufficientTokensShort: 'Insufficient Credits'
+                };
+                this.stringsLoaded = true;
+            });
         }
 
         registerEventListeners() {
@@ -364,9 +454,11 @@ define([
 
             if (this.selectedText && this.selectedText.length > 0 && this.selectionLineCount > 0) {
                 // Show indicator with count (lines and characters)
-                const lineText = this.selectionLineCount === 1 ? 'line' : 'lines';
-                const charText = this.selectionCharCount === 1 ? 'char' : 'chars';
-                countElement.text(`${this.selectionLineCount} ${lineText}, ${this.selectionCharCount} ${charText} selected`);
+                const lineText = this.selectionLineCount === 1 ? this.strings.line : this.strings.lines;
+                const charText = this.selectionCharCount === 1 ? this.strings.char : this.strings.chars;
+                const selectionText = this.selectionLineCount + ' ' + lineText + ', ' +
+                    this.selectionCharCount + ' ' + charText + ' ' + this.strings.selected;
+                countElement.text(selectionText);
                 indicator.show();
             } else {
                 // Hide indicator
@@ -710,7 +802,7 @@ define([
 
             // If yesterday, show "Yesterday HH:MM"
             if (messageDate.getTime() === yesterday.getTime()) {
-                return `Yesterday ${time}`;
+                return `${this.strings.yesterday} ${time}`;
             }
 
             // Otherwise show DD/MM/YYYY HH:MM
@@ -728,7 +820,7 @@ define([
             if (!messagesContainer.find('.history-loading').length) {
                 const loadingDiv = $('<div>')
                     .addClass('history-loading')
-                    .text('Loading...');
+                    .text(this.strings.loading);
                 messagesContainer.prepend(loadingDiv);
             }
         }
@@ -758,13 +850,13 @@ define([
 
             // Validation: Message contains only a single dot.
             if (messageText === '.') {
-                this.addMessage('[Error] Please enter a valid message.', 'ai');
+                this.addMessage('[Error] ' + this.strings.errorInvalidMessage, 'ai');
                 return;
             }
 
             // Validation: Message exceeds maximum length.
             if (messageText.length > 4000) {
-                this.addMessage('[Error] Message is too long. Maximum 4000 characters.', 'ai');
+                this.addMessage(this.strings.errorMessageTooLong, 'ai');
                 return;
             }
 
@@ -843,7 +935,7 @@ define([
                         this.hideTypingIndicator();
 
                         if (this.isNoCreditsError(err)) {
-                            const errorHtml = err.message || 'Insufficient AI credits available.';
+                            const errorHtml = err.message || this.strings.errorNoCredits;
                             this.showNoCreditsWarning(errorHtml);
 
                             const input = this.root.find(SELECTORS.INPUT);
@@ -866,7 +958,7 @@ define([
             } catch (error) {
                 this.hideTypingIndicator();
                 sendBtn.prop('disabled', false);
-                ErrorModal.showGeneralError('Internal error: ' + error.message);
+                ErrorModal.showGeneralError(this.strings.errorInternal.replace('{$a}', error.message));
             }
         }
 
@@ -922,13 +1014,13 @@ define([
                     // Generic EventSource error handler (connection failures).
                     // Only show error if message did NOT complete successfully.
                     if (!messageCompleted) {
-                        this.appendToAIMessage('\n[Connection interrupted]');
+                        this.appendToAIMessage('\n' + this.strings.connectionInterrupted);
                         this.finalizeStream(sendBtn);
                     }
                     // If messageCompleted=true, error is expected (normal closure after completion).
                 });
             } catch (error) {
-                this.addMessage('[Error] Could not establish SSE connection', 'ai');
+                this.addMessage(this.strings.errorEstablishSse, 'ai');
                 this.finalizeStream(sendBtn);
             }
         }
@@ -1049,7 +1141,7 @@ define([
             alertDiv.html(
                 '<i class="fa fa-exclamation-circle"></i> ' +
                 '<div class="warning-content">' +
-                '<strong>No Credits Available</strong>' +
+                '<strong>' + this.strings.errorNoCreditsShort + '</strong>' +
                 '<p>' + errorHtml + '</p>' +
                 '</div>'
             );
@@ -1113,6 +1205,7 @@ define([
 
                 // Check if it's a license error.
                 if (errorMessage.toLowerCase().includes('license not allowed')) {
+                    var self = this;
                     Str.get_strings([
                         {key: 'error_license_not_allowed', component: 'local_dttutor'},
                         {key: 'error_license_not_allowed_short', component: 'local_dttutor'}
@@ -1122,8 +1215,8 @@ define([
                     }).catch(function() {
                         // Fallback if strings fail to load.
                         ErrorModal.showGeneralError(
-                            'License error: ' + errorMessage,
-                            'License Error'
+                            self.strings.errorLicenseFallback.replace('{$a}', errorMessage),
+                            self.strings.errorLicenseFallbackShort
                         );
                     });
                     return;
@@ -1131,6 +1224,7 @@ define([
 
                 // Check if it's an insufficient tokens error.
                 if (errorMessage.toLowerCase().includes('insufficient tokens')) {
+                    var selfTokens = this;
                     Str.get_strings([
                         {key: 'error_insufficient_tokens', component: 'local_dttutor'},
                         {key: 'error_insufficient_tokens_short', component: 'local_dttutor'}
@@ -1140,8 +1234,8 @@ define([
                     }).catch(function() {
                         // Fallback if strings fail to load.
                         ErrorModal.showGeneralError(
-                            'Insufficient credits: ' + errorMessage,
-                            'Insufficient Credits'
+                            selfTokens.strings.errorNoCreditssFallback.replace('{$a}', errorMessage),
+                            selfTokens.strings.errorInsufficientTokensShort
                         );
                     });
                     return;
@@ -1151,7 +1245,7 @@ define([
                 ErrorModal.showGeneralError(errorMessage);
             } else {
                 // Fallback for unexpected error structure.
-                ErrorModal.showGeneralError('An unexpected error occurred. Please try again.');
+                ErrorModal.showGeneralError(this.strings.errorUnexpected);
             }
         }
 
@@ -1200,14 +1294,14 @@ define([
          */
         getFriendlyErrorMessage(err) {
             if (!err) {
-                return 'An unknown error occurred. Please try again.';
+                return this.strings.errorUnknown;
             }
 
             // Check if it's a webservice configuration error
             if (this.isWebserviceConfigError(err)) {
                 // Return the error message as-is since it's already friendly
                 // (comes from our language strings)
-                return err.message || err.error || 'Configuration error';
+                return err.message || err.error || this.strings.configurationError;
             }
 
             // For other errors, provide generic friendly message
@@ -1219,7 +1313,7 @@ define([
                 return err.error;
             }
 
-            return 'An error occurred. Please try again later.';
+            return this.strings.errorAttemptLater;
         }
 
         /**
