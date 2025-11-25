@@ -7,7 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+#### Debug Mode Feature
+- **Debug mode setting**: New admin setting to enable debug options in the chat interface
+- **Force reindex checkbox**: When debug mode is enabled, shows a checkbox to force context reindexing (only visible to site administrators)
+- **Admin-only access**: Debug controls require both debug mode enabled AND site:config capability
+- **Metadata transmission**: Checkbox state sent as `force_reindex=true` in message metadata
+- **Visual design**: Debug controls styled with warning colors (yellow background) to clearly indicate debug functionality
+- **Language support**: Debug strings added to all 7 supported languages
+
+#### Error Handling Improvements
+- **Stream error detection**: Enhanced SSE stream error handling to detect and parse JSON error responses
+- **License error modal**: User-friendly modal for license validation errors with clear explanation
+- **Insufficient credits modal**: User-friendly modal for insufficient AI tokens/credits errors
+- **Language support**: Added error strings for license and credits errors in all 7 languages
+
+#### Technical Details
+
+**Debug Mode**:
+- Admin setting: `local_dttutor/debug_mode` (default: disabled)
+- Template variables: `debug_mode` and `is_debug_admin` passed to drawer template
+- Capability check: Requires `moodle/site:config` capability to see debug controls
+- Visibility: Debug checkbox only shown when BOTH conditions are met (debug_mode=true AND user is admin)
+- JavaScript: Checks checkbox state and includes in metadata when checked
+- CSS: Warning-styled debug controls with yellow background and amber border
+
+**Error Handling**:
+- Enhanced EventSource error listener to parse JSON error data from SSE stream
+- Added `handleStreamError()` method to detect and categorize API errors
+- Detects errors with structure: `{detail: {status: "error", detail: "message"}}`
+- Shows appropriate error modal based on error type (license vs. credits)
+- Graceful fallback for unexpected error structures
 
 ## [1.8.0] - 2025-11-17
 

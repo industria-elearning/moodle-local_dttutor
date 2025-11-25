@@ -68,6 +68,16 @@ if ($hassiteconfig) {
         )
     );
 
+    // Debug Mode.
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'local_dttutor/debug_mode',
+            get_string('debug_mode', 'local_dttutor'),
+            get_string('debug_mode_desc', 'local_dttutor'),
+            '0'
+        )
+    );
+
     // Avatar Selection.
     $settings->add(new admin_setting_heading(
         'local_dttutor/avatarsettings',

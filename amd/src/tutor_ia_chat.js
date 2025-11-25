@@ -26,12 +26,14 @@ define([
     'core/ajax',
     'core/notification',
     'core/pubsub',
+    'core/str',
     'local_dttutor/error_modal'
 ], function(
     $,
     Ajax,
     Notification,
     PubSub,
+    Str,
     ErrorModal
 ) {
     'use strict';
@@ -809,6 +811,12 @@ define([
                     metaData.selected_text = this.selectedText;
                 }
 
+                // Add debug force reindex if checkbox is checked.
+                const forceReindexCheckbox = this.root.find('[data-region="debug-force-reindex"]');
+                if (forceReindexCheckbox.length && forceReindexCheckbox.is(':checked')) {
+                    metaData.force_reindex = true;
+                }
+
                 const requests = Ajax.call([{
                     methodname: "local_dttutor_create_chat_message",
                     args: {
@@ -898,7 +906,20 @@ define([
                     this.finalizeStream(sendBtn);
                 });
 
-                es.addEventListener('error', () => {
+                // Listen for custom 'error' event from API with JSON error data.
+                es.addEventListener('error', (ev) => {
+                    // Try to parse error data if available.
+                    if (ev.data) {
+                        try {
+                            const errorData = JSON.parse(ev.data);
+                            this.handleStreamError(errorData, sendBtn);
+                            return;
+                        } catch (e) {
+                            // Not JSON, continue with generic error handling below.
+                        }
+                    }
+
+                    // Generic EventSource error handler (connection failures).
                     // Only show error if message did NOT complete successfully.
                     if (!messageCompleted) {
                         this.appendToAIMessage('\n[Connection interrupted]');
@@ -1072,6 +1093,65 @@ define([
             this.closeCurrentStream();
             if (sendBtn) {
                 sendBtn.prop('disabled', false);
+            }
+        }
+
+        /**
+         * Handle structured error data from SSE stream.
+         * Detects license and insufficient tokens errors and shows user-friendly modals.
+         *
+         * @param {Object} errorData - Error data object from SSE event
+         * @param {jQuery} sendBtn - Send button element to re-enable
+         */
+        handleStreamError(errorData, sendBtn) {
+            this.hideTypingIndicator();
+            this.finalizeStream(sendBtn);
+
+            // Check if error data has the expected structure.
+            if (errorData && errorData.detail && errorData.detail.status === 'error') {
+                const errorMessage = errorData.detail.detail || '';
+
+                // Check if it's a license error.
+                if (errorMessage.toLowerCase().includes('license not allowed')) {
+                    Str.get_strings([
+                        {key: 'error_license_not_allowed', component: 'local_dttutor'},
+                        {key: 'error_license_not_allowed_short', component: 'local_dttutor'}
+                    ]).then(function(strings) {
+                        ErrorModal.showGeneralError(strings[0], strings[1]);
+                        return;
+                    }).catch(function() {
+                        // Fallback if strings fail to load.
+                        ErrorModal.showGeneralError(
+                            'License error: ' + errorMessage,
+                            'License Error'
+                        );
+                    });
+                    return;
+                }
+
+                // Check if it's an insufficient tokens error.
+                if (errorMessage.toLowerCase().includes('insufficient tokens')) {
+                    Str.get_strings([
+                        {key: 'error_insufficient_tokens', component: 'local_dttutor'},
+                        {key: 'error_insufficient_tokens_short', component: 'local_dttutor'}
+                    ]).then(function(strings) {
+                        ErrorModal.showGeneralError(strings[0], strings[1]);
+                        return;
+                    }).catch(function() {
+                        // Fallback if strings fail to load.
+                        ErrorModal.showGeneralError(
+                            'Insufficient credits: ' + errorMessage,
+                            'Insufficient Credits'
+                        );
+                    });
+                    return;
+                }
+
+                // Generic error from API (unknown type).
+                ErrorModal.showGeneralError(errorMessage);
+            } else {
+                // Fallback for unexpected error structure.
+                ErrorModal.showGeneralError('An unexpected error occurred. Please try again.');
             }
         }
 
