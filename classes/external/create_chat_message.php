@@ -116,6 +116,61 @@ class create_chat_message extends external_api {
             $metaarray = [];
         }
 
+        // Validate total metadata size (100KB limit).
+        $metasize = strlen($params['meta']);
+        if ($metasize > 102400) {
+            throw new \moodle_exception(
+                'error_metadata_too_large',
+                'local_dttutor',
+                '',
+                null,
+                sprintf('Metadata size: %d bytes exceeds 100KB limit', $metasize)
+            );
+        }
+
+        // Validate and sanitize selected_text if present.
+        if (isset($metaarray['selected_text'])) {
+            // Ensure it's a string (not object or array).
+            if (!is_string($metaarray['selected_text'])) {
+                debugging('selected_text must be string, got: ' . gettype($metaarray['selected_text']), DEBUG_DEVELOPER);
+                unset($metaarray['selected_text']);
+            } else {
+                // Trim whitespace.
+                $metaarray['selected_text'] = trim($metaarray['selected_text']);
+
+                // Check if empty after trim.
+                if (empty($metaarray['selected_text'])) {
+                    unset($metaarray['selected_text']);
+                } else {
+                    // Check length (50KB limit for selected text).
+                    $textsize = strlen($metaarray['selected_text']);
+                    if ($textsize > 51200) {
+                        throw new \moodle_exception(
+                            'error_selected_text_too_large',
+                            'local_dttutor',
+                            '',
+                            null,
+                            sprintf('Selected text size: %d bytes exceeds 50KB limit', $textsize)
+                        );
+                    }
+
+                    // Sanitize for security (strip HTML, clean special chars).
+                    // Note: Text is not displayed in UI, only sent to AI.
+                    // This is defense-in-depth.
+                    $metaarray['selected_text'] = clean_param(
+                        $metaarray['selected_text'],
+                        PARAM_TEXT
+                    );
+
+                    // Check again if empty after sanitization.
+                    if (empty($metaarray['selected_text'])) {
+                        debugging('selected_text is empty after sanitization', DEBUG_DEVELOPER);
+                        unset($metaarray['selected_text']);
+                    }
+                }
+            }
+        }
+
         $metaarray['userid'] = $USER->id;
         $metaarray['off_topic_detection_enabled'] = (bool)get_config('local_dttutor', 'off_topic_detection_enabled');
         $metaarray['off_topic_strictness'] = get_config('local_dttutor', 'off_topic_strictness') ?: 'permissive';

@@ -7,7 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+#### Debug Mode Feature
+- **Debug mode setting**: New admin setting to enable debug options in the chat interface
+- **Force reindex checkbox**: When debug mode is enabled, shows a checkbox to force context reindexing (only visible to site administrators)
+- **Admin-only access**: Debug controls require both debug mode enabled AND site:config capability
+- **Metadata transmission**: Checkbox state sent as `force_reindex=true` in message metadata
+- **Visual design**: Debug controls styled with warning colors (yellow background) to clearly indicate debug functionality
+- **Language support**: Debug strings added to all 7 supported languages
+
+#### Error Handling Improvements
+- **Stream error detection**: Enhanced SSE stream error handling to detect and parse JSON error responses
+- **License error modal**: User-friendly modal for license validation errors with clear explanation
+- **Insufficient credits modal**: User-friendly modal for insufficient AI tokens/credits errors
+- **Language support**: Added error strings for license and credits errors in all 7 languages
+
+#### Technical Details
+
+**Debug Mode**:
+- Admin setting: `local_dttutor/debug_mode` (default: disabled)
+- Template variables: `debug_mode` and `is_debug_admin` passed to drawer template
+- Capability check: Requires `moodle/site:config` capability to see debug controls
+- Visibility: Debug checkbox only shown when BOTH conditions are met (debug_mode=true AND user is admin)
+- JavaScript: Checks checkbox state and includes in metadata when checked
+- CSS: Warning-styled debug controls with yellow background and amber border
+
+**Error Handling**:
+- Enhanced EventSource error listener to parse JSON error data from SSE stream
+- Added `handleStreamError()` method to detect and categorize API errors
+- Detects errors with structure: `{detail: {status: "error", detail: "message"}}`
+- Shows appropriate error modal based on error type (license vs. credits)
+- Graceful fallback for unexpected error structures
+
+## [1.8.0] - 2025-11-17
+
+### Added
+
+#### Text Selection Context Feature
+- **Text selection detection**: Automatically captures text selected by the user on course pages and activities
+- **Selection metadata**: Selected text is sent as context with chat messages to provide more relevant AI responses
+- **Persistent visual highlighting**: Selected text remains visually highlighted with yellow background and subtle outline even after clicking chat input
+- **Selection indicator badge**: Shows line count and character count in chat footer with clear button
+- **Backend validation**: Robust validation and sanitization of selected text (100KB metadata limit, 50KB text limit)
+- **Security**: XSS prevention through clean_param() sanitization and PARAM_TEXT filtering
+- **Language support**: Translations for text selection feature added to all 7 supported languages (en, es, de, fr, pt, ru, id)
+- **Error handling**: User-friendly error messages for oversized metadata or selected text
+- **Documentation**: Complete backend specification document (BACKEND_TEXT_SELECTION_SPEC.md) with API integration guidelines
+
+#### Backend Improvements
+- Enhanced metadata validation in `create_chat_message.php` with size limits and type checking
+- Server-side sanitization of user-selected content
+- Improved debugging output for metadata validation errors
+
+#### Frontend Enhancements
+- Real-time text selection handling with mouseup and keyboard event listeners
+- Internal state management for selected text, line count, and character count
+- Persistent highlighting using DOM manipulation (wraps selected text in styled span element)
+- Smart selection persistence - only updates on new selection, never auto-clears when clicking elsewhere
+- Automatic selection clearing after message is sent or when clear button clicked
+- Visual indicator badge with line count, character count, and clear button
+- Smooth animations for badge appearance and highlight transitions
+- Interactive highlight with hover effect
+
+#### UX Improvements
+- **Context clarity**: Users can clearly see what text they're asking about while typing their question
+- **Selection persistence**: Text selection doesn't disappear when clicking chat input to type
+- **Visual feedback**: Highlighted text uses soft yellow background with subtle outline shadow
+- **Graceful cleanup**: Highlight properly removed when selection cleared or message sent
+
+### Technical Details
+- Backend validation: 100KB max metadata, 50KB max selected text
+- UTF-8 safe byte counting using `strlen()`
+- Defense-in-depth security approach
+- Compatible with Moodle 4.5+
+- DOM manipulation: Uses Range.extractContents() and insertNode() for highlight wrapping
+- Proper cleanup: Unwraps highlight span and normalizes parent nodes on removal
+- Error handling: Try-catch blocks prevent failures in non-editable areas
 
 ## [1.0.0] - 2025-10-07
 

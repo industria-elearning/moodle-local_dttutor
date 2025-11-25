@@ -26,12 +26,14 @@ define([
     'core/ajax',
     'core/notification',
     'core/pubsub',
+    'core/str',
     'local_dttutor/error_modal'
 ], function(
     $,
     Ajax,
     Notification,
     PubSub,
+    Str,
     ErrorModal
 ) {
     'use strict';
@@ -60,6 +62,12 @@ define([
             this.currentSessionId = null;
             this.currentAIMessageEl = null;
             this.currentAIMessageContainer = null;
+
+            // Text selection state
+            this.selectedText = '';
+            this.selectionLineCount = 0;
+            this.selectionCharCount = 0;
+            this.highlightedRange = null; // Reference to the highlighted range for visual persistence
 
             // History pagination state
             this.historyOffset = 0;
@@ -279,6 +287,174 @@ define([
                         this.closeButton.focus();
                     }
                 });
+            }
+
+            // Text selection handler.
+            document.addEventListener('mouseup', () => {
+                this.handleTextSelection();
+            });
+
+            // Also handle keyboard selection (Shift + Arrow keys, Ctrl+A, etc.)
+            document.addEventListener('keyup', (e) => {
+                if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                    this.handleTextSelection();
+                }
+            });
+
+            // Clear selection button.
+            this.root.find('[data-action="clear-selection"]').on('click', () => {
+                this.clearSelection();
+                // Also clear browser selection
+                if (window.getSelection) {
+                    window.getSelection().removeAllRanges();
+                }
+            });
+        }
+
+        /**
+         * Handles text selection on the page.
+         * Captures selected text and updates the internal state.
+         *
+         * IMPORTANT: Only updates when new text is selected.
+         * Does NOT clear existing selection when user clicks elsewhere (like the chat input).
+         * Selection is only cleared when:
+         * - User clicks the X button
+         * - User sends a message
+         * - User selects new text (replaces old selection)
+         */
+        handleTextSelection() {
+            const selection = window.getSelection();
+            const selectedText = selection ? selection.toString().trim() : '';
+
+            // Only update if there is actual text selected.
+            // Do NOT clear existing selection if user just clicked somewhere else.
+            if (selectedText && selectedText.length > 0) {
+                // Remove any previous highlight before creating new one.
+                this.removeHighlight();
+
+                // Store the selected text.
+                this.selectedText = selectedText;
+
+                // Count lines (split by newlines).
+                this.selectionLineCount = selectedText.split('\n').length;
+
+                // Count characters.
+                this.selectionCharCount = selectedText.length;
+
+                // Apply persistent visual highlighting.
+                this.applyHighlight(selection);
+
+                // Update UI indicator.
+                this.updateSelectionIndicator();
+            }
+            // Note: We intentionally do NOT call clearSelection() here.
+            // Selection persists until explicitly cleared by user action.
+        }
+
+        /**
+         * Updates the selection indicator in the chat UI.
+         */
+        updateSelectionIndicator() {
+            const indicator = this.root.find('[data-region="selection-indicator"]');
+            const countElement = this.root.find('[data-region="selection-count"]');
+
+            if (!indicator.length || !countElement.length) {
+                return;
+            }
+
+            if (this.selectedText && this.selectedText.length > 0 && this.selectionLineCount > 0) {
+                // Show indicator with count (lines and characters)
+                const lineText = this.selectionLineCount === 1 ? 'line' : 'lines';
+                const charText = this.selectionCharCount === 1 ? 'char' : 'chars';
+                countElement.text(`${this.selectionLineCount} ${lineText}, ${this.selectionCharCount} ${charText} selected`);
+                indicator.show();
+            } else {
+                // Hide indicator
+                indicator.hide();
+            }
+        }
+
+        /**
+         * Clears the text selection state.
+         */
+        clearSelection() {
+            this.selectedText = '';
+            this.selectionLineCount = 0;
+            this.selectionCharCount = 0;
+
+            // Remove visual highlight.
+            this.removeHighlight();
+
+            // Update UI indicator (if it exists).
+            this.updateSelectionIndicator();
+        }
+
+        /**
+         * Applies persistent visual highlighting to the selected text.
+         * Wraps the selected range in a styled span element that persists after focus loss.
+         *
+         * @param {Selection} selection - The browser Selection object containing the current selection
+         */
+        applyHighlight(selection) {
+            if (!selection || selection.rangeCount === 0) {
+                return;
+            }
+
+            try {
+                // Get the first range from the selection.
+                const range = selection.getRangeAt(0);
+
+                // Create a span element to wrap the selected text.
+                const highlightSpan = document.createElement('span');
+                highlightSpan.className = 'tutor-ia-text-highlight';
+                highlightSpan.setAttribute('data-tutor-ia-highlight', 'true');
+
+                // Wrap the range contents in the highlight span.
+                // This extracts the contents and places them in the span.
+                highlightSpan.appendChild(range.extractContents());
+
+                // Insert the highlighted span at the range position.
+                range.insertNode(highlightSpan);
+
+                // Store reference to the highlighted element for later removal.
+                this.highlightedRange = highlightSpan;
+            } catch (e) {
+                // Silently handle errors (e.g., selection in non-editable area).
+                window.console.warn('Failed to apply text highlight:', e);
+            }
+        }
+
+        /**
+         * Removes the persistent visual highlighting from the page.
+         * Unwraps the highlighted span and restores original text nodes.
+         */
+        removeHighlight() {
+            if (!this.highlightedRange) {
+                return;
+            }
+
+            try {
+                // Get the parent of the highlight span.
+                const parent = this.highlightedRange.parentNode;
+
+                if (parent) {
+                    // Move all child nodes of the span back to the parent.
+                    while (this.highlightedRange.firstChild) {
+                        parent.insertBefore(this.highlightedRange.firstChild, this.highlightedRange);
+                    }
+
+                    // Remove the now-empty highlight span.
+                    parent.removeChild(this.highlightedRange);
+
+                    // Normalize the parent to merge adjacent text nodes.
+                    parent.normalize();
+                }
+            } catch (e) {
+                // Silently handle errors (e.g., element already removed).
+                window.console.warn('Failed to remove text highlight:', e);
+            } finally {
+                // Clear the reference regardless of success.
+                this.highlightedRange = null;
             }
         }
 
@@ -630,6 +806,17 @@ define([
                     metaData.cmid = parseInt(this.cmId, 10);
                 }
 
+                // Add selected text if present.
+                if (this.selectedText && this.selectedText.length > 0) {
+                    metaData.selected_text = this.selectedText;
+                }
+
+                // Add debug force reindex if checkbox is checked.
+                const forceReindexCheckbox = this.root.find('[data-region="debug-force-reindex"]');
+                if (forceReindexCheckbox.length && forceReindexCheckbox.is(':checked')) {
+                    metaData.force_reindex = true;
+                }
+
                 const requests = Ajax.call([{
                     methodname: "local_dttutor_create_chat_message",
                     args: {
@@ -646,6 +833,10 @@ define([
                         }
                         this.currentSessionId = data.session_id;
                         this.startSSE(data.stream_url, sendBtn);
+
+                        // Clear the selection after sending the message.
+                        this.clearSelection();
+
                         return data;
                     })
                     .catch((err) => {
@@ -715,7 +906,20 @@ define([
                     this.finalizeStream(sendBtn);
                 });
 
-                es.addEventListener('error', () => {
+                // Listen for custom 'error' event from API with JSON error data.
+                es.addEventListener('error', (ev) => {
+                    // Try to parse error data if available.
+                    if (ev.data) {
+                        try {
+                            const errorData = JSON.parse(ev.data);
+                            this.handleStreamError(errorData, sendBtn);
+                            return;
+                        } catch (e) {
+                            // Not JSON, continue with generic error handling below.
+                        }
+                    }
+
+                    // Generic EventSource error handler (connection failures).
                     // Only show error if message did NOT complete successfully.
                     if (!messageCompleted) {
                         this.appendToAIMessage('\n[Connection interrupted]');
@@ -889,6 +1093,65 @@ define([
             this.closeCurrentStream();
             if (sendBtn) {
                 sendBtn.prop('disabled', false);
+            }
+        }
+
+        /**
+         * Handle structured error data from SSE stream.
+         * Detects license and insufficient tokens errors and shows user-friendly modals.
+         *
+         * @param {Object} errorData - Error data object from SSE event
+         * @param {jQuery} sendBtn - Send button element to re-enable
+         */
+        handleStreamError(errorData, sendBtn) {
+            this.hideTypingIndicator();
+            this.finalizeStream(sendBtn);
+
+            // Check if error data has the expected structure.
+            if (errorData && errorData.detail && errorData.detail.status === 'error') {
+                const errorMessage = errorData.detail.detail || '';
+
+                // Check if it's a license error.
+                if (errorMessage.toLowerCase().includes('license not allowed')) {
+                    Str.get_strings([
+                        {key: 'error_license_not_allowed', component: 'local_dttutor'},
+                        {key: 'error_license_not_allowed_short', component: 'local_dttutor'}
+                    ]).then(function(strings) {
+                        ErrorModal.showGeneralError(strings[0], strings[1]);
+                        return;
+                    }).catch(function() {
+                        // Fallback if strings fail to load.
+                        ErrorModal.showGeneralError(
+                            'License error: ' + errorMessage,
+                            'License Error'
+                        );
+                    });
+                    return;
+                }
+
+                // Check if it's an insufficient tokens error.
+                if (errorMessage.toLowerCase().includes('insufficient tokens')) {
+                    Str.get_strings([
+                        {key: 'error_insufficient_tokens', component: 'local_dttutor'},
+                        {key: 'error_insufficient_tokens_short', component: 'local_dttutor'}
+                    ]).then(function(strings) {
+                        ErrorModal.showGeneralError(strings[0], strings[1]);
+                        return;
+                    }).catch(function() {
+                        // Fallback if strings fail to load.
+                        ErrorModal.showGeneralError(
+                            'Insufficient credits: ' + errorMessage,
+                            'Insufficient Credits'
+                        );
+                    });
+                    return;
+                }
+
+                // Generic error from API (unknown type).
+                ErrorModal.showGeneralError(errorMessage);
+            } else {
+                // Fallback for unexpected error structure.
+                ErrorModal.showGeneralError('An unexpected error occurred. Please try again.');
             }
         }
 

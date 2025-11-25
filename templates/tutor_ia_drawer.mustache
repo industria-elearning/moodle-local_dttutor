@@ -30,8 +30,10 @@
     * avatarurl - Selected avatar URL
     * position - Drawer side (right/left, auto-determined for custom positions)
     * is_configured - Whether the Datacurso AI Provider is configured
-    * is_admin - Whether the current user is an admin
+    * is_admin - Whether the current user is an admin (for config errors)
     * config_url - Configuration URL for admins (empty if not admin)
+    * debug_mode - Whether debug mode is enabled (global setting)
+    * is_debug_admin - Whether current user has admin capabilities (for debug controls)
 
     Example context (json):
     {
@@ -46,7 +48,9 @@
         "position": "right",
         "is_configured": true,
         "is_admin": false,
-        "config_url": ""
+        "config_url": "",
+        "debug_mode": false,
+        "is_debug_admin": false
     }
 }}
 <div class="tutor-ia-drawer tutor-ia-drawer-{{position}}" id="tutor-ia-drawer-{{uniqid}}" data-position="{{position}}" aria-label="{{tutorname}}" tabindex="-1" role="region">
@@ -95,6 +99,27 @@
 
         {{! Footer con input }}
         <div class="tutor-ia-footer" data-region="tutor-ia-footer">
+            {{! Selection indicator badge }}
+            <div class="tutor-ia-selection-indicator" data-region="selection-indicator" style="display: none;">
+                <div class="selection-badge">
+                    <i class="fa fa-i-cursor"></i>
+                    <span class="selection-count" data-region="selection-count">0 lines selected</span>
+                    <button class="btn-clear-selection" data-action="clear-selection" aria-label="{{#str}}clear_selection, local_dttutor{{/str}}" title="{{#str}}clear_selection, local_dttutor{{/str}}">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            {{! Debug options (only for admins when debug mode is enabled) }}
+            {{#debug_mode}}
+            {{#is_debug_admin}}
+            <div class="tutor-ia-debug-controls">
+                <label class="tutor-ia-debug-label">
+                    <input type="checkbox" class="tutor-ia-debug-checkbox" data-region="debug-force-reindex">
+                    <span>{{#str}}debug_force_reindex, local_dttutor{{/str}}</span>
+                </label>
+            </div>
+            {{/is_debug_admin}}
+            {{/debug_mode}}
             <div class="tutor-ia-input-wrapper">
                 <textarea
                     class="form-control tutor-ia-input"
