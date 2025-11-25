@@ -21,12 +21,38 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define([], function() {
+define(['core/str'], function(Str) {
+
+    // Language strings (loaded asynchronously)
+    var strings = {
+        positionCorner: 'Position: {$a->preset} corner | Drawer: {$a->drawer}',
+        positionCustom: 'Position: X: {$a->x}, Y: {$a->y} | Drawer: {$a->drawer}'
+    };
+
+    /**
+     * Load language strings
+     * @returns {Promise}
+     */
+    var loadStrings = function() {
+        return Str.get_strings([
+            {key: 'positiondisplay_corner', component: 'local_dttutor'},
+            {key: 'positiondisplay_custom', component: 'local_dttutor'}
+        ]).then(function(strs) {
+            strings.positionCorner = strs[0];
+            strings.positionCustom = strs[1];
+            return;
+        }).catch(function() {
+            // Keep fallback values
+        });
+    };
 
     /**
      * Initialize the position configurator
      */
     var init = function() {
+        // Load language strings first
+        loadStrings();
+
         const presetRadios = document.querySelectorAll('input[name="position_preset"]');
         const customCoordsDiv = document.getElementById('custom-coords');
         const xInput = document.getElementById('position_x');
@@ -152,10 +178,19 @@ define([], function() {
                 previewAvatar.style.bottom = 'auto';
             }
 
-            const xDisplay = preset === 'custom' ? `${x} (from ${xRef})` : x;
-            const yDisplay = preset === 'custom' ? `${y} (from ${yRef})` : y;
-            coordsDisplay.textContent = `Position: ${preset === 'custom' ?
-                `X: ${xDisplay}, Y: ${yDisplay}` : preset + ' corner'} | Drawer: ${drawerSide}`;
+            // Use language strings for position display
+            var displayText;
+            if (preset === 'custom') {
+                displayText = strings.positionCustom
+                    .replace('{$a->x}', x + ' (from ' + xRef + ')')
+                    .replace('{$a->y}', y + ' (from ' + yRef + ')')
+                    .replace('{$a->drawer}', drawerSide);
+            } else {
+                displayText = strings.positionCorner
+                    .replace('{$a->preset}', preset)
+                    .replace('{$a->drawer}', drawerSide);
+            }
+            coordsDisplay.textContent = displayText;
 
             const data = {
                 preset: preset,
@@ -220,8 +255,12 @@ define([], function() {
             previewAvatar.style.right = 'auto';
             previewAvatar.style.bottom = 'auto';
 
-            coordsDisplay.textContent = 'Position: X: ' + xInput.value + ' (from ' + xRef + '), Y: ' +
-                yInput.value + ' (from ' + yRef + ') | Drawer: ' + drawerSideSelect.value;
+            // Use language strings for position display during drag
+            var dragDisplayText = strings.positionCustom
+                .replace('{$a->x}', xInput.value + ' (from ' + xRef + ')')
+                .replace('{$a->y}', yInput.value + ' (from ' + yRef + ')')
+                .replace('{$a->drawer}', drawerSideSelect.value);
+            coordsDisplay.textContent = dragDisplayText;
         }
 
         /**
