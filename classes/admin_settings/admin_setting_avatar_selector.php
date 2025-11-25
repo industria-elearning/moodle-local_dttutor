@@ -67,7 +67,8 @@ class admin_setting_avatar_selector extends \admin_setting {
 
         $default = $this->get_defaultsetting();
         $current = $this->get_setting();
-        if ($current === null) {
+        // Use empty() to catch null, empty string, and false values.
+        if (empty($current)) {
             $current = $default;
         }
 
