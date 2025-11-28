@@ -40,6 +40,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shows appropriate error modal based on error type (license vs. credits)
 - Graceful fallback for unexpected error structures
 
+## [1.8.1] - 2025-11-28
+
+### Changed
+
+#### Text Selection Performance Optimization
+- **Lazy loading of event listeners**: Text selection event listeners are now only attached when the chat drawer is open, eliminating performance overhead when the chat is closed
+- **Event listener cleanup**: Listeners are automatically removed when the drawer is closed, ensuring zero performance impact on page interactions outside of the chat
+- **Debounced text selection handling**: Added 150ms debouncing to the `debouncedHandleTextSelection()` method to prevent excessive DOM operations during rapid text selection
+- **DOM element caching**: Selection indicator DOM elements are now cached instead of being queried repeatedly, improving selection handling performance
+- **New JavaScript methods**:
+  - `attachTextSelectionListeners()`: Attaches mouseup and keyup event listeners when drawer opens
+  - `detachTextSelectionListeners()`: Removes event listeners when drawer closes
+  - `debouncedHandleTextSelection()`: Debounced version of text selection handler
+  - `cacheSelectionIndicatorElements()`: Caches references to selection indicator DOM elements on first use
+
+### Technical Details
+
+**Performance Improvements**:
+- Reduced memory footprint by eliminating constant DOM queries during text selection
+- Prevented redundant event handling through debouncing (150ms threshold)
+- Event listeners only active when user is actively using the chat drawer
+- Zero performance impact when chat is not in use
+
+**Implementation**:
+- Lazy attachment in `openDrawer()` method calls `attachTextSelectionListeners()`
+- Cleanup in `closeDrawer()` method calls `detachTextSelectionListeners()`
+- Debouncing threshold configurable via class constant
+- Compatible with all existing text selection functionality from version 1.8.0
+
+### Performance Metrics
+
+- **Memory**: Reduced by removing inactive event listeners from DOM
+- **CPU**: Reduced through debouncing and element caching
+- **Responsiveness**: Improved for pages with heavy DOM manipulation
+- **User impact**: No change in user-facing functionality or visual behavior
+
 ## [1.8.0] - 2025-11-17
 
 ### Added
@@ -265,9 +301,11 @@ When upgrading from local_datacurso's embedded Tutor-IA:
 
 ## Version History Summary
 
-| Version | Date       | Description                                    |
-|---------|------------|------------------------------------------------|
-| 1.0.0   | 2025-10-07 | Initial release - migrated from local_datacurso |
+| Version | Date       | Description                                                |
+|---------|------------|--------------------------------------------------------|
+| 1.8.1   | 2025-11-28 | Text selection performance optimization                |
+| 1.8.0   | 2025-11-17 | Text selection context feature and debug mode support |
+| 1.0.0   | 2025-10-07 | Initial release - migrated from local_datacurso        |
 
 ---
 

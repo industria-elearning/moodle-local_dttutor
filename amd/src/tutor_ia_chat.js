@@ -69,6 +69,18 @@ define([
             this.selectionCharCount = 0;
             this.highlightedRange = null; // Reference to the highlighted range for visual persistence
 
+            // Text selection event listeners (bound functions for proper removal)
+            this.boundHandleTextSelectionMouseUp = null;
+            this.boundHandleTextSelectionKeyUp = null;
+            this.textSelectionListenersActive = false;
+
+            // Debounce timer for text selection
+            this.textSelectionDebounceTimer = null;
+
+            // Cached DOM elements for selection indicator (will be populated when needed)
+            this.cachedSelectionIndicator = null;
+            this.cachedSelectionCount = null;
+
             // History pagination state
             this.historyOffset = 0;
             this.historyLimit = 20;
@@ -379,17 +391,9 @@ define([
                 });
             }
 
-            // Text selection handler.
-            document.addEventListener('mouseup', () => {
-                this.handleTextSelection();
-            });
-
-            // Also handle keyboard selection (Shift + Arrow keys, Ctrl+A, etc.)
-            document.addEventListener('keyup', (e) => {
-                if (e.shiftKey || e.ctrlKey || e.metaKey) {
-                    this.handleTextSelection();
-                }
-            });
+            // Text selection listeners are NOT registered here.
+            // They are dynamically added/removed when drawer opens/closes for performance.
+            // See: attachTextSelectionListeners() and detachTextSelectionListeners()
 
             // Clear selection button.
             this.root.find('[data-action="clear-selection"]').on('click', () => {
@@ -399,6 +403,84 @@ define([
                     window.getSelection().removeAllRanges();
                 }
             });
+        }
+
+        /**
+         * Attaches text selection event listeners to the document.
+         * Called when the drawer opens to enable text selection capture.
+         * Uses debouncing to prevent excessive processing.
+         */
+        attachTextSelectionListeners() {
+            // Avoid attaching multiple times.
+            if (this.textSelectionListenersActive) {
+                return;
+            }
+
+            // Create bound functions for proper removal later.
+            this.boundHandleTextSelectionMouseUp = () => {
+                this.debouncedHandleTextSelection();
+            };
+
+            this.boundHandleTextSelectionKeyUp = (e) => {
+                // Only process if modifier keys are pressed (selection shortcuts).
+                if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                    this.debouncedHandleTextSelection();
+                }
+            };
+
+            // Attach listeners.
+            document.addEventListener('mouseup', this.boundHandleTextSelectionMouseUp);
+            document.addEventListener('keyup', this.boundHandleTextSelectionKeyUp);
+
+            this.textSelectionListenersActive = true;
+        }
+
+        /**
+         * Detaches text selection event listeners from the document.
+         * Called when the drawer closes to eliminate performance overhead.
+         */
+        detachTextSelectionListeners() {
+            // Only detach if listeners are active.
+            if (!this.textSelectionListenersActive) {
+                return;
+            }
+
+            // Remove listeners.
+            if (this.boundHandleTextSelectionMouseUp) {
+                document.removeEventListener('mouseup', this.boundHandleTextSelectionMouseUp);
+                this.boundHandleTextSelectionMouseUp = null;
+            }
+
+            if (this.boundHandleTextSelectionKeyUp) {
+                document.removeEventListener('keyup', this.boundHandleTextSelectionKeyUp);
+                this.boundHandleTextSelectionKeyUp = null;
+            }
+
+            // Clear any pending debounce timer.
+            if (this.textSelectionDebounceTimer) {
+                clearTimeout(this.textSelectionDebounceTimer);
+                this.textSelectionDebounceTimer = null;
+            }
+
+            this.textSelectionListenersActive = false;
+        }
+
+        /**
+         * Debounced version of handleTextSelection.
+         * Waits for 150ms of inactivity before processing selection.
+         * This prevents excessive DOM operations during rapid selection changes.
+         */
+        debouncedHandleTextSelection() {
+            // Clear any existing timer.
+            if (this.textSelectionDebounceTimer) {
+                clearTimeout(this.textSelectionDebounceTimer);
+            }
+
+            // Set new timer.
+            this.textSelectionDebounceTimer = setTimeout(() => {
+                this.handleTextSelection();
+                this.textSelectionDebounceTimer = null;
+            }, 150);
         }
 
         /**
@@ -442,11 +524,22 @@ define([
         }
 
         /**
+         * Caches selection indicator DOM elements for performance.
+         * Called once when drawer opens to avoid repeated jQuery lookups.
+         */
+        cacheSelectionIndicatorElements() {
+            this.cachedSelectionIndicator = this.root.find('[data-region="selection-indicator"]');
+            this.cachedSelectionCount = this.root.find('[data-region="selection-count"]');
+        }
+
+        /**
          * Updates the selection indicator in the chat UI.
+         * Uses cached DOM elements for performance.
          */
         updateSelectionIndicator() {
-            const indicator = this.root.find('[data-region="selection-indicator"]');
-            const countElement = this.root.find('[data-region="selection-count"]');
+            // Use cached elements, fall back to fresh lookup if not cached.
+            const indicator = this.cachedSelectionIndicator || this.root.find('[data-region="selection-indicator"]');
+            const countElement = this.cachedSelectionCount || this.root.find('[data-region="selection-count"]');
 
             if (!indicator.length || !countElement.length) {
                 return;
@@ -590,6 +683,12 @@ define([
             if (this.isConfigured) {
                 this.loadChatHistory();
             }
+
+            // Attach text selection listeners when drawer opens.
+            this.attachTextSelectionListeners();
+
+            // Cache selection indicator elements for performance.
+            this.cacheSelectionIndicatorElements();
         }
 
         closeDrawer() {
@@ -622,6 +721,9 @@ define([
             if (this.toggleButton) {
                 this.toggleButton.focus();
             }
+
+            // Detach text selection listeners when drawer closes for performance.
+            this.detachTextSelectionListeners();
         }
 
         toggleDrawer() {
@@ -1338,10 +1440,15 @@ define([
 
         cleanup() {
             this.closeCurrentStream();
+            // Ensure text selection listeners are removed on cleanup.
+            this.detachTextSelectionListeners();
         }
 
         destroy() {
             this.cleanup();
+            // Clear cached elements.
+            this.cachedSelectionIndicator = null;
+            this.cachedSelectionCount = null;
         }
     }
 
