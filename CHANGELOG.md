@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2025-12-01
+
 ### Added
 
 #### Debug Mode Feature
@@ -331,9 +333,10 @@ When upgrading from local_datacurso's embedded Tutor-IA:
 
 | Version | Date       | Description                                                |
 |---------|------------|--------------------------------------------------------|
+| 1.9.0   | 2025-12-01 | Debug mode and enhanced error handling for license/credits |
 | 1.8.2   | 2025-12-01 | Code cleanup - reduced redundant comments in JS        |
 | 1.8.1   | 2025-11-28 | Text selection performance optimization                |
-| 1.8.0   | 2025-11-17 | Text selection context feature and debug mode support |
+| 1.8.0   | 2025-11-17 | Text selection context feature                         |
 | 1.0.0   | 2025-10-07 | Initial release - migrated from local_datacurso        |
 
 ---
