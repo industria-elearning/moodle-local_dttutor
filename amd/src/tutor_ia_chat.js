@@ -50,7 +50,21 @@ define([
         BODY: 'body'
     };
 
+    /**
+     * TutorIAChat - Main chat drawer and messaging functionality.
+     *
+     * @class TutorIAChat
+     */
     class TutorIAChat {
+        /**
+         * Constructor.
+         *
+         * @param {HTMLElement} root - The root element for the chat
+         * @param {string} uniqueId - Unique identifier for the instance
+         * @param {number} courseId - Course ID
+         * @param {number} cmId - Course module ID
+         * @param {number} userId - User ID
+         */
         constructor(root, uniqueId, courseId, cmId, userId) {
             this.root = $(root);
             this.uniqueId = uniqueId;
@@ -63,39 +77,33 @@ define([
             this.currentAIMessageEl = null;
             this.currentAIMessageContainer = null;
 
-            // Text selection state
+            // Text selection state.
             this.selectedText = '';
             this.selectionLineCount = 0;
             this.selectionCharCount = 0;
-            this.highlightedRange = null; // Reference to the highlighted range for visual persistence
 
-            // Text selection event listeners (bound functions for proper removal)
+            // Bound functions for proper event listener removal.
             this.boundHandleTextSelectionMouseUp = null;
             this.boundHandleTextSelectionKeyUp = null;
             this.textSelectionListenersActive = false;
-
-            // Debounce timer for text selection
             this.textSelectionDebounceTimer = null;
 
-            // Cached DOM elements for selection indicator (will be populated when needed)
+            // Cached DOM elements for performance.
             this.cachedSelectionIndicator = null;
             this.cachedSelectionCount = null;
 
-            // History pagination state
+            // History pagination state.
             this.historyOffset = 0;
             this.historyLimit = 20;
             this.isLoadingHistory = false;
             this.hasMoreHistory = true;
             this.historyLoaded = false;
 
-            // Language strings (loaded asynchronously)
+            // Language strings (loaded asynchronously).
             this.strings = {};
             this.stringsLoaded = false;
 
-            // Get welcome message from data attribute
             this.welcomeMessage = root.getAttribute('data-welcomemessage') || '';
-
-            // Check if webservice is configured
             this.isConfigured = root.getAttribute('data-is-configured') === '1' ||
                                 root.getAttribute('data-is-configured') === 'true';
 
@@ -106,32 +114,25 @@ define([
             this.closeButton = document.querySelector(SELECTORS.CLOSE_BTN);
             this.jumpTo = document.querySelector(SELECTORS.JUMP_TO);
 
-            // Detect drawer position (right/left) from data-position.
             this.position = this.drawerElement ? this.drawerElement.getAttribute('data-position') || 'right' : 'right';
             this.pageClass = this.position === 'left' ? 'show-drawer-left' : 'show-drawer-right';
-            // Class to identify that Tutor-IA drawer is open (to move footer-popover).
+            // Used for footer-popover positioning via CSS.
             this.bodyClass = this.position === 'left' ? 'tutor-ia-drawer-open-left' : 'tutor-ia-drawer-open-right';
 
-            // Capture contextual information from the page.
             this.pageContext = this.detectPageContext();
-
-            // Adjust drawer top position based on navbar height.
             this.adjustDrawerTopPosition();
-
             this.init();
         }
 
         /**
          * Adjusts the drawer top position based on the navbar height.
-         * This ensures compatibility with different Moodle themes that may have
-         * different navbar heights (e.g., 60px, 80px, etc.).
+         * Ensures compatibility with different Moodle themes that may have different navbar heights.
          */
         adjustDrawerTopPosition() {
             if (!this.drawerElement) {
                 return;
             }
 
-            // Try to find the navbar using common Moodle selectors.
             const navbarSelectors = [
                 '.navbar.fixed-top',
                 '.fixed-top.navbar',
@@ -140,25 +141,20 @@ define([
                 '.navbar-fixed-top'
             ];
 
-            let navbarHeight = 60; // Default fallback height.
+            let navbarHeight = 60;
 
             for (const selector of navbarSelectors) {
                 const navbar = document.querySelector(selector);
                 if (navbar) {
-                    // Get the computed height including padding and border.
                     navbarHeight = navbar.offsetHeight;
-
-                    // If the navbar is hidden or has 0 height, skip it.
                     if (navbarHeight > 0) {
                         break;
                     }
                 }
             }
 
-            // Set the CSS variable for drawer top position.
             this.drawerElement.style.setProperty('--tutor-ia-drawer-top', navbarHeight + 'px');
 
-            // Also listen for window resize to recalculate if needed.
             window.addEventListener('resize', () => {
                 const navbar = document.querySelector(navbarSelectors[0]);
                 if (navbar) {
@@ -176,56 +172,45 @@ define([
         detectPageContext() {
             const context = {};
 
-            // Method 1: Try to get pagetype from M.cfg.
             if (typeof M !== 'undefined' && M.cfg && M.cfg.pagetype) {
                 context.pagetype = M.cfg.pagetype;
             }
 
-            // Method 2: If not available, use body id/class (more reliable).
+            // Fallback: extract from body id (format: "page-mod-forum-discuss").
             if (!context.pagetype) {
                 const bodyId = document.body.id;
                 if (bodyId) {
-                    // Body id format: "page-mod-forum-discuss" or "page-course-view-topics".
-                    // Extract the part after "page-".
                     context.pagetype = bodyId.replace('page-', '');
                 }
             }
 
-            // Method 3: Fallback using body classes.
+            // Fallback: extract from body classes.
             if (!context.pagetype) {
                 const bodyClasses = document.body.className;
-                // Look for classes with format "path-mod-forum", "pagelayout-incourse", etc.
                 const pathMatch = bodyClasses.match(/path-([\w-]+)/);
                 if (pathMatch) {
                     context.pagetype = pathMatch[1];
                 }
             }
 
-            // Get URL parameters.
             const urlParams = new URLSearchParams(window.location.search);
 
-            // Extract common parameters based on page type.
             if (context.pagetype && context.pagetype.includes('forum')) {
-                // Forum discussion ID.
                 if (urlParams.has('d')) {
                     context.discussionid = parseInt(urlParams.get('d'), 10);
                 }
-                // Forum ID.
                 if (urlParams.has('f')) {
                     context.forumid = parseInt(urlParams.get('f'), 10);
                 }
             } else if (context.pagetype && context.pagetype.includes('quiz')) {
-                // Quiz attempt ID.
                 if (urlParams.has('attempt')) {
                     context.attemptid = parseInt(urlParams.get('attempt'), 10);
                 }
             } else if (context.pagetype && context.pagetype.includes('assign')) {
-                // Assignment ID.
                 if (urlParams.has('id')) {
                     context.assignid = parseInt(urlParams.get('id'), 10);
                 }
             } else if (context.pagetype && context.pagetype.includes('wiki')) {
-                // Wiki page ID.
                 if (urlParams.has('pageid')) {
                     context.pageid = parseInt(urlParams.get('pageid'), 10);
                 }
@@ -242,7 +227,6 @@ define([
 
         /**
          * Load language strings asynchronously.
-         * Strings are stored in this.strings object for later use.
          */
         loadStrings() {
             Str.get_strings([
@@ -325,8 +309,10 @@ define([
             });
         }
 
+        /**
+         * Register all event listeners for the chat functionality.
+         */
         registerEventListeners() {
-            // Toggle button.
             if (this.toggleButton) {
                 this.toggleButton.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -334,7 +320,6 @@ define([
                 });
             }
 
-            // Close button.
             if (this.closeButton) {
                 this.closeButton.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -342,12 +327,10 @@ define([
                 });
             }
 
-            // Send button.
             this.root.find(SELECTORS.SEND_BTN).on('click', () => {
                 this.sendMessage();
             });
 
-            // Input - Enter to send.
             const input = this.root.find(SELECTORS.INPUT);
             input.on('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -356,33 +339,29 @@ define([
                 }
             });
 
-            // Auto-resize textarea.
             input.on('input', function() {
                 this.style.height = 'auto';
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
 
-            // Infinity scroll for history
             const messagesContainer = this.root.find(SELECTORS.MESSAGES);
             messagesContainer.on('scroll', () => {
                 this.handleHistoryScroll();
             });
 
-            // Close on Escape key.
             document.addEventListener('keydown', (e) => {
                 if (this.isDrawerOpen() && e.key === 'Escape') {
                     this.closeDrawer();
                 }
             });
 
-            // Close drawer if message drawer opens.
+            // Close drawer if Moodle's message drawer opens (prevent conflict).
             PubSub.subscribe('core_message/drawer_shown', () => {
                 if (this.isDrawerOpen()) {
                     this.closeDrawer();
                 }
             });
 
-            // Jump to functionality.
             if (this.jumpTo) {
                 this.jumpTo.addEventListener('focus', () => {
                     if (this.closeButton) {
@@ -391,14 +370,9 @@ define([
                 });
             }
 
-            // Text selection listeners are NOT registered here.
-            // They are dynamically added/removed when drawer opens/closes for performance.
-            // See: attachTextSelectionListeners() and detachTextSelectionListeners()
-
-            // Clear selection button.
+            // Text selection listeners are dynamically added/removed when drawer opens/closes.
             this.root.find('[data-action="clear-selection"]').on('click', () => {
                 this.clearSelection();
-                // Also clear browser selection
                 if (window.getSelection) {
                     window.getSelection().removeAllRanges();
                 }
@@ -407,28 +381,23 @@ define([
 
         /**
          * Attaches text selection event listeners to the document.
-         * Called when the drawer opens to enable text selection capture.
-         * Uses debouncing to prevent excessive processing.
+         * Called when the drawer opens. Uses debouncing to prevent excessive processing.
          */
         attachTextSelectionListeners() {
-            // Avoid attaching multiple times.
             if (this.textSelectionListenersActive) {
                 return;
             }
 
-            // Create bound functions for proper removal later.
             this.boundHandleTextSelectionMouseUp = () => {
                 this.debouncedHandleTextSelection();
             };
 
             this.boundHandleTextSelectionKeyUp = (e) => {
-                // Only process if modifier keys are pressed (selection shortcuts).
                 if (e.shiftKey || e.ctrlKey || e.metaKey) {
                     this.debouncedHandleTextSelection();
                 }
             };
 
-            // Attach listeners.
             document.addEventListener('mouseup', this.boundHandleTextSelectionMouseUp);
             document.addEventListener('keyup', this.boundHandleTextSelectionKeyUp);
 
@@ -440,12 +409,10 @@ define([
          * Called when the drawer closes to eliminate performance overhead.
          */
         detachTextSelectionListeners() {
-            // Only detach if listeners are active.
             if (!this.textSelectionListenersActive) {
                 return;
             }
 
-            // Remove listeners.
             if (this.boundHandleTextSelectionMouseUp) {
                 document.removeEventListener('mouseup', this.boundHandleTextSelectionMouseUp);
                 this.boundHandleTextSelectionMouseUp = null;
@@ -456,7 +423,6 @@ define([
                 this.boundHandleTextSelectionKeyUp = null;
             }
 
-            // Clear any pending debounce timer.
             if (this.textSelectionDebounceTimer) {
                 clearTimeout(this.textSelectionDebounceTimer);
                 this.textSelectionDebounceTimer = null;
@@ -467,16 +433,13 @@ define([
 
         /**
          * Debounced version of handleTextSelection.
-         * Waits for 150ms of inactivity before processing selection.
-         * This prevents excessive DOM operations during rapid selection changes.
+         * Waits 150ms before processing to prevent excessive DOM operations.
          */
         debouncedHandleTextSelection() {
-            // Clear any existing timer.
             if (this.textSelectionDebounceTimer) {
                 clearTimeout(this.textSelectionDebounceTimer);
             }
 
-            // Set new timer.
             this.textSelectionDebounceTimer = setTimeout(() => {
                 this.handleTextSelection();
                 this.textSelectionDebounceTimer = null;
@@ -485,47 +448,24 @@ define([
 
         /**
          * Handles text selection on the page.
-         * Captures selected text and updates the internal state.
-         *
-         * IMPORTANT: Only updates when new text is selected.
-         * Does NOT clear existing selection when user clicks elsewhere (like the chat input).
-         * Selection is only cleared when:
-         * - User clicks the X button
-         * - User sends a message
-         * - User selects new text (replaces old selection)
+         * IMPORTANT: This method ONLY reads the selection - it does NOT modify the page DOM.
+         * Selection persists until explicitly cleared by user action (X button, send message, or new selection).
          */
         handleTextSelection() {
             const selection = window.getSelection();
             const selectedText = selection ? selection.toString().trim() : '';
 
-            // Only update if there is actual text selected.
-            // Do NOT clear existing selection if user just clicked somewhere else.
+            // Only update if there is actual new text selected.
             if (selectedText && selectedText.length > 0) {
-                // Remove any previous highlight before creating new one.
-                this.removeHighlight();
-
-                // Store the selected text.
                 this.selectedText = selectedText;
-
-                // Count lines (split by newlines).
                 this.selectionLineCount = selectedText.split('\n').length;
-
-                // Count characters.
                 this.selectionCharCount = selectedText.length;
-
-                // Apply persistent visual highlighting.
-                this.applyHighlight(selection);
-
-                // Update UI indicator.
                 this.updateSelectionIndicator();
             }
-            // Note: We intentionally do NOT call clearSelection() here.
-            // Selection persists until explicitly cleared by user action.
         }
 
         /**
          * Caches selection indicator DOM elements for performance.
-         * Called once when drawer opens to avoid repeated jQuery lookups.
          */
         cacheSelectionIndicatorElements() {
             this.cachedSelectionIndicator = this.root.find('[data-region="selection-indicator"]');
@@ -534,10 +474,8 @@ define([
 
         /**
          * Updates the selection indicator in the chat UI.
-         * Uses cached DOM elements for performance.
          */
         updateSelectionIndicator() {
-            // Use cached elements, fall back to fresh lookup if not cached.
             const indicator = this.cachedSelectionIndicator || this.root.find('[data-region="selection-indicator"]');
             const countElement = this.cachedSelectionCount || this.root.find('[data-region="selection-count"]');
 
@@ -546,7 +484,6 @@ define([
             }
 
             if (this.selectedText && this.selectedText.length > 0 && this.selectionLineCount > 0) {
-                // Show indicator with count (lines and characters)
                 const lineText = this.selectionLineCount === 1 ? this.strings.line : this.strings.lines;
                 const charText = this.selectionCharCount === 1 ? this.strings.char : this.strings.chars;
                 const selectionText = this.selectionLineCount + ' ' + lineText + ', ' +
@@ -554,7 +491,6 @@ define([
                 countElement.text(selectionText);
                 indicator.show();
             } else {
-                // Hide indicator
                 indicator.hide();
             }
         }
@@ -566,131 +502,60 @@ define([
             this.selectedText = '';
             this.selectionLineCount = 0;
             this.selectionCharCount = 0;
-
-            // Remove visual highlight.
-            this.removeHighlight();
-
-            // Update UI indicator (if it exists).
             this.updateSelectionIndicator();
         }
 
         /**
-         * Applies persistent visual highlighting to the selected text.
-         * Wraps the selected range in a styled span element that persists after focus loss.
+         * Check if the drawer is currently open.
          *
-         * @param {Selection} selection - The browser Selection object containing the current selection
+         * @returns {boolean} True if drawer is open
          */
-        applyHighlight(selection) {
-            if (!selection || selection.rangeCount === 0) {
-                return;
-            }
-
-            try {
-                // Get the first range from the selection.
-                const range = selection.getRangeAt(0);
-
-                // Create a span element to wrap the selected text.
-                const highlightSpan = document.createElement('span');
-                highlightSpan.className = 'tutor-ia-text-highlight';
-                highlightSpan.setAttribute('data-tutor-ia-highlight', 'true');
-
-                // Wrap the range contents in the highlight span.
-                // This extracts the contents and places them in the span.
-                highlightSpan.appendChild(range.extractContents());
-
-                // Insert the highlighted span at the range position.
-                range.insertNode(highlightSpan);
-
-                // Store reference to the highlighted element for later removal.
-                this.highlightedRange = highlightSpan;
-            } catch (e) {
-                // Silently handle errors (e.g., selection in non-editable area).
-                window.console.warn('Failed to apply text highlight:', e);
-            }
-        }
-
-        /**
-         * Removes the persistent visual highlighting from the page.
-         * Unwraps the highlighted span and restores original text nodes.
-         */
-        removeHighlight() {
-            if (!this.highlightedRange) {
-                return;
-            }
-
-            try {
-                // Get the parent of the highlight span.
-                const parent = this.highlightedRange.parentNode;
-
-                if (parent) {
-                    // Move all child nodes of the span back to the parent.
-                    while (this.highlightedRange.firstChild) {
-                        parent.insertBefore(this.highlightedRange.firstChild, this.highlightedRange);
-                    }
-
-                    // Remove the now-empty highlight span.
-                    parent.removeChild(this.highlightedRange);
-
-                    // Normalize the parent to merge adjacent text nodes.
-                    parent.normalize();
-                }
-            } catch (e) {
-                // Silently handle errors (e.g., element already removed).
-                window.console.warn('Failed to remove text highlight:', e);
-            } finally {
-                // Clear the reference regardless of success.
-                this.highlightedRange = null;
-            }
-        }
-
         isDrawerOpen() {
             return this.drawerElement && this.drawerElement.classList.contains('show');
         }
 
+        /**
+         * Opens the chat drawer.
+         */
         openDrawer() {
             if (!this.drawerElement) {
                 return;
             }
 
-            // Close message drawer if open.
+            // Close Moodle's message drawer to prevent conflict.
             PubSub.publish('core_message/hide', {});
 
             this.drawerElement.classList.add('show');
             this.drawerElement.setAttribute('tabindex', '0');
 
-            // Update toggle button aria-expanded.
             if (this.toggleButton) {
                 this.toggleButton.setAttribute('aria-expanded', 'true');
             }
 
-            // Add padding to page (redistribute space) - uses this.pageClass (show-drawer-left or show-drawer-right).
             if (this.pageElement && !this.pageElement.classList.contains(this.pageClass)) {
                 this.pageElement.classList.add(this.pageClass);
             }
 
-            // Add class to body to identify Tutor-IA drawer is open (for footer-popover positioning).
             if (this.bodyElement && !this.bodyElement.classList.contains(this.bodyClass)) {
                 this.bodyElement.classList.add(this.bodyClass);
             }
 
-            // Focus management.
             if (this.jumpTo) {
                 this.jumpTo.setAttribute('tabindex', 0);
                 this.jumpTo.focus();
             }
 
-            // Load chat history on first open (only if configured)
             if (this.isConfigured) {
                 this.loadChatHistory();
             }
 
-            // Attach text selection listeners when drawer opens.
             this.attachTextSelectionListeners();
-
-            // Cache selection indicator elements for performance.
             this.cacheSelectionIndicatorElements();
         }
 
+        /**
+         * Closes the chat drawer.
+         */
         closeDrawer() {
             if (!this.drawerElement) {
                 return;
@@ -699,22 +564,18 @@ define([
             this.drawerElement.classList.remove('show');
             this.drawerElement.setAttribute('tabindex', '-1');
 
-            // Update toggle button aria-expanded.
             if (this.toggleButton) {
                 this.toggleButton.setAttribute('aria-expanded', 'false');
             }
 
-            // Remove padding from page - uses this.pageClass.
             if (this.pageElement && this.pageElement.classList.contains(this.pageClass)) {
                 this.pageElement.classList.remove(this.pageClass);
             }
 
-            // Remove class from body.
             if (this.bodyElement && this.bodyElement.classList.contains(this.bodyClass)) {
                 this.bodyElement.classList.remove(this.bodyClass);
             }
 
-            // Focus management.
             if (this.jumpTo) {
                 this.jumpTo.setAttribute('tabindex', -1);
             }
@@ -722,10 +583,12 @@ define([
                 this.toggleButton.focus();
             }
 
-            // Detach text selection listeners when drawer closes for performance.
             this.detachTextSelectionListeners();
         }
 
+        /**
+         * Toggles the drawer open/closed state.
+         */
         toggleDrawer() {
             if (this.isDrawerOpen()) {
                 this.closeDrawer();
@@ -735,22 +598,19 @@ define([
         }
 
         /**
-         * Load chat history from API
+         * Load chat history from API.
          */
         loadChatHistory() {
-            // Skip if already loading, no more history, or no session yet
             if (this.isLoadingHistory || !this.hasMoreHistory) {
                 return;
             }
 
             this.isLoadingHistory = true;
 
-            // Get current scroll position and height to maintain position after loading
             const messagesContainer = this.root.find(SELECTORS.MESSAGES);
             const scrollHeightBefore = messagesContainer[0].scrollHeight;
             const scrollTopBefore = messagesContainer[0].scrollTop;
 
-            // Show loading indicator at top
             this.showHistoryLoading();
 
             const requests = Ajax.call([{
@@ -769,18 +629,14 @@ define([
                     if (data.success && data.messages && data.messages.length > 0) {
                         const isInitialLoad = this.historyOffset === 0;
 
-                        // Display messages
                         this.displayHistoryMessages(data.messages, isInitialLoad);
-
-                        // Update pagination state
                         this.historyOffset += data.messages.length;
                         this.hasMoreHistory = data.pagination.has_more;
 
                         if (isInitialLoad) {
-                            // Scroll to bottom to show newest messages
                             this.scrollToBottom();
                         } else {
-                            // Maintain scroll position (prevent jump)
+                            // Maintain scroll position when loading older messages.
                             const scrollHeightAfter = messagesContainer[0].scrollHeight;
                             const scrollDiff = scrollHeightAfter - scrollHeightBefore;
                             messagesContainer[0].scrollTop = scrollTopBefore + scrollDiff;
@@ -797,7 +653,6 @@ define([
                     this.hideHistoryLoading();
                     this.isLoadingHistory = false;
 
-                    // Show error in modal instead of notification
                     const errorMessage = this.getFriendlyErrorMessage(err);
                     const isConfigError = this.isWebserviceConfigError(err);
                     const configUrl = this.extractConfigUrl(err);
@@ -811,41 +666,38 @@ define([
         }
 
         /**
-         * Handle scroll event for infinity scroll
+         * Handle scroll event for infinity scroll.
          */
         handleHistoryScroll() {
             const messagesContainer = this.root.find(SELECTORS.MESSAGES);
             const scrollTop = messagesContainer[0].scrollTop;
 
-            // Load more when scrolled near top (within 100px)
             if (scrollTop < 100 && !this.isLoadingHistory && this.hasMoreHistory) {
                 this.loadChatHistory();
             }
         }
 
         /**
-         * Display history messages in the chat
-         * @param {Array} messages - Array of message objects from API (ordered DESC by timestamp from backend)
-         * @param {boolean} isInitialLoad - True if this is the first load (append), false for loading older (prepend)
+         * Display history messages in the chat.
+         *
+         * @param {Array} messages - Array of message objects (ordered DESC by timestamp from backend)
+         * @param {boolean} isInitialLoad - True if first load (append), false for older messages (prepend)
          */
         displayHistoryMessages(messages, isInitialLoad) {
             const messagesContainer = this.root.find(SELECTORS.MESSAGES);
 
-            // Remove welcome message if it exists on initial load
             if (isInitialLoad && this.welcomeMessage) {
                 messagesContainer.find('.tutor-ia-message.ai:contains("' + this.welcomeMessage + '")').remove();
             }
 
             if (isInitialLoad) {
-                // Initial load: backend sends DESC [msg_10, msg_9, msg_8]
-                // Iterate in reverse and append to get chronological order: msg_8, msg_9, msg_10
+                // Initial load: reverse to get chronological order.
                 for (let i = messages.length - 1; i >= 0; i--) {
                     const messageDiv = this.createMessageElement(messages[i]);
                     messagesContainer.append(messageDiv);
                 }
             } else {
-                // Loading older: backend sends DESC [msg_5, msg_4, msg_3]
-                // Iterate normally and prepend to get: msg_3, msg_4, msg_5 (above existing messages)
+                // Loading older: prepend to place above existing messages.
                 messages.forEach(msg => {
                     const messageDiv = this.createMessageElement(msg);
                     messagesContainer.prepend(messageDiv);
@@ -854,7 +706,8 @@ define([
         }
 
         /**
-         * Create a message element
+         * Create a message element.
+         *
          * @param {Object} msg - Message object
          * @returns {jQuery} Message element
          */
@@ -879,7 +732,8 @@ define([
         }
 
         /**
-         * Format Unix timestamp to readable date and time
+         * Format Unix timestamp to readable date and time.
+         *
          * @param {number} timestamp - Unix timestamp
          * @returns {string} Formatted date and time string
          */
@@ -887,7 +741,6 @@ define([
             const date = new Date(timestamp * 1000);
             const today = new Date();
 
-            // Reset hours to compare dates only
             const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
             const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
             const yesterday = new Date(todayDate);
@@ -897,17 +750,14 @@ define([
             const minutes = date.getMinutes().toString().padStart(2, '0');
             const time = `${hours}:${minutes}`;
 
-            // If today, show only time
             if (messageDate.getTime() === todayDate.getTime()) {
                 return time;
             }
 
-            // If yesterday, show "Yesterday HH:MM"
             if (messageDate.getTime() === yesterday.getTime()) {
                 return `${this.strings.yesterday} ${time}`;
             }
 
-            // Otherwise show DD/MM/YYYY HH:MM
             const day = date.getDate().toString().padStart(2, '0');
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
             const year = date.getFullYear();
@@ -915,7 +765,7 @@ define([
         }
 
         /**
-         * Show loading indicator at top of messages
+         * Show loading indicator at top of messages.
          */
         showHistoryLoading() {
             const messagesContainer = this.root.find(SELECTORS.MESSAGES);
@@ -928,35 +778,33 @@ define([
         }
 
         /**
-         * Hide loading indicator
+         * Hide loading indicator.
          */
         hideHistoryLoading() {
             this.root.find('.history-loading').remove();
         }
 
+        /**
+         * Send a message to the AI tutor.
+         */
         sendMessage() {
-            // Do not send messages if webservice is not configured
             if (!this.isConfigured) {
                 return;
             }
 
             const input = this.root.find(SELECTORS.INPUT);
             const sendBtn = this.root.find(SELECTORS.SEND_BTN);
-
             const messageText = input.val().trim();
 
-            // Validation: Empty messages or streaming in progress.
             if (!messageText || this.streaming) {
                 return;
             }
 
-            // Validation: Message contains only a single dot.
             if (messageText === '.') {
                 this.addMessage('[Error] ' + this.strings.errorInvalidMessage, 'ai');
                 return;
             }
 
-            // Validation: Message exceeds maximum length.
             if (messageText.length > 4000) {
                 this.addMessage(this.strings.errorMessageTooLong, 'ai');
                 return;
@@ -980,7 +828,6 @@ define([
                 if (this.pageContext.pagetype) {
                     metaData.page = this.pageContext.pagetype;
                 }
-
                 if (this.pageContext.discussionid) {
                     metaData.discussionid = this.pageContext.discussionid;
                 }
@@ -999,13 +846,10 @@ define([
                 if (this.cmId) {
                     metaData.cmid = parseInt(this.cmId, 10);
                 }
-
-                // Add selected text if present.
                 if (this.selectedText && this.selectedText.length > 0) {
                     metaData.selected_text = this.selectedText;
                 }
 
-                // Add debug force reindex if checkbox is checked.
                 const forceReindexCheckbox = this.root.find('[data-region="debug-force-reindex"]');
                 if (forceReindexCheckbox.length && forceReindexCheckbox.is(':checked')) {
                     metaData.force_reindex = true;
@@ -1027,8 +871,6 @@ define([
                         }
                         this.currentSessionId = data.session_id;
                         this.startSSE(data.stream_url, sendBtn);
-
-                        // Clear the selection after sending the message.
                         this.clearSelection();
 
                         return data;
@@ -1040,8 +882,8 @@ define([
                             const errorHtml = err.message || this.strings.errorNoCredits;
                             this.showNoCreditsWarning(errorHtml);
 
-                            const input = this.root.find(SELECTORS.INPUT);
-                            input.prop('disabled', true);
+                            const inputEl = this.root.find(SELECTORS.INPUT);
+                            inputEl.prop('disabled', true);
                             sendBtn.prop('disabled', true);
                         } else {
                             sendBtn.prop('disabled', false);
@@ -1064,6 +906,12 @@ define([
             }
         }
 
+        /**
+         * Start Server-Sent Events stream for AI response.
+         *
+         * @param {string} streamUrl - URL for the SSE stream
+         * @param {jQuery} sendBtn - Send button element to re-enable on completion
+         */
         startSSE(streamUrl, sendBtn) {
             try {
                 const es = new EventSource(streamUrl);
@@ -1084,42 +932,37 @@ define([
                         }
                         this.appendToAIMessage(text);
                     } catch (e) {
-                        // Invalid token data, skip
+                        // Invalid token data, skip.
                     }
                 });
 
-                // Listen for 'done' event (server sends 'done', not 'message_completed').
                 es.addEventListener('done', () => {
-                    messageCompleted = true; // Mark that message completed successfully.
+                    messageCompleted = true;
                     this.finalizeStream(sendBtn);
                 });
 
-                // Maintain compatibility with 'message_completed' in case server changes.
+                // Backward compatibility with 'message_completed' event.
                 es.addEventListener('message_completed', () => {
                     messageCompleted = true;
                     this.finalizeStream(sendBtn);
                 });
 
-                // Listen for custom 'error' event from API with JSON error data.
                 es.addEventListener('error', (ev) => {
-                    // Try to parse error data if available.
                     if (ev.data) {
                         try {
                             const errorData = JSON.parse(ev.data);
                             this.handleStreamError(errorData, sendBtn);
                             return;
                         } catch (e) {
-                            // Not JSON, continue with generic error handling below.
+                            // Not JSON, continue with generic error handling.
                         }
                     }
 
-                    // Generic EventSource error handler (connection failures).
-                    // Only show error if message did NOT complete successfully.
+                    // Only show error if message did NOT complete (error after 'done' is expected).
                     if (!messageCompleted) {
                         this.appendToAIMessage('\n' + this.strings.connectionInterrupted);
                         this.finalizeStream(sendBtn);
                     }
-                    // If messageCompleted=true, error is expected (normal closure after completion).
                 });
             } catch (error) {
                 this.addMessage(this.strings.errorEstablishSse, 'ai');
@@ -1127,6 +970,11 @@ define([
             }
         }
 
+        /**
+         * Ensures an AI message element exists for streaming content.
+         *
+         * @returns {HTMLElement} The message content element
+         */
         ensureAIMessageEl() {
             if (this.currentAIMessageEl) {
                 return this.currentAIMessageEl;
@@ -1135,31 +983,31 @@ define([
             const messages = this.root.find(SELECTORS.MESSAGES);
             let messageContainer;
 
-            // Check if typing indicator exists
             const typingEl = messages.find('.tutor-ia-typing');
             if (typingEl.length) {
-                // Convert typing indicator to message
                 messageContainer = typingEl;
                 messageContainer.removeClass('tutor-ia-typing');
                 messageContainer.addClass('tutor-ia-message ai');
                 messageContainer.html('');
             } else {
-                // Create new message container
                 messageContainer = $('<div class="tutor-ia-message ai"></div>');
                 messages.append(messageContainer);
             }
 
-            // Create content div for message text
             const contentDiv = $('<div>')
                 .addClass('message-content');
             messageContainer.append(contentDiv);
 
-            // Store reference to content div for appending text
             this.currentAIMessageEl = contentDiv[0];
             this.currentAIMessageContainer = messageContainer[0];
             return this.currentAIMessageEl;
         }
 
+        /**
+         * Appends text to the current AI message element.
+         *
+         * @param {string} text - Text to append
+         */
         appendToAIMessage(text) {
             if (!this.currentAIMessageEl) {
                 this.ensureAIMessageEl();
@@ -1183,6 +1031,12 @@ define([
             this.scrollToBottom();
         }
 
+        /**
+         * Adds a complete message to the chat.
+         *
+         * @param {string} text - Message text
+         * @param {string} type - Message type ('user' or 'ai')
+         */
         addMessage(text, type) {
             if (!text || typeof text !== 'string') {
                 return;
@@ -1190,17 +1044,14 @@ define([
 
             const messages = this.root.find(SELECTORS.MESSAGES);
 
-            // Create message container
             const messageEl = $('<div></div>')
                 .addClass('tutor-ia-message')
                 .addClass(type);
 
-            // Add message content
             const contentDiv = $('<div>')
                 .addClass('message-content')
                 .text(text.substring(0, 10000));
 
-            // Add timestamp (current time)
             const currentTimestamp = Math.floor(Date.now() / 1000);
             const timestampDiv = $('<div>')
                 .addClass('message-timestamp')
@@ -1213,6 +1064,9 @@ define([
             this.scrollToBottom();
         }
 
+        /**
+         * Shows the typing indicator.
+         */
         showTypingIndicator() {
             const messages = this.root.find(SELECTORS.MESSAGES);
             if (messages.find('.tutor-ia-typing').length) {
@@ -1225,12 +1079,16 @@ define([
             this.scrollToBottom();
         }
 
+        /**
+         * Hides the typing indicator.
+         */
         hideTypingIndicator() {
             this.root.find('.tutor-ia-typing').remove();
         }
 
         /**
-         * Show no credits warning in chat
+         * Show no credits warning in chat.
+         *
          * @param {string} errorHtml - HTML error message from provider
          */
         showNoCreditsWarning(errorHtml) {
@@ -1253,17 +1111,23 @@ define([
             this.scrollToBottom();
         }
 
+        /**
+         * Scrolls the messages container to the bottom.
+         */
         scrollToBottom() {
             const messages = this.root.find(SELECTORS.MESSAGES);
             messages.scrollTop(messages[0].scrollHeight);
         }
 
+        /**
+         * Closes the current SSE stream.
+         */
         closeCurrentStream() {
             if (this.currentEventSource) {
                 try {
                     this.currentEventSource.close();
                 } catch (e) {
-                    // Ignore.
+                    // Ignore close errors.
                 }
             }
             this.currentEventSource = null;
@@ -1273,6 +1137,11 @@ define([
             this.hideTypingIndicator();
         }
 
+        /**
+         * Finalizes the stream and re-enables the send button.
+         *
+         * @param {jQuery} sendBtn - Send button element
+         */
         finalizeStream(sendBtn) {
             if (this.currentAIMessageContainer) {
                 const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -1301,11 +1170,9 @@ define([
             this.hideTypingIndicator();
             this.finalizeStream(sendBtn);
 
-            // Check if error data has the expected structure.
             if (errorData && errorData.detail && errorData.detail.status === 'error') {
                 const errorMessage = errorData.detail.detail || '';
 
-                // Check if it's a license error.
                 if (errorMessage.toLowerCase().includes('license not allowed')) {
                     var self = this;
                     Str.get_strings([
@@ -1315,7 +1182,6 @@ define([
                         ErrorModal.showGeneralError(strings[0], strings[1]);
                         return;
                     }).catch(function() {
-                        // Fallback if strings fail to load.
                         ErrorModal.showGeneralError(
                             self.strings.errorLicenseFallback.replace('{$a}', errorMessage),
                             self.strings.errorLicenseFallbackShort
@@ -1324,7 +1190,6 @@ define([
                     return;
                 }
 
-                // Check if it's an insufficient tokens error.
                 if (errorMessage.toLowerCase().includes('insufficient tokens')) {
                     var selfTokens = this;
                     Str.get_strings([
@@ -1334,7 +1199,6 @@ define([
                         ErrorModal.showGeneralError(strings[0], strings[1]);
                         return;
                     }).catch(function() {
-                        // Fallback if strings fail to load.
                         ErrorModal.showGeneralError(
                             selfTokens.strings.errorNoCreditssFallback.replace('{$a}', errorMessage),
                             selfTokens.strings.errorInsufficientTokensShort
@@ -1343,14 +1207,18 @@ define([
                     return;
                 }
 
-                // Generic error from API (unknown type).
                 ErrorModal.showGeneralError(errorMessage);
             } else {
-                // Fallback for unexpected error structure.
                 ErrorModal.showGeneralError(this.strings.errorUnexpected);
             }
         }
 
+        /**
+         * Sanitizes a string by removing angle brackets.
+         *
+         * @param {string} str - String to sanitize
+         * @returns {string} Sanitized string
+         */
         sanitizeString(str) {
             if (typeof str !== 'string') {
                 return '';
@@ -1359,9 +1227,10 @@ define([
         }
 
         /**
-         * Check if error is related to webservice configuration
+         * Check if error is related to webservice configuration.
+         *
          * @param {Object} err - Error object
-         * @returns {boolean}
+         * @returns {boolean} True if webservice config error
          */
         isWebserviceConfigError(err) {
             if (!err || !err.message) {
@@ -1374,9 +1243,10 @@ define([
         }
 
         /**
-         * Check if error is related to insufficient AI credits
+         * Check if error is related to insufficient AI credits.
+         *
          * @param {Object} err - Error object
-         * @returns {boolean}
+         * @returns {boolean} True if no credits error
          */
         isNoCreditsError(err) {
             if (!err || !err.message) {
@@ -1390,7 +1260,8 @@ define([
         }
 
         /**
-         * Get friendly error message from exception
+         * Get friendly error message from exception.
+         *
          * @param {Object} err - Error object
          * @returns {string} Friendly error message
          */
@@ -1399,14 +1270,10 @@ define([
                 return this.strings.errorUnknown;
             }
 
-            // Check if it's a webservice configuration error
             if (this.isWebserviceConfigError(err)) {
-                // Return the error message as-is since it's already friendly
-                // (comes from our language strings)
                 return err.message || err.error || this.strings.configurationError;
             }
 
-            // For other errors, provide generic friendly message
             if (err.message) {
                 return err.message;
             }
@@ -1419,7 +1286,8 @@ define([
         }
 
         /**
-         * Extract configuration URL from error message (for admin users)
+         * Extract configuration URL from error message (for admin users).
+         *
          * @param {Object} err - Error object
          * @returns {string|null} Configuration URL or null
          */
@@ -1428,8 +1296,6 @@ define([
                 return null;
             }
 
-            // Try to extract URL from error message
-            // Format: <a href="URL" target="_blank">
             const hrefMatch = err.message.match(/href="([^"]+)"/);
             if (hrefMatch && hrefMatch[1]) {
                 return hrefMatch[1];
@@ -1438,15 +1304,19 @@ define([
             return null;
         }
 
+        /**
+         * Cleanup resources on page unload.
+         */
         cleanup() {
             this.closeCurrentStream();
-            // Ensure text selection listeners are removed on cleanup.
             this.detachTextSelectionListeners();
         }
 
+        /**
+         * Destroys the chat instance and releases all resources.
+         */
         destroy() {
             this.cleanup();
-            // Clear cached elements.
             this.cachedSelectionIndicator = null;
             this.cachedSelectionCount = null;
         }

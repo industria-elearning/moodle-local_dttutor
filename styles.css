@@ -493,25 +493,6 @@ body.tutor-ia-drawer-open-left .popover-process-monitor {
 }
 
 /* ============================================
-   Persistent Text Highlight
-   Visual indicator for selected text context
-   ============================================ */
-
-.tutor-ia-text-highlight {
-    background: rgba(255, 235, 59, 0.4); /* Soft yellow highlight */
-    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3); /* Subtle outline */
-    border-radius: 2px;
-    padding: 2px 0;
-    transition: background 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Slightly more prominent on hover to show it's interactive */
-.tutor-ia-text-highlight:hover {
-    background: rgba(255, 235, 59, 0.5);
-    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5);
-}
-
-/* ============================================
    Debug Controls
    Checkbox for debugging options
    ============================================ */
