@@ -125,7 +125,7 @@ class admin_setting_position_preview extends \admin_setting {
                 'x' => '2rem',
                 'y' => '6rem',
                 'drawerside' => 'right',
-                'xref' => 'left',
+                'xref' => 'right',
                 'yref' => 'bottom',
             ];
         }
