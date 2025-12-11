@@ -29,6 +29,7 @@ $plugin->version = 2025120104;
 $plugin->requires = 2024042200;
 $plugin->maturity = MATURITY_STABLE;
 $plugin->release = '1.9.0';
+
 // Plugin dependencies.
 $plugin->dependencies = [
     'aiprovider_datacurso' => 2024100100, // Datacurso AI Provider with is_configured() method.
