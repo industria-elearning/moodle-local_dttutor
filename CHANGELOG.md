@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2025-12-01
+
 ### Added
 
 #### Debug Mode Feature
@@ -39,6 +41,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Detects errors with structure: `{detail: {status: "error", detail: "message"}}`
 - Shows appropriate error modal based on error type (license vs. credits)
 - Graceful fallback for unexpected error structures
+
+## [1.8.2] - 2025-12-01
+
+### Changed
+
+#### Code Quality Improvements
+- **JavaScript code cleanup**: Reduced tutor_ia_chat.js from 1387 to 1330 lines by removing redundant comments and consolidating documentation
+- **Improved JSDoc**: Added proper class and constructor documentation with @class and @param tags
+- **Comment standardization**: Replaced verbose inline comments with concise, meaningful ones following Moodle coding standards
+- **Removed unused variable**: Eliminated `highlightedRange` variable that was no longer used
+
+#### CSS Cleanup
+- **Removed unused styles**: Eliminated `.tutor-ia-text-highlight` CSS rules (19 lines) that were no longer used after text selection refactoring
+
+### Fixed
+
+#### Avatar Position Default
+- **Fixed xref default value**: Changed default `xref` from 'left' to 'right' in position preview admin setting to match actual behavior
+- **Updated settings default**: Added complete position object with `drawerside`, `xref`, and `yref` to default JSON value
+
+### Technical Details
+
+**Code Reduction**:
+- JavaScript: 57 lines removed (4.1% reduction)
+- CSS: 19 lines removed (unused text highlight styles)
+- Focus on removing redundant comments while preserving essential documentation
+- Improved code readability through better comment organization
+- All functionality remains unchanged
 
 ## [1.8.1] - 2025-11-28
 
@@ -303,8 +333,10 @@ When upgrading from local_datacurso's embedded Tutor-IA:
 
 | Version | Date       | Description                                                |
 |---------|------------|--------------------------------------------------------|
+| 1.9.0   | 2025-12-01 | Debug mode and enhanced error handling for license/credits |
+| 1.8.2   | 2025-12-01 | Code cleanup - reduced redundant comments in JS        |
 | 1.8.1   | 2025-11-28 | Text selection performance optimization                |
-| 1.8.0   | 2025-11-17 | Text selection context feature and debug mode support |
+| 1.8.0   | 2025-11-17 | Text selection context feature                         |
 | 1.0.0   | 2025-10-07 | Initial release - migrated from local_datacurso        |
 
 ---

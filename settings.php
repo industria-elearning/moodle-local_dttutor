@@ -110,7 +110,7 @@ if ($hassiteconfig) {
             'local_dttutor/avatar_position_data',
             get_string('avatar_position', 'local_dttutor'),
             get_string('avatar_position_desc', 'local_dttutor'),
-            '{"preset":"right","x":"2rem","y":"6rem"}'
+            '{"preset":"right","x":"2rem","y":"6rem","drawerside":"right","xref":"right","yref":"bottom"}'
         )
     );
 
