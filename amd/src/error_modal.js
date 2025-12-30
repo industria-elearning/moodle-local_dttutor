@@ -21,9 +21,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery', 'core/modal_factory', 'core/modal_events', 'core/str', 'core/templates'],
-    function($, ModalFactory, ModalEvents, Str, Templates) {
-    'use strict';
+import Modal from 'core/modal';
+import * as Str from 'core/str';
+import * as Templates from 'core/templates';
 
     /**
      * Show error modal with friendly message
@@ -33,19 +33,19 @@ define(['jquery', 'core/modal_factory', 'core/modal_events', 'core/str', 'core/t
      * @param {string} configUrl Optional configuration URL for admins
      * @returns {Promise} Promise that resolves when modal is created
      */
-    var showError = function(message, isConfigError, configUrl) {
-        var modalTitle = '';
+    const showError = async(message, isConfigError, configUrl) => {
+        try {
+            const strings = await Str.get_strings([
+                {key: 'error_webservice_not_configured_short', component: 'local_dttutor'},
+                {key: 'pluginname', component: 'local_dttutor'},
+                {key: 'configure_now', component: 'local_dttutor'}
+            ]);
 
-        return Str.get_strings([
-            {key: 'error_webservice_not_configured_short', component: 'local_dttutor'},
-            {key: 'pluginname', component: 'local_dttutor'},
-            {key: 'configure_now', component: 'local_dttutor'}
-        ]).then(function(strings) {
-            modalTitle = isConfigError ? strings[0] : strings[1];
-            var configureNowStr = strings[2];
+            const modalTitle = isConfigError ? strings[0] : strings[1];
+            const configureNowStr = strings[2];
 
             // Prepare template context.
-            var context = {
+            const context = {
                 message: message,
                 has_config_url: !!configUrl,
                 config_url: configUrl || '',
@@ -53,29 +53,29 @@ define(['jquery', 'core/modal_factory', 'core/modal_events', 'core/str', 'core/t
             };
 
             // Render template.
-            return Templates.render('local_dttutor/error_modal_body', context);
-        }).then(function(html) {
-            return ModalFactory.create({
-                type: ModalFactory.types.DEFAULT,
+            const html = await Templates.render('local_dttutor/error_modal_body', context);
+
+            // Create modal using new API.
+            const modal = await Modal.create({
                 title: modalTitle,
-                body: html
+                body: html,
+                show: true,
+                removeOnClose: true
             });
-        }).then(function(modal) {
-            modal.show();
 
             // Auto-hide after 10 seconds if not a config error.
             if (!isConfigError) {
-                setTimeout(function() {
+                setTimeout(() => {
                     modal.hide();
                 }, 10000);
             }
 
             return modal;
-        }).catch(function(error) {
+        } catch (error) {
             // Fallback to alert if modal/template fails.
             window.alert(message);
             throw error;
-        });
+        }
     };
 
     /**
@@ -85,7 +85,7 @@ define(['jquery', 'core/modal_factory', 'core/modal_events', 'core/str', 'core/t
      * @param {string} configUrl Optional configuration URL
      * @returns {Promise} Promise that resolves when modal is created
      */
-    var showConfigError = function(message, configUrl) {
+    export const showConfigError = (message, configUrl) => {
         return showError(message, true, configUrl);
     };
 
@@ -95,13 +95,12 @@ define(['jquery', 'core/modal_factory', 'core/modal_events', 'core/str', 'core/t
      * @param {string} message Error message
      * @returns {Promise} Promise that resolves when modal is created
      */
-    var showGeneralError = function(message) {
+    export const showGeneralError = (message) => {
         return showError(message, false, null);
     };
 
-    return {
-        showError: showError,
-        showConfigError: showConfigError,
-        showGeneralError: showGeneralError
+    export default {
+        showError,
+        showConfigError,
+        showGeneralError
     };
-});
