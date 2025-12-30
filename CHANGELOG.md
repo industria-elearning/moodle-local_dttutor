@@ -7,6 +7,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2025-12-30
+
+### Changed
+
+#### User Interface Terminology
+- **Indexing → Synchronization**: Changed all user-facing terminology from "indexing/indexed" to "synchronization/synchronized" across all 7 supported languages
+- **Language updates**: Updated 19 strings per language × 7 languages = 133 total string changes
+- **Terminology mapping**:
+  - "Course Indexing" → "Course Synchronization"
+  - "Indexed" → "Synchronized"
+  - "Indexing in progress" → "Synchronization in progress"
+  - "Start Indexing" → "Start Synchronization"
+  - "Re-index Course" → "Re-synchronize Course"
+  - "Last indexed" → "Last synchronized"
+  - "Indexing failed" → "Synchronization failed"
+  - "Not indexed" → "Not synchronized"
+- **Code preservation**: Internal code (variable names, functions, classes) maintains "indexing" terminology to avoid breaking changes
+- **All languages updated**:
+  - English: Indexing → Synchronization
+  - Spanish: Indexación → Sincronización
+  - German: Indexierung → Synchronisierung
+  - French: Indexation → Synchronisation
+  - Portuguese: Indexação → Sincronização
+  - Russian: Индексация → Синхронизация
+  - Indonesian: Pengindeksan → Sinkronisasi
+
+### Removed
+
+#### Markdown Formatting Feature
+- **Removed markdown rendering**: Eliminated markdown-to-HTML conversion feature that was causing display issues
+- **Simplified message display**: Chat messages now display as plain text without formatting
+- **Code cleanup**:
+  - Removed `markdownToHtml()` function from `tutor_ia_chat.js`
+  - Reverted `appendToAIMessage()` to use `textContent` instead of `innerHTML`
+  - Reverted `addMessage()` to use `.text()` for all messages
+  - Reverted `createMessageElement()` to use `.text()` for history messages
+  - Removed CSS styles for markdown formatting (lists, bold, italic)
+- **Reason**: Markdown rendering was not working reliably and causing inconsistent message display
+
+#### Debug Mode
+- **Removed debug mode feature**: Completely removed debug mode and force reindex functionality
+- **Removed from settings**: Deleted debug mode checkbox from admin settings page
+- **Removed from UI**: Deleted debug controls section from chat drawer template
+- **Removed from hook**: Cleaned up debug-related variables from chat_hook.php
+- **Language cleanup**: Removed debug-related strings from all 7 language files
+  - Removed: `debug_mode`, `debug_mode_desc`, `debug_force_reindex`
+
+### Technical Details
+
+**Terminology Change Impact**:
+- User-facing strings only (no code changes)
+- No database migrations required
+- No breaking changes to API or functionality
+- Maintains backwards compatibility
+
+**Files Modified**:
+- `lang/en/local_dttutor.php` (English)
+- `lang/es/local_dttutor.php` (Spanish)
+- `lang/de/local_dttutor.php` (German)
+- `lang/fr/local_dttutor.php` (French)
+- `lang/pt/local_dttutor.php` (Portuguese)
+- `lang/ru/local_dttutor.php` (Russian)
+- `lang/id/local_dttutor.php` (Indonesian)
+- `amd/src/tutor_ia_chat.js` (Markdown removal)
+- `styles.css` (Markdown styles removal)
+- `settings.php` (Debug mode removal)
+- `templates/tutor_ia_drawer.mustache` (Debug controls removal)
+- `classes/hook/chat_hook.php` (Debug variables removal)
+
 ## [1.9.0] - 2025-12-01
 
 ### Added
