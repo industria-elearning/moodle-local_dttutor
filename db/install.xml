@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/dttutor/db" VERSION="20251211" COMMENT="XMLDB file for Moodle local/dttutor"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="local_dttutor_course_config" COMMENT="Course-specific configuration for AI Tutor">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Course ID"/>
+        <FIELD NAME="custom_prompt" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Course-specific custom prompt (overrides global setting)"/>
+        <FIELD NAME="indexing_enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Enable/disable indexing for this course (disabled by default)"/>
+        <FIELD NAME="last_indexed_at" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Timestamp of last successful indexing"/>
+        <FIELD NAME="indexing_status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="not_indexed" SEQUENCE="false" COMMENT="Current indexing status"/>
+        <FIELD NAME="indexing_task_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Task ID from backend API"/>
+        <FIELD NAME="indexing_error" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Last error message if indexing failed"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Record creation timestamp"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Last modification timestamp"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User who last modified this record"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="courseid" UNIQUE="true" FIELDS="courseid"/>
+        <INDEX NAME="indexing_status" UNIQUE="false" FIELDS="indexing_status"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

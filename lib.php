@@ -23,6 +23,39 @@
  */
 
 /**
+ * Extend course navigation with AI Tutor Management link
+ *
+ * @param navigation_node $parentnode The parent node
+ * @param stdClass $course The course object
+ * @param context_course $context The course context
+ * @return void
+ */
+function local_dttutor_extend_navigation_course(navigation_node $parentnode, stdClass $course, context_course $context) {
+    // Only show for teachers/managers.
+    if (!has_capability('moodle/course:update', $context)) {
+        return;
+    }
+
+    // Only if plugin is enabled.
+    if (!get_config('local_dttutor', 'enabled')) {
+        return;
+    }
+
+    $url = new moodle_url('/local/dttutor/manage.php', ['id' => $course->id]);
+    $node = navigation_node::create(
+        get_string('manage_tutor', 'local_dttutor'),
+        $url,
+        navigation_node::TYPE_SETTING,
+        null,
+        'dttutormanage',
+        new pix_icon('i/settings', '')
+    );
+
+    // Add to course secondary navigation (More menu).
+    $parentnode->add_node($node);
+}
+
+/**
  * Serves the files from the local_dttutor file areas
  *
  * @param stdClass $course the course object
@@ -37,38 +70,43 @@
 function local_dttutor_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
     global $CFG;
 
-    // Check the contextlevel is as expected - system context only.
-    if ($context->contextlevel != CONTEXT_SYSTEM) {
-        return false;
+    // Handle custom avatar (system context).
+    if ($context->contextlevel == CONTEXT_SYSTEM && $filearea === 'customavatar') {
+        $itemid = array_shift($args);
+        $filename = array_pop($args);
+        $filepath = !$args ? '/' : '/' . implode('/', $args) . '/';
+
+        $fs = get_file_storage();
+        $file = $fs->get_file($context->id, 'local_dttutor', $filearea, $itemid, $filepath, $filename);
+
+        if (!$file || $file->is_directory()) {
+            return false;
+        }
+
+        send_stored_file($file, 86400, 0, false, $options);
+        return;
     }
 
-    // Make sure the filearea is one that we handle.
-    if ($filearea !== 'customavatar') {
-        return false;
+    // Handle course materials (course context).
+    if ($context->contextlevel == CONTEXT_COURSE && $filearea === 'course_materials') {
+        // Verify user has access to course.
+        require_login($course);
+        require_capability('local/dttutor:use', $context);
+
+        $itemid = array_shift($args);
+        $filename = array_pop($args);
+        $filepath = !$args ? '/' : '/' . implode('/', $args) . '/';
+
+        $fs = get_file_storage();
+        $file = $fs->get_file($context->id, 'local_dttutor', $filearea, $itemid, $filepath, $filename);
+
+        if (!$file || $file->is_directory()) {
+            return false;
+        }
+
+        send_stored_file($file, 86400, 0, false, $options);
+        return;
     }
 
-    // The itemid is always 0 for custom avatar.
-    $itemid = array_shift($args);
-
-    // Extract the filename from the remaining args.
-    $filename = array_pop($args);
-
-    // Build the filepath.
-    if (!$args) {
-        $filepath = '/';
-    } else {
-        $filepath = '/' . implode('/', $args) . '/';
-    }
-
-    // Retrieve the file from the files API.
-    $fs = get_file_storage();
-    $file = $fs->get_file($context->id, 'local_dttutor', $filearea, $itemid, $filepath, $filename);
-
-    if (!$file || $file->is_directory()) {
-        return false;
-    }
-
-    // Send the file with caching headers (cache for 1 day).
-    // No force download - display inline in browser.
-    send_stored_file($file, 86400, 0, false, $options);
+    return false;
 }

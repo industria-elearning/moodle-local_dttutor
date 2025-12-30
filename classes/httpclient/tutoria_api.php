@@ -168,4 +168,71 @@ class tutoria_api {
 
         return $elapsed < ($ttl - 3600); // 1 hour margin.
     }
+
+    /**
+     * Get site identifier for indexing requests.
+     *
+     * @return string Site identifier
+     * @since Moodle 4.5
+     */
+    private function get_site_id(): string {
+        global $CFG;
+        return $CFG->wwwroot;
+    }
+
+    /**
+     * Check indexing status for a course.
+     *
+     * @param int $courseid Course ID
+     * @return array Response with status, task_id, progress information
+     * @throws moodle_exception If the request fails
+     * @since Moodle 4.5
+     */
+    public function get_indexing_status(int $courseid): array {
+        $endpoint = '/indexing/status?site_id=' . urlencode($this->get_site_id()) .
+                    '&course_id=' . urlencode((string)$courseid);
+        return $this->aiservice->request('GET', $endpoint);
+    }
+
+    /**
+     * Start indexing for a course.
+     *
+     * @param int $courseid Course ID
+     * @param bool $forcereindex Force re-indexing even if already indexed
+     * @return array Response with status, task_id, message
+     * @throws moodle_exception If the request fails
+     * @since Moodle 4.5
+     */
+    public function start_indexing(int $courseid, bool $forcereindex = false): array {
+        return $this->aiservice->request('POST', '/indexing/start', [
+            'site_id' => $this->get_site_id(),
+            'course_id' => (string)$courseid,
+            'force_reindex' => $forcereindex,
+            'lang' => current_language(),
+        ]);
+    }
+
+    /**
+     * Get indexing progress for a task.
+     *
+     * @param string $taskid Task ID from start_indexing
+     * @return array Response with current_phase, overall_percent, items_processed, items_total
+     * @throws moodle_exception If the request fails
+     * @since Moodle 4.5
+     */
+    public function get_indexing_progress(string $taskid): array {
+        return $this->aiservice->request('GET', '/indexing/progress/' . urlencode($taskid));
+    }
+
+    /**
+     * Cancel an ongoing indexing task.
+     *
+     * @param string $taskid Task ID to cancel
+     * @return array Response with cancellation status
+     * @throws moodle_exception If the request fails
+     * @since Moodle 4.5
+     */
+    public function cancel_indexing(string $taskid): array {
+        return $this->aiservice->request('POST', '/indexing/cancel/' . urlencode($taskid));
+    }
 }

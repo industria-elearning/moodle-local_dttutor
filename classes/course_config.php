@@ -1,0 +1,200 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Course configuration model for AI Tutor
+ *
+ * @package    local_dttutor
+ * @copyright  2025 Datacurso
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+namespace local_dttutor;
+
+/**
+ * Model class for managing course-specific configuration
+ *
+ * @package    local_dttutor
+ * @copyright  2025 Datacurso
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class course_config {
+    /**
+     * Get course configuration record (creates if not exists).
+     *
+     * @param int $courseid Course ID
+     * @return \stdClass Course configuration record
+     * @since Moodle 4.5
+     */
+    public static function get_by_course(int $courseid): \stdClass {
+        global $DB;
+
+        $record = $DB->get_record('local_dttutor_course_config', ['courseid' => $courseid]);
+
+        if (!$record) {
+            $record = self::create_default($courseid);
+        }
+
+        return $record;
+    }
+
+    /**
+     * Create default configuration for a course.
+     *
+     * @param int $courseid Course ID
+     * @return \stdClass Created configuration record
+     * @since Moodle 4.5
+     */
+    private static function create_default(int $courseid): \stdClass {
+        global $DB, $USER;
+
+        $record = new \stdClass();
+        $record->courseid = $courseid;
+        $record->custom_prompt = null;
+        $record->indexing_enabled = 0; // Disabled by default.
+        $record->indexing_status = 'not_indexed';
+        $record->indexing_task_id = null;
+        $record->indexing_error = null;
+        $record->last_indexed_at = null;
+        $record->timecreated = time();
+        $record->timemodified = time();
+        $record->usermodified = $USER->id;
+
+        $record->id = $DB->insert_record('local_dttutor_course_config', $record);
+
+        return $record;
+    }
+
+    /**
+     * Update course configuration.
+     *
+     * @param int $courseid Course ID
+     * @param array $data Data to update (field => value pairs)
+     * @return bool Success status
+     * @since Moodle 4.5
+     */
+    public static function update(int $courseid, array $data): bool {
+        global $DB, $USER;
+
+        $record = self::get_by_course($courseid);
+
+        // Only update allowed fields.
+        $allowedfields = [
+            'custom_prompt',
+            'indexing_enabled',
+            'indexing_status',
+            'indexing_task_id',
+            'indexing_error',
+            'last_indexed_at',
+        ];
+
+        foreach ($data as $key => $value) {
+            if (in_array($key, $allowedfields) && property_exists($record, $key)) {
+                $record->$key = $value;
+            }
+        }
+
+        $record->timemodified = time();
+        $record->usermodified = $USER->id;
+
+        return $DB->update_record('local_dttutor_course_config', $record);
+    }
+
+    /**
+     * Update indexing status for a course.
+     *
+     * @param int $courseid Course ID
+     * @param string $status New status (not_indexed, running, completed, failed, cancelled, interrupted)
+     * @param string|null $taskid Task ID from backend API
+     * @param string|null $error Error message if failed
+     * @return void
+     * @since Moodle 4.5
+     */
+    public static function update_indexing_status(
+        int $courseid,
+        string $status,
+        ?string $taskid = null,
+        ?string $error = null
+    ): void {
+        $data = [
+            'indexing_status' => $status,
+            'indexing_task_id' => $taskid,
+            'indexing_error' => $error,
+        ];
+
+        // If status is completed, update last_indexed_at timestamp.
+        if ($status === 'completed') {
+            $data['last_indexed_at'] = time();
+        }
+
+        self::update($courseid, $data);
+    }
+
+    /**
+     * Check if course has been indexed.
+     *
+     * @param int $courseid Course ID
+     * @return bool True if course is indexed
+     * @since Moodle 4.5
+     */
+    public static function is_indexed(int $courseid): bool {
+        $config = self::get_by_course($courseid);
+        return $config->indexing_status === 'completed';
+    }
+
+    /**
+     * Check if course indexing is in progress.
+     *
+     * @param int $courseid Course ID
+     * @return bool True if indexing is running
+     * @since Moodle 4.5
+     */
+    public static function is_indexing(int $courseid): bool {
+        $config = self::get_by_course($courseid);
+        return $config->indexing_status === 'running';
+    }
+
+    /**
+     * Get custom prompt for course (returns global prompt if course-specific is empty).
+     *
+     * @param int $courseid Course ID
+     * @return string Custom prompt text
+     * @since Moodle 4.5
+     */
+    public static function get_custom_prompt(int $courseid): string {
+        $config = self::get_by_course($courseid);
+
+        // Return course-specific prompt if set, otherwise use global prompt.
+        if (!empty($config->custom_prompt)) {
+            return $config->custom_prompt;
+        }
+
+        $globalprompt = get_config('local_dttutor', 'custom_prompt');
+        return $globalprompt ?: '';
+    }
+
+    /**
+     * Delete course configuration.
+     *
+     * @param int $courseid Course ID
+     * @return bool Success status
+     * @since Moodle 4.5
+     */
+    public static function delete(int $courseid): bool {
+        global $DB;
+        return $DB->delete_records('local_dttutor_course_config', ['courseid' => $courseid]);
+    }
+}

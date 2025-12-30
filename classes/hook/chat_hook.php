@@ -107,6 +107,7 @@ class chat_hook {
     private static function add_float_chat(before_footer_html_generation $hook): void {
         global $PAGE, $COURSE, $USER, $OUTPUT;
 
+        // Check 1: Global plugin enabled.
         if (!get_config('local_dttutor', 'enabled')) {
             return;
         }
@@ -118,6 +119,12 @@ class chat_hook {
         $courseid = $COURSE->id ?? 0;
         if ($courseid <= 1) {
             return; // Don't show on frontpage.
+        }
+
+        // Check 2: Course-specific enabled (double enablement).
+        $courseconfig = \local_dttutor\course_config::get_by_course($courseid);
+        if (!$courseconfig->indexing_enabled) {
+            return; // Tutor not enabled for this course.
         }
 
         if (self::is_quiz_module()) {
@@ -169,10 +176,6 @@ class chat_hook {
             }
         }
 
-        // Check if current user is admin for debug features (independent of webservice config).
-        $syscontext = \context_system::instance();
-        $isdebugadmin = has_capability('moodle/site:config', $syscontext);
-
         $uniqid = uniqid('tia_');
         $positionstyle = self::calculate_position_style($positiondata);
         $drawerside = $positiondata['drawerside'] ?? 'right';
@@ -197,8 +200,6 @@ class chat_hook {
             'is_configured' => $isconfigured,
             'is_admin' => $isadmin,
             'config_url' => $configurl,
-            'debug_mode' => (bool)get_config('local_dttutor', 'debug_mode'),
-            'is_debug_admin' => $isdebugadmin,
         ];
 
         $toggle = $OUTPUT->render_from_template('local_dttutor/tutor_ia_toggle', $toggledata);
