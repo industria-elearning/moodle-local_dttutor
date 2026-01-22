@@ -78,6 +78,9 @@ class create_chat_message extends external_api {
             'meta' => $meta,
         ]);
 
+        // Check if user is logged in.
+        require_login();
+
         if (!get_config('local_dttutor', 'enabled')) {
             throw new \moodle_exception('error_api_not_configured', 'local_dttutor');
         }
@@ -98,7 +101,14 @@ class create_chat_message extends external_api {
             }
         }
 
+        // Validate course context and permissions.
         $context = \context_course::instance($params['courseid']);
+        self::validate_context($context);
+
+        // Verify user has permission to use Tutor-IA.
+        require_capability('local/dttutor:use', $context);
+
+        // Additional check: user must have at least course view permission.
         require_capability('moodle/course:view', $context);
 
         $trimmedmessage = trim($params['message']);

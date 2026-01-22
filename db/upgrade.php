@@ -80,5 +80,37 @@ function xmldb_local_dttutor_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025120302, 'local', 'dttutor');
     }
 
+    if ($oldversion < 2026012201) {
+        // Add local/dttutor:use capability to 'user' archetype roles.
+        // This allows all authenticated users to use the tutor, not just enrolled students.
+        $capability = 'local/dttutor:use';
+        $archetypes = ['user'];
+
+        foreach ($archetypes as $archetype) {
+            // Get all roles with this archetype.
+            $roles = get_archetype_roles($archetype);
+
+            foreach ($roles as $role) {
+                // Assign capability at system context level for course context.
+                $systemcontext = context_system::instance();
+
+                // Check if capability already exists for this role.
+                $existingcap = $DB->get_record('role_capabilities', [
+                    'roleid' => $role->id,
+                    'capability' => $capability,
+                    'contextid' => $systemcontext->id,
+                ]);
+
+                if (!$existingcap) {
+                    // Assign capability with CAP_ALLOW permission.
+                    assign_capability($capability, CAP_ALLOW, $role->id, $systemcontext->id);
+                }
+            }
+        }
+
+        // Dttutor savepoint reached.
+        upgrade_plugin_savepoint(true, 2026012201, 'local', 'dttutor');
+    }
+
     return true;
 }
