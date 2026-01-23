@@ -113,7 +113,6 @@ class get_chat_history extends external_api {
         // Verify user has permission to use Tutor-IA.
         require_capability('local/dttutor:use', $context);
 
-
         // Sanitize pagination parameters.
         if ($params['limit'] < 1) {
             $params['limit'] = 20;
