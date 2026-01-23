@@ -82,7 +82,6 @@ class get_course_materials extends external_api {
         $context = \context_course::instance($params['courseid']);
         self::validate_context($context);
         require_capability('local/dttutor:use', $context);
-        require_capability('moodle/course:view', $context);
 
         // 5. Get course configuration.
         $config = course_config::get_by_course($params['courseid']);

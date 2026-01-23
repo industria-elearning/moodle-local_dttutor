@@ -113,8 +113,6 @@ class get_chat_history extends external_api {
         // Verify user has permission to use Tutor-IA.
         require_capability('local/dttutor:use', $context);
 
-        // Additional check: user must have at least course view permission.
-        require_capability('moodle/course:view', $context);
 
         // Sanitize pagination parameters.
         if ($params['limit'] < 1) {

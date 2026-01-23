@@ -108,9 +108,6 @@ class create_chat_message extends external_api {
         // Verify user has permission to use Tutor-IA.
         require_capability('local/dttutor:use', $context);
 
-        // Additional check: user must have at least course view permission.
-        require_capability('moodle/course:view', $context);
-
         $trimmedmessage = trim($params['message']);
         if (empty($trimmedmessage)) {
             throw new \moodle_exception('error_empty_message', 'local_dttutor');

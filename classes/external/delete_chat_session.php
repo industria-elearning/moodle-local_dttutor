@@ -93,9 +93,6 @@ class delete_chat_session extends external_api {
         // Verify user has permission to use Tutor-IA.
         require_capability('local/dttutor:use', $context);
 
-        // Additional check: user must have at least course view permission.
-        require_capability('moodle/course:view', $context);
-
         $tutoriaapi = new tutoria_api();
 
         try {
