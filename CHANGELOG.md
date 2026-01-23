@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-01-22
+
+### Fixed
+
+#### Security Vulnerability - Missing Authentication and Context Validation
+- **Critical fix**: Added missing security validations in `create_chat_message` web service
+- **Issue**: Users were receiving permission denied errors because security checks were incomplete
+- **Root cause**: The web service was missing three critical validation steps:
+  1. `require_login()` - User authentication check
+  2. `self::validate_context($context)` - Course context validation
+  3. `require_capability('local/dttutor:use', $context)` - Plugin permission check
+- **Solution**: Added all three missing validations following Moodle's external service security checklist
+- **Impact**: Fixes "Lo sentimos, pero no tiene los permisos para hacer esto (Ver cursos sin participación)" error
+- **Files modified**: `classes/external/create_chat_message.php`
+
+### Changed
+
+#### Permission System - Extended to All Authenticated Users
+- **Extended access**: Added 'user' archetype to `local/dttutor:use` capability
+- **Reason**: Allow all authenticated users to use the tutor, not just enrolled students
+- **Previous behavior**: Only students, teachers, editing teachers, and managers could use the chat
+- **New behavior**: All authenticated users with `moodle/course:view` permission can use the chat
+- **Automatic upgrade**: Added upgrade script (`db/upgrade.php`) to automatically assign capability to 'user' role when updating from v2.0.0
+- **Files modified**:
+  - `db/access.php` - Added 'user' archetype to capability definition
+  - `db/upgrade.php` - Added version 2026012201 upgrade step to assign capability
+
+### Technical Details
+
+**Security Validation Order** (now properly implemented):
+1. Parameter validation via `self::validate_parameters()`
+2. Authentication check via `require_login()`
+3. Plugin state check via `get_config()`
+4. Webservice configuration check
+5. Course context validation via `self::validate_context()`
+6. Plugin capability check via `require_capability('local/dttutor:use')`
+7. Course view capability check via `require_capability('moodle/course:view')`
+
+**Permission Archetypes** (updated):
+- `user` → CAP_ALLOW (NEW - authenticated users)
+- `student` → CAP_ALLOW
+- `teacher` → CAP_ALLOW
+- `editingteacher` → CAP_ALLOW
+- `manager` → CAP_ALLOW
+
+**Upgrade Script**:
+- Version check: `if ($oldversion < 2026012201)`
+- Uses `get_archetype_roles()` to find all 'user' roles
+- Uses `assign_capability()` to grant permission at system context
+- Checks for existing capability to avoid duplicate assignments
+- Idempotent - safe to run multiple times
+
+### Migration Notes
+
+**Upgrading from v2.0.0**:
+1. Replace plugin files with new version
+2. Access your Moodle site
+3. Click "Update database" when prompted
+4. Upgrade script will automatically assign capability to 'user' role
+5. No manual configuration required
+
+**New Installations**:
+- 'user' archetype automatically included in capability definition
+- No additional setup needed
+
 ## [2.0.0] - 2025-12-30
 
 ### Changed
@@ -402,6 +467,8 @@ When upgrading from local_datacurso's embedded Tutor-IA:
 
 | Version | Date       | Description                                                |
 |---------|------------|--------------------------------------------------------|
+| 2.0.1   | 2026-01-22 | Security fix and extended permissions to all users     |
+| 2.0.0   | 2025-12-30 | Terminology change (indexing → synchronization), removed markdown & debug |
 | 1.9.0   | 2025-12-01 | Debug mode and enhanced error handling for license/credits |
 | 1.8.2   | 2025-12-01 | Code cleanup - reduced redundant comments in JS        |
 | 1.8.1   | 2025-11-28 | Text selection performance optimization                |
