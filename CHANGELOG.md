@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-01-23
+
+### Changed
+
+#### Code Cleanup - Removed Redundant Permission Checks
+- **Removed redundant capability checks**: Eliminated unnecessary `require_capability('moodle/course:view')` checks from external web services
+- **Reason**: The `local/dttutor:use` capability check already validates course access in course context
+- **Impact**: Cleaner, more maintainable code without functional changes
+- **Files modified**:
+  - `classes/external/create_chat_message.php` - Removed redundant `moodle/course:view` check
+  - `classes/external/delete_chat_session.php` - Removed redundant `moodle/course:view` check
+  - `classes/external/get_chat_history.php` - Removed redundant `moodle/course:view` check
+  - `classes/external/get_course_materials.php` - Removed redundant `moodle/course:view` check
+
+### Technical Details
+
+**Permission Check Logic:**
+- Previous: `require_capability('local/dttutor:use', $context)` + `require_capability('moodle/course:view', $context)`
+- Now: `require_capability('local/dttutor:use', $context)` only
+- Rationale: Having `local/dttutor:use` capability in a course context already implies course access
+
+**Security:**
+- No security reduction - permission validation remains robust
+- All web services still validate:
+  1. User authentication via `require_login()`
+  2. Context validation via `self::validate_context()`
+  3. Plugin permission via `require_capability('local/dttutor:use')`
+
+**Version:**
+- Plugin version: `2026012300`
+- Release: `2.0.2`
+- Maturity: `MATURITY_STABLE`
+
+### Migration Notes
+
+**Upgrading from v2.0.1:**
+- No database changes required
+- No configuration changes needed
+- Simply replace plugin files
+- Code refactoring only - no functional changes
+
 ## [2.0.1] - 2026-01-22
 
 ### Fixed
@@ -467,6 +508,7 @@ When upgrading from local_datacurso's embedded Tutor-IA:
 
 | Version | Date       | Description                                                |
 |---------|------------|--------------------------------------------------------|
+| 2.0.2   | 2026-01-23 | Code cleanup - removed redundant permission checks     |
 | 2.0.1   | 2026-01-22 | Security fix and extended permissions to all users     |
 | 2.0.0   | 2025-12-30 | Terminology change (indexing → synchronization), removed markdown & debug |
 | 1.9.0   | 2025-12-01 | Debug mode and enhanced error handling for license/credits |
