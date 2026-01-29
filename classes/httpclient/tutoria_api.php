@@ -62,12 +62,16 @@ class tutoria_api {
      * Start a new chat session or retrieve an existing one from cache.
      *
      * @param int $courseid Course ID.
+     * @param int|null $cmid Course Module ID (optional, for module context).
      * @return array Session data including session_id, ready status, and TTL.
      * @throws moodle_exception If the session creation fails.
      * @since Moodle 4.5
      */
-    public function start_session(int $courseid): array {
+    public function start_session(int $courseid, ?int $cmid = null): array {
         $cachekey = "session_{$courseid}";
+        if ($cmid !== null) {
+            $cachekey .= "_{$cmid}";
+        }
         $cached = null;
 
         if ($this->cache !== null) {
@@ -79,6 +83,9 @@ class tutoria_api {
         }
 
         $requestdata = ['course_id' => (string)$courseid];
+        if ($cmid !== null) {
+            $requestdata['module_id'] = (string)$cmid;
+        }
 
         $response = $this->aiservice->request('POST', '/chat/start', $requestdata);
 

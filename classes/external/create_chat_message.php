@@ -187,7 +187,13 @@ class create_chat_message extends external_api {
             $metaarray['custom_prompt'] = $customprompt;
         }
 
-        $session = $tutoriaapi->start_session($params['courseid']);
+        // Extract cmid from metadata if present (when in module context).
+        $cmid = null;
+        if (isset($metaarray['cmid']) && is_numeric($metaarray['cmid'])) {
+            $cmid = (int)$metaarray['cmid'];
+        }
+
+        $session = $tutoriaapi->start_session($params['courseid'], $cmid);
 
         if (!isset($session['ready']) || !$session['ready']) {
             throw new \moodle_exception('sessionnotready', 'local_dttutor');
