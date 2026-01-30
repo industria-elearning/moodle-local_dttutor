@@ -202,7 +202,7 @@ class create_chat_message extends external_api {
         }
 
         // Ensure all meta values are strings for API compatibility.
-        $metaarray = array_map(function($value) {
+        $metaarray = array_map(function ($value) {
             if (is_bool($value)) {
                 return $value ? 'true' : 'false';
             }
