@@ -841,10 +841,10 @@ define([
                     metaData.assignid = this.pageContext.assignid;
                 }
                 if (this.pageContext.pageid) {
-                    metaData.pageid = this.pageContext.pageid;
+                    metaData.pageid = String(this.pageContext.pageid);
                 }
                 if (this.cmId) {
-                    metaData.cmid = parseInt(this.cmId, 10);
+                    metaData.cmid = String(parseInt(this.cmId, 10));
                 }
                 if (this.selectedText && this.selectedText.length > 0) {
                     metaData.selected_text = this.selectedText;
@@ -852,7 +852,7 @@ define([
 
                 const forceReindexCheckbox = this.root.find('[data-region="debug-force-reindex"]');
                 if (forceReindexCheckbox.length && forceReindexCheckbox.is(':checked')) {
-                    metaData.force_reindex = true;
+                    metaData.force_reindex = 'true';
                 }
 
                 const requests = Ajax.call([{
