@@ -191,7 +191,7 @@ class create_chat_message extends external_api {
         $cmid = null;
         if (isset($metaarray['cmid']) && is_numeric($metaarray['cmid'])) {
             $cmid = (int)$metaarray['cmid'];
-            // Convert cmid to string for API compatibility
+            // Convert cmid to string for API compatibility.
             $metaarray['cmid'] = (string)$cmid;
         }
 
@@ -201,7 +201,7 @@ class create_chat_message extends external_api {
             throw new \moodle_exception('sessionnotready', 'local_dttutor');
         }
 
-        // Ensure all meta values are strings for API compatibility
+        // Ensure all meta values are strings for API compatibility.
         $metaarray = array_map(function($value) {
             if (is_bool($value)) {
                 return $value ? 'true' : 'false';
