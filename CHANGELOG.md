@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-01-30
+
+### Changed
+
+#### API Compatibility Improvements - Metadata String Conversion
+- **Metadata string conversion**: All metadata values are now converted to strings for API compatibility
+- **Boolean to string conversion**: Boolean values (`off_topic_detection_enabled`) are now sent as "true"/"false" strings instead of native booleans
+- **Type safety**: Added `array_map()` function to ensure all metadata values are strings before sending to API
+- **User ID conversion**: `userid` metadata is now explicitly cast to string
+- **Module context support**: Added optional `cmid` parameter to session management for module-specific chat contexts
+- **Session cache enhancement**: Session cache keys now include `cmid` when in module context (`session_{courseid}_{cmid}`)
+- **API request structure**: `cmid` is sent as `module_id` string in API requests when present
+- **Files modified**:
+  - `classes/external/create_chat_message.php` - Added metadata string conversion and cmid support
+  - `classes/httpclient/tutoria_api.php` - Enhanced session caching with cmid parameter
+
+### Technical Details
+
+**Metadata String Conversion:**
+- Previous: Mixed types (bool, int, string) sent directly
+- Now: All values converted to strings using `array_map()` before API call
+- Boolean conversion: `value ? 'true' : 'false'`
+- Numeric conversion: `(string)$value`
+
+**Session Caching Enhancement:**
+- Previous cache key: `session_{courseid}`
+- New cache key: `session_{courseid}_{cmid}` (when cmid present)
+- Allows separate chat sessions for course-level and module-level contexts
+- Improves context isolation and relevance of AI responses
+
+**API Compatibility:**
+- `userid` → sent as string instead of integer
+- `cmid` → sent as `module_id` string in API requests
+- `off_topic_detection_enabled` → sent as "true"/"false" instead of boolean
+- All other metadata values → explicitly converted to strings
+
+**Version:**
+- Plugin version: `2026012900`
+- Release: `2.0.3`
+- Maturity: `MATURITY_STABLE`
+
+### Migration Notes
+
+**Upgrading from v2.0.2:**
+- No database changes required
+- No configuration changes needed
+- Simply replace plugin files
+- Existing sessions will be regenerated with new cache key format
+- All functionality remains backward compatible
+
 ## [2.0.2] - 2026-01-23
 
 ### Changed
@@ -508,6 +558,7 @@ When upgrading from local_datacurso's embedded Tutor-IA:
 
 | Version | Date       | Description                                                |
 |---------|------------|--------------------------------------------------------|
+| 2.0.3   | 2026-01-30 | Metadata string conversion for API compatibility      |
 | 2.0.2   | 2026-01-23 | Code cleanup - removed redundant permission checks     |
 | 2.0.1   | 2026-01-22 | Security fix and extended permissions to all users     |
 | 2.0.0   | 2025-12-30 | Terminology change (indexing → synchronization), removed markdown & debug |
