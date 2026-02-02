@@ -92,6 +92,17 @@ class save_course_config extends external_api {
             'indexing_enabled' => $params['indexing_enabled'] ? 1 : 0,
         ];
 
+        // Validation: Cannot enable if not indexed.
+        if ($data['indexing_enabled']) {
+            $config = course_config::get_by_course($params['courseid']);
+            if ($config->indexing_status !== 'completed') {
+                throw new \moodle_exception(
+                    'tutor_enable_requires_indexing',
+                    'local_dttutor'
+                );
+            }
+        }
+
         $success = course_config::update($params['courseid'], $data);
 
         return [

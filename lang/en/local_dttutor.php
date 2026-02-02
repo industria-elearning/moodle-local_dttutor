@@ -151,6 +151,7 @@ $string['start_indexing'] = 'Start Synchronization';
 $string['student'] = 'Student';
 $string['teacher'] = 'Teacher';
 $string['tutor_disabled_notice'] = 'The AI Tutor is currently disabled for this course. Students will not see the chat interface.';
+$string['tutor_enable_requires_indexing'] = 'You must synchronize the course content before you can enable the AI Tutor.';
 $string['tutor_status'] = 'AI Tutor Status';
 $string['tutorcustomization'] = 'Tutor Customization';
 $string['tutorname_default'] = 'AI Tutor';

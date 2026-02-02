@@ -20,6 +20,7 @@
     * draftitemid - Draft item ID for file manager
     * sesskey - Session key for form submission
     * filemanagerhtml - Rendered file manager HTML
+    * can_enable_tutor - Boolean if tutor can be enabled (indexing completed)
 
     Example context (json):
     {
@@ -62,7 +63,8 @@
                                id="tutor-enabled"
                                data-action="toggle-tutor"
                                data-courseid="{{courseid}}"
-                               {{#indexing_enabled}}checked{{/indexing_enabled}}>
+                               {{#indexing_enabled}}checked{{/indexing_enabled}}
+                               {{^can_enable_tutor}}disabled{{/can_enable_tutor}}>
                         <label class="custom-control-label" for="tutor-enabled">
                             <strong>{{#str}}enable_tutor_for_course, local_dttutor{{/str}}</strong>
                         </label>
@@ -76,6 +78,13 @@
                         {{#str}}tutor_disabled_notice, local_dttutor{{/str}}
                     </div>
                     {{/indexing_enabled}}
+                    
+                    {{^can_enable_tutor}}
+                    <div class="alert alert-info mb-0 mt-3">
+                        <i class="fa fa-info-circle mr-1"></i>
+                        {{#str}}tutor_enable_requires_indexing, local_dttutor{{/str}}
+                    </div>
+                    {{/can_enable_tutor}}
                 </div>
             </div>
 

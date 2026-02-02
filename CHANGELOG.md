@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.3] - 2026-01-30
+## [2.0.3] - 2026-02-02
+
+### Added
+
+#### Course Synchronization Validation
+- **Validation before enabling tutor**: Users cannot enable the AI Tutor until course content synchronization is completed
+- **Frontend validation**: Toggle switch is disabled when `indexing_status !== 'completed'`
+- **Backend validation**: `save_course_config` web service throws `moodle_exception` if enabling tutor without completed synchronization
+- **User feedback**: Alert message shown explaining synchronization requirement
+- **Files modified**:
+  - `classes/external/save_course_config.php` - Added validation logic
+  - `manage.php` - Added `can_enable_tutor` template variable
+  - `templates/manage_course.mustache` - Added disabled state and info alert
+  - `lang/en/local_dttutor.php` - Added new error string
+
+### Technical Details
+- Validation checks `indexing_status === 'completed'` before allowing `indexing_enabled = 1`
+- Exception type: `moodle_exception('tutor_enable_requires_indexing', 'local_dttutor')`
+- UI state: Toggle disabled with `{{^can_enable_tutor}}disabled{{/can_enable_tutor}}`
+
+## [2.0.3] - 2026-02-02 (Continued)
 
 ### Changed
 
@@ -558,7 +578,7 @@ When upgrading from local_datacurso's embedded Tutor-IA:
 
 | Version | Date       | Description                                                |
 |---------|------------|--------------------------------------------------------|
-| 2.0.3   | 2026-01-30 | Metadata string conversion for API compatibility      |
+| 2.0.3   | 2026-02-02 | Course synchronization validation & API metadata fixes |
 | 2.0.2   | 2026-01-23 | Code cleanup - removed redundant permission checks     |
 | 2.0.1   | 2026-01-22 | Security fix and extended permissions to all users     |
 | 2.0.0   | 2025-12-30 | Terminology change (indexing → synchronization), removed markdown & debug |
