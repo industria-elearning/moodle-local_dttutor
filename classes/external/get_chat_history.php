@@ -73,6 +73,7 @@ class get_chat_history extends external_api {
      * @since Moodle 4.5
      */
     public static function execute($courseid, $limit = 20, $offset = 0): array {
+        global $USER;
         // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'limit' => $limit,
@@ -127,7 +128,7 @@ class get_chat_history extends external_api {
 
         $tutoriaapi = new tutoria_api();
 
-        $session = $tutoriaapi->start_session($params['courseid']);
+        $session = $tutoriaapi->start_session($params['courseid'], $USER->id);
 
         $response = $tutoriaapi->get_history(
             $session['session_id'],
