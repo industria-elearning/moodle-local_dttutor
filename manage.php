@@ -177,6 +177,7 @@ $templatecontext = [
     'has_last_indexed' => !empty($config->last_indexed_at),
     'indexing_task_id' => $config->indexing_task_id ?? '',
     'show_progress' => $config->indexing_status === 'running',
+    'can_enable_tutor' => $config->indexing_status === 'completed',
 ];
 
 echo $OUTPUT->header();
