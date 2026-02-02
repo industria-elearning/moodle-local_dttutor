@@ -178,8 +178,8 @@ class create_chat_message extends external_api {
             }
         }
 
-        $metaarray['userid'] = $USER->id;
-        $metaarray['off_topic_detection_enabled'] = (bool)get_config('local_dttutor', 'off_topic_detection_enabled');
+        $metaarray['userid'] = (string)$USER->id;
+        $metaarray['off_topic_detection_enabled'] = get_config('local_dttutor', 'off_topic_detection_enabled') ? 'true' : 'false';
         $metaarray['off_topic_strictness'] = get_config('local_dttutor', 'off_topic_strictness') ?: 'permissive';
 
         $customprompt = get_config('local_dttutor', 'custom_prompt');
@@ -187,11 +187,27 @@ class create_chat_message extends external_api {
             $metaarray['custom_prompt'] = $customprompt;
         }
 
-        $session = $tutoriaapi->start_session($params['courseid']);
+        // Extract cmid from metadata if present (when in module context).
+        $cmid = null;
+        if (isset($metaarray['cmid']) && is_numeric($metaarray['cmid'])) {
+            $cmid = (int)$metaarray['cmid'];
+            // Convert cmid to string for API compatibility.
+            $metaarray['cmid'] = (string)$cmid;
+        }
+
+        $session = $tutoriaapi->start_session($params['courseid'], $cmid);
 
         if (!isset($session['ready']) || !$session['ready']) {
             throw new \moodle_exception('sessionnotready', 'local_dttutor');
         }
+
+        // Ensure all meta values are strings for API compatibility.
+        $metaarray = array_map(function ($value) {
+            if (is_bool($value)) {
+                return $value ? 'true' : 'false';
+            }
+            return (string)$value;
+        }, $metaarray);
 
         $tutoriaapi->send_message($session['session_id'], $params['message'], $metaarray);
 
