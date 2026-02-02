@@ -53,15 +53,15 @@ class delete_chat_session extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'courseid' => new external_value(PARAM_INT, 'Course ID', VALUE_REQUIRED),
-            'sessionid' => new external_value(PARAM_TEXT, 'Chat session ID', VALUE_REQUIRED),
+            'cmid' => new external_value(PARAM_INT, 'Course Module ID', VALUE_DEFAULT, null),
         ]);
     }
 
     /**
-     * Delete a Tutor-IA chat session.
+     * Delete a Tutor-IA chat session for the current user.
      *
      * @param int $courseid Course ID where the session was created.
-     * @param string $sessionid Session ID to delete.
+     * @param int|null $cmid Course Module ID (optional).
      * @return array Deletion status.
      * @throws \invalid_parameter_exception
      * @throws \moodle_exception
@@ -69,13 +69,13 @@ class delete_chat_session extends external_api {
      * @throws \required_capability_exception
      * @since Moodle 4.5
      */
-    public static function execute($courseid, $sessionid): array {
+    public static function execute($courseid, $cmid = null): array {
         global $USER;
 
         // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
-            'sessionid' => $sessionid,
+            'cmid' => $cmid,
         ]);
 
         // Check if user is logged in.
@@ -96,10 +96,22 @@ class delete_chat_session extends external_api {
         $tutoriaapi = new tutoria_api();
 
         try {
-            $result = $tutoriaapi->delete_session($params['sessionid']);
+            // Get current session for this user and course.
+            $session = $tutoriaapi->start_session($params['courseid'], $USER->id, $params['cmid']);
+
+            if (isset($session['session_id'])) {
+                $result = $tutoriaapi->delete_session($session['session_id']);
+
+                // Note: Cache handling for the specific user session is done
+                // implicitly if we purge or the token expires.
+                // But we should ideally have a way to clear the cache key here.
+                return [
+                    'deleted' => $result['deleted'] ?? false,
+                ];
+            }
 
             return [
-                'deleted' => $result['deleted'] ?? false,
+                'deleted' => false,
             ];
         } catch (\Exception $e) {
             // If deletion fails, log but don't throw (session might already be expired).

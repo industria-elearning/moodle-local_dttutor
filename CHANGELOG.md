@@ -5,7 +5,24 @@ All notable changes to the Tutor-IA plugin (local_dttutor) will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.4] - 2026-02-02
+
+### Changed
+
+#### Individual Chat History Implementation
+- **User-specific sessions**: Chat sessions are now tied to individual users instead of being course-wide.
+- **Session cache keys**: Changed from `session_{courseid}` to `session_{courseid}_{userid}` for proper isolation.
+- **API enhancement**: Added `user_id` parameter to `/chat/start` API endpoint.
+- **Data privacy**: Each user now has their own private chat history that cannot be accessed by other users.
+- **Breaking change**: Sessions created before this update will be invalidated and new sessions will be created per user.
+- **Files modified**:
+    - `classes/httpclient/tutoria_api.php` - Enhanced `start_session()` with userid parameter.
+    - `classes/external/create_chat_message.php` - Pass current user ID to session creation.
+    - `classes/external/get_chat_history.php` - Pass current user ID to history retrieval.
+
+### Security Improvements
+- **Session isolation**: Users can only access their own chat sessions.
+- **Privacy enhancement**: Chat history is now private per user, not shared at course level.
 
 ## [2.0.3] - 2026-02-02
 

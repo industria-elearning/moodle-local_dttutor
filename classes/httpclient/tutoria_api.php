@@ -62,13 +62,14 @@ class tutoria_api {
      * Start a new chat session or retrieve an existing one from cache.
      *
      * @param int $courseid Course ID.
+     * @param int $userid User ID.
      * @param int|null $cmid Course Module ID (optional, for module context).
      * @return array Session data including session_id, ready status, and TTL.
      * @throws moodle_exception If the session creation fails.
      * @since Moodle 4.5
      */
-    public function start_session(int $courseid, ?int $cmid = null): array {
-        $cachekey = "session_{$courseid}";
+    public function start_session(int $courseid, int $userid, ?int $cmid = null): array {
+        $cachekey = "session_{$courseid}_{$userid}";
         if ($cmid !== null) {
             $cachekey .= "_{$cmid}";
         }
@@ -82,9 +83,12 @@ class tutoria_api {
             return $cached;
         }
 
-        $requestdata = ['course_id' => (string)$courseid];
+        $requestdata = [
+            'course_id' => (string) $courseid,
+            'user_id' => (string) $userid,
+        ];
         if ($cmid !== null) {
-            $requestdata['module_id'] = (string)$cmid;
+            $requestdata['module_id'] = (string) $cmid;
         }
 
         $response = $this->aiservice->request('POST', '/chat/start', $requestdata);
@@ -92,7 +96,6 @@ class tutoria_api {
         $response['created_at'] = time();
 
         if ($this->cache !== null) {
-            $ttl = ($response['session_ttl_seconds'] ?? 604800) - 3600;
             $this->cache->set($cachekey, $response);
         }
 
@@ -142,8 +145,8 @@ class tutoria_api {
      */
     public function get_history(string $sessionid, int $limit = 20, int $offset = 0): array {
         $endpoint = '/chat/history?session_id=' . urlencode($sessionid) .
-                    '&limit=' . $limit .
-                    '&offset=' . $offset;
+            '&limit=' . $limit .
+            '&offset=' . $offset;
         return $this->aiservice->request('GET', $endpoint);
     }
 
@@ -197,7 +200,7 @@ class tutoria_api {
      */
     public function get_indexing_status(int $courseid): array {
         $endpoint = '/indexing/status?site_id=' . urlencode($this->get_site_id()) .
-                    '&course_id=' . urlencode((string)$courseid);
+            '&course_id=' . urlencode((string) $courseid);
         return $this->aiservice->request('GET', $endpoint);
     }
 
@@ -213,7 +216,7 @@ class tutoria_api {
     public function start_indexing(int $courseid, bool $forcereindex = false): array {
         return $this->aiservice->request('POST', '/indexing/start', [
             'site_id' => $this->get_site_id(),
-            'course_id' => (string)$courseid,
+            'course_id' => (string) $courseid,
             'force_reindex' => $forcereindex,
             'lang' => current_language(),
         ]);
