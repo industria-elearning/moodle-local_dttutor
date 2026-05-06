@@ -36,6 +36,13 @@ use moodle_exception;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class tutoria_api {
+    /**
+     * Seconds between backend liveness checks for cached sessions.
+     *
+     * @var int
+     */
+    private const SESSION_BACKEND_VALIDATION_INTERVAL = 300;
+
     /** @var ai_services_api AI services API client instance. */
     private ai_services_api $aiservice;
 
@@ -80,10 +87,18 @@ class tutoria_api {
         }
 
         if ($cached && $this->is_session_valid($cached)) {
-            // Validate the cached session still exists on backend.
-            // This handles cases where backend/Redis was restarted and Moodle cache still
-            // contains a not-yet-expired session_id.
+            // Validate cached session against backend only at intervals.
+            // This avoids an extra backend round-trip on every cache hit while still
+            // recovering from stale sessions after backend/Redis restarts.
+            if (!$this->should_validate_cached_session($cached)) {
+                return $cached;
+            }
+
             if (!empty($cached['session_id']) && $this->is_backend_session_alive((string)$cached['session_id'])) {
+                $cached['backend_validated_at'] = time();
+                if ($this->cache !== null) {
+                    $this->cache->set($cachekey, $cached);
+                }
                 return $cached;
             }
 
@@ -104,6 +119,7 @@ class tutoria_api {
         $response = $this->aiservice->request('POST', '/chat/start', $requestdata);
 
         $response['created_at'] = time();
+        $response['backend_validated_at'] = time();
 
         if ($this->cache !== null) {
             $this->cache->set($cachekey, $response);
@@ -190,6 +206,21 @@ class tutoria_api {
     }
 
     /**
+     * Determine if cached session should be revalidated against backend.
+     *
+     * @param array $session Cached session payload.
+     * @return bool True when validation is needed.
+     */
+    private function should_validate_cached_session(array $session): bool {
+        if (empty($session['backend_validated_at'])) {
+            return true;
+        }
+
+        $lastvalidated = (int)$session['backend_validated_at'];
+        return (time() - $lastvalidated) >= self::SESSION_BACKEND_VALIDATION_INTERVAL;
+    }
+
+    /**
      * Check whether a cached session still exists on backend storage.
      *
      * @param string $sessionid Session ID.
@@ -200,7 +231,7 @@ class tutoria_api {
             // Lightweight existence check.
             $this->get_history($sessionid, 1, 0);
             return true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             debugging('Cached Tutor-IA session is stale: ' . $e->getMessage(), DEBUG_DEVELOPER);
             return false;
         }

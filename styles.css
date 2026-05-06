@@ -212,7 +212,7 @@ body.tutor-ia-drawer-open-left .popover-process-monitor {
 }
 
 .tutor-ia-message.ai .message-content a {
-    color: #0b5ed7;
+    color: var(--bs-primary, var(--primary, #0b5ed7));
     text-decoration: underline;
 }
 

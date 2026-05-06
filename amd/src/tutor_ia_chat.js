@@ -77,6 +77,8 @@ define([
             this.currentAIMessageEl = null;
             this.currentAIMessageContainer = null;
             this.currentAIMessageRawText = '';
+            this.markdownRenderFrameId = null;
+            this.markdownRenderScheduled = false;
 
             // Text selection state.
             this.selectedText = '';
@@ -1037,8 +1039,29 @@ define([
             }
 
             this.currentAIMessageRawText += chunk;
-            this.currentAIMessageEl.innerHTML = this.renderMarkdown(this.currentAIMessageRawText);
-            this.scrollToBottom();
+            this.scheduleStreamingRender();
+        }
+
+        /**
+         * Batch markdown rendering to avoid full DOM re-render on each chunk.
+         */
+        scheduleStreamingRender() {
+            if (this.markdownRenderScheduled) {
+                return;
+            }
+
+            this.markdownRenderScheduled = true;
+            this.markdownRenderFrameId = window.requestAnimationFrame(() => {
+                this.markdownRenderScheduled = false;
+                this.markdownRenderFrameId = null;
+
+                if (!this.currentAIMessageEl) {
+                    return;
+                }
+
+                this.currentAIMessageEl.innerHTML = this.renderMarkdown(this.currentAIMessageRawText);
+                this.scrollToBottom();
+            });
         }
 
         /**
@@ -1111,21 +1134,82 @@ define([
                     return '';
                 }
 
-                const lines = trimmedBlock.split('\n').filter((line) => line.trim().length > 0);
-                const isOrderedList = lines.length > 0 && lines.every((line) => /^\s*\d+\.\s+/.test(line));
-                const isUnorderedList = lines.length > 0 && lines.every((line) => /^\s*[-*+]\s+/.test(line));
+                const lines = trimmedBlock.split('\n');
+                const segments = [];
+                const paragraphLines = [];
+                let listType = null;
+                let listItems = [];
 
-                if (isOrderedList) {
-                    const items = lines.map((line) => line.replace(/^\s*\d+\.\s+/, ''));
-                    return '<ol>' + items.map((item) => '<li>' + this.renderMarkdownInline(item) + '</li>').join('') + '</ol>';
-                }
+                const flushParagraph = () => {
+                    if (!paragraphLines.length) {
+                        return;
+                    }
 
-                if (isUnorderedList) {
-                    const items = lines.map((line) => line.replace(/^\s*[-*+]\s+/, ''));
-                    return '<ul>' + items.map((item) => '<li>' + this.renderMarkdownInline(item) + '</li>').join('') + '</ul>';
-                }
+                    const paragraph = paragraphLines.join('\n').trim();
+                    if (paragraph) {
+                        segments.push('<p>' + this.renderMarkdownInline(paragraph).replace(/\n/g, '<br>') + '</p>');
+                    }
+                    paragraphLines.length = 0;
+                };
 
-                return '<p>' + this.renderMarkdownInline(trimmedBlock).replace(/\n/g, '<br>') + '</p>';
+                const flushList = () => {
+                    if (!listItems.length || !listType) {
+                        return;
+                    }
+
+                    const openTag = listType === 'ol' ? '<ol>' : '<ul>';
+                    const closeTag = listType === 'ol' ? '</ol>' : '</ul>';
+                    const itemsHtml = listItems
+                        .map((item) => '<li>' + this.renderMarkdownInline(item.trim()) + '</li>')
+                        .join('');
+
+                    segments.push(openTag + itemsHtml + closeTag);
+                    listType = null;
+                    listItems = [];
+                };
+
+                lines.forEach((line) => {
+                    const headingMatch = line.match(/^\s*(#{1,6})\s+(.+)$/);
+                    const orderedMatch = line.match(/^\s*\d+\.\s+(.+)$/);
+                    const unorderedMatch = line.match(/^\s*[-*+]\s+(.+)$/);
+
+                    if (headingMatch) {
+                        flushParagraph();
+                        flushList();
+                        const level = headingMatch[1].length;
+                        const headingContent = this.renderMarkdownInline(headingMatch[2].trim());
+                        segments.push('<h' + level + '>' + headingContent + '</h' + level + '>');
+                        return;
+                    }
+
+                    if (orderedMatch) {
+                        flushParagraph();
+                        if (listType !== 'ol') {
+                            flushList();
+                            listType = 'ol';
+                        }
+                        listItems.push(orderedMatch[1]);
+                        return;
+                    }
+
+                    if (unorderedMatch) {
+                        flushParagraph();
+                        if (listType !== 'ul') {
+                            flushList();
+                            listType = 'ul';
+                        }
+                        listItems.push(unorderedMatch[1]);
+                        return;
+                    }
+
+                    flushList();
+                    paragraphLines.push(line);
+                });
+
+                flushParagraph();
+                flushList();
+
+                return segments.join('');
             }).filter((html) => html.length > 0);
 
             return htmlBlocks.join('');
@@ -1228,6 +1312,12 @@ define([
          * Closes the current SSE stream.
          */
         closeCurrentStream() {
+            if (this.markdownRenderFrameId) {
+                window.cancelAnimationFrame(this.markdownRenderFrameId);
+                this.markdownRenderFrameId = null;
+                this.markdownRenderScheduled = false;
+            }
+
             if (this.currentEventSource) {
                 try {
                     this.currentEventSource.close();
