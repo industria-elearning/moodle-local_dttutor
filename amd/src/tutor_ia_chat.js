@@ -76,6 +76,9 @@ define([
             this.currentSessionId = null;
             this.currentAIMessageEl = null;
             this.currentAIMessageContainer = null;
+            this.currentAIMessageRawText = '';
+            this.markdownRenderFrameId = null;
+            this.markdownRenderScheduled = false;
 
             // Text selection state.
             this.selectedText = '';
@@ -718,8 +721,13 @@ define([
                 .attr('data-message-id', msg.id);
 
             const contentDiv = $('<div>')
-                .addClass('message-content')
-                .text(msg.content);
+                .addClass('message-content');
+
+            if (msg.role === 'user') {
+                contentDiv.text(msg.content);
+            } else {
+                contentDiv.html(this.renderMarkdown(msg.content || ''));
+            }
 
             const timestampDiv = $('<div>')
                 .addClass('message-timestamp')
@@ -1000,6 +1008,7 @@ define([
 
             this.currentAIMessageEl = contentDiv[0];
             this.currentAIMessageContainer = messageContainer[0];
+            this.currentAIMessageRawText = '';
             return this.currentAIMessageEl;
         }
 
@@ -1016,19 +1025,194 @@ define([
                 return;
             }
 
-            const currentText = this.currentAIMessageEl.textContent || '';
+            const currentText = this.currentAIMessageRawText || '';
             const maxLength = 10000;
 
-            if (currentText.length + text.length > maxLength) {
+            let chunk = text;
+
+            if (currentText.length + chunk.length > maxLength) {
                 const remaining = maxLength - currentText.length;
-                if (remaining > 0) {
-                    this.currentAIMessageEl.textContent += text.substring(0, remaining) + '...';
+                if (remaining <= 0) {
+                    return;
                 }
+                chunk = chunk.substring(0, remaining) + '...';
+            }
+
+            this.currentAIMessageRawText += chunk;
+            this.scheduleStreamingRender();
+        }
+
+        /**
+         * Batch markdown rendering to avoid full DOM re-render on each chunk.
+         */
+        scheduleStreamingRender() {
+            if (this.markdownRenderScheduled) {
                 return;
             }
 
-            this.currentAIMessageEl.textContent += text;
-            this.scrollToBottom();
+            this.markdownRenderScheduled = true;
+            this.markdownRenderFrameId = window.requestAnimationFrame(() => {
+                this.markdownRenderScheduled = false;
+                this.markdownRenderFrameId = null;
+
+                if (!this.currentAIMessageEl) {
+                    return;
+                }
+
+                this.currentAIMessageEl.innerHTML = this.renderMarkdown(this.currentAIMessageRawText);
+                this.scrollToBottom();
+            });
+        }
+
+        /**
+         * Escape HTML special characters.
+         *
+         * @param {string} text - Raw text
+         * @returns {string} Escaped text
+         */
+        escapeHtml(text) {
+            if (typeof text !== 'string') {
+                return '';
+            }
+
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        /**
+         * Render inline markdown (bold, italic, links, code).
+         *
+         * @param {string} text - Escaped text
+         * @returns {string} HTML string
+         */
+        renderMarkdownInline(text) {
+            if (!text) {
+                return '';
+            }
+
+            let html = text;
+
+            // Links (http/https only).
+            html = html.replace(
+                /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+                '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+            );
+
+            // Inline code.
+            html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+            // Bold.
+            html = html.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__([^_\n]+)__/g, '<strong>$1</strong>');
+
+            // Italic (after bold).
+            html = html.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+
+            return html;
+        }
+
+        /**
+         * Render basic markdown to safe HTML for AI responses.
+         *
+         * @param {string} text - Raw markdown text
+         * @returns {string} Safe HTML
+         */
+        renderMarkdown(text) {
+            const escaped = this.escapeHtml((text || '').replace(/\r\n?/g, '\n'));
+            if (!escaped.trim()) {
+                return '';
+            }
+
+            const blocks = escaped.split(/\n{2,}/);
+            const htmlBlocks = blocks.map((block) => {
+                const trimmedBlock = block.trim();
+                if (!trimmedBlock) {
+                    return '';
+                }
+
+                const lines = trimmedBlock.split('\n');
+                const segments = [];
+                const paragraphLines = [];
+                let listType = null;
+                let listItems = [];
+
+                const flushParagraph = () => {
+                    if (!paragraphLines.length) {
+                        return;
+                    }
+
+                    const paragraph = paragraphLines.join('\n').trim();
+                    if (paragraph) {
+                        segments.push('<p>' + this.renderMarkdownInline(paragraph).replace(/\n/g, '<br>') + '</p>');
+                    }
+                    paragraphLines.length = 0;
+                };
+
+                const flushList = () => {
+                    if (!listItems.length || !listType) {
+                        return;
+                    }
+
+                    const openTag = listType === 'ol' ? '<ol>' : '<ul>';
+                    const closeTag = listType === 'ol' ? '</ol>' : '</ul>';
+                    const itemsHtml = listItems
+                        .map((item) => '<li>' + this.renderMarkdownInline(item.trim()) + '</li>')
+                        .join('');
+
+                    segments.push(openTag + itemsHtml + closeTag);
+                    listType = null;
+                    listItems = [];
+                };
+
+                lines.forEach((line) => {
+                    const headingMatch = line.match(/^\s*(#{1,6})\s+(.+)$/);
+                    const orderedMatch = line.match(/^\s*\d+\.\s+(.+)$/);
+                    const unorderedMatch = line.match(/^\s*[-*+]\s+(.+)$/);
+
+                    if (headingMatch) {
+                        flushParagraph();
+                        flushList();
+                        const level = headingMatch[1].length;
+                        const headingContent = this.renderMarkdownInline(headingMatch[2].trim());
+                        segments.push('<h' + level + '>' + headingContent + '</h' + level + '>');
+                        return;
+                    }
+
+                    if (orderedMatch) {
+                        flushParagraph();
+                        if (listType !== 'ol') {
+                            flushList();
+                            listType = 'ol';
+                        }
+                        listItems.push(orderedMatch[1]);
+                        return;
+                    }
+
+                    if (unorderedMatch) {
+                        flushParagraph();
+                        if (listType !== 'ul') {
+                            flushList();
+                            listType = 'ul';
+                        }
+                        listItems.push(unorderedMatch[1]);
+                        return;
+                    }
+
+                    flushList();
+                    paragraphLines.push(line);
+                });
+
+                flushParagraph();
+                flushList();
+
+                return segments.join('');
+            }).filter((html) => html.length > 0);
+
+            return htmlBlocks.join('');
         }
 
         /**
@@ -1049,8 +1233,13 @@ define([
                 .addClass(type);
 
             const contentDiv = $('<div>')
-                .addClass('message-content')
-                .text(text.substring(0, 10000));
+                .addClass('message-content');
+
+            if (type === 'ai') {
+                contentDiv.html(this.renderMarkdown(text.substring(0, 10000)));
+            } else {
+                contentDiv.text(text.substring(0, 10000));
+            }
 
             const currentTimestamp = Math.floor(Date.now() / 1000);
             const timestampDiv = $('<div>')
@@ -1123,6 +1312,12 @@ define([
          * Closes the current SSE stream.
          */
         closeCurrentStream() {
+            if (this.markdownRenderFrameId) {
+                window.cancelAnimationFrame(this.markdownRenderFrameId);
+                this.markdownRenderFrameId = null;
+                this.markdownRenderScheduled = false;
+            }
+
             if (this.currentEventSource) {
                 try {
                     this.currentEventSource.close();
@@ -1134,6 +1329,7 @@ define([
             this.streaming = false;
             this.currentAIMessageEl = null;
             this.currentAIMessageContainer = null;
+            this.currentAIMessageRawText = '';
             this.hideTypingIndicator();
         }
 
