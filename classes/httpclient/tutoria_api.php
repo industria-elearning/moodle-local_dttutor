@@ -80,7 +80,17 @@ class tutoria_api {
         }
 
         if ($cached && $this->is_session_valid($cached)) {
-            return $cached;
+            // Validate the cached session still exists on backend.
+            // This handles cases where backend/Redis was restarted and Moodle cache still
+            // contains a not-yet-expired session_id.
+            if (!empty($cached['session_id']) && $this->is_backend_session_alive((string)$cached['session_id'])) {
+                return $cached;
+            }
+
+            // Cached session is stale; clear it and create a new one.
+            if ($this->cache !== null) {
+                $this->cache->delete($cachekey);
+            }
         }
 
         $requestdata = [
@@ -177,6 +187,23 @@ class tutoria_api {
         $ttl = $session['session_ttl_seconds'];
 
         return $elapsed < ($ttl - 3600); // 1 hour margin.
+    }
+
+    /**
+     * Check whether a cached session still exists on backend storage.
+     *
+     * @param string $sessionid Session ID.
+     * @return bool True when backend recognizes the session.
+     */
+    private function is_backend_session_alive(string $sessionid): bool {
+        try {
+            // Lightweight existence check.
+            $this->get_history($sessionid, 1, 0);
+            return true;
+        } catch (\Exception $e) {
+            debugging('Cached Tutor-IA session is stale: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            return false;
+        }
     }
 
     /**
